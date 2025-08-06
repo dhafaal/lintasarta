@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
-<h2>Shift List</h2>
-<a href="{{ route('admin.shifts.create') }}">+ Add Shift</a>
+<h2>Daftar Shift</h2>
+<a href="{{ route('admin.shifts.create') }}">+ Tambah Shift</a>
 
 @if(session('success'))
-    <p style="color: green">{{ session('success') }}</p>
+    <div>{{ session('success') }}</div>
 @endif
 
-<table border="1">
+<table border="1" cellpadding="10">
     <tr>
-        <th>Name</th>
-        <th>Start</th>
-        <th>End</th>
-        <th>Action</th>
+        <th>Nama Shift</th>
+        <th>Jam Mulai</th>
+        <th>Jam Selesai</th>
+        <th>Aksi</th>
     </tr>
     @foreach ($shifts as $shift)
     <tr>
@@ -24,7 +24,7 @@
             <a href="{{ route('admin.shifts.edit', $shift->id) }}">Edit</a> |
             <form action="{{ route('admin.shifts.destroy', $shift->id) }}" method="POST" style="display:inline">
                 @csrf @method('DELETE')
-                <button onclick="return confirm('Are you sure?')">Delete</button>
+                <button onclick="return confirm('Hapus shift ini?')">Hapus</button>
             </form>
         </td>
     </tr>
