@@ -17,6 +17,10 @@
             })->name('admin.dashboard');
             Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+            Route::delete('/users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulkDelete');
+            Route::get('/users/export/pdf', [UserController::class, 'exportPdf'])->name('users.exportPdf');
+            Route::get('/users/export/excel', [UserController::class, 'exportExcel'])->name('users.exportExcel');
+
             // Fitur Admin
             Route::resource('users', UserController::class);
             Route::resource('shifts', ShiftController::class);

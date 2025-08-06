@@ -1,3 +1,5 @@
+@import 'tailwindcss';
+
 @font-face {
   font-family: 'Geist';
   src: url('../font/Geist-Thin.woff2') format('woff2');
@@ -126,4 +128,8 @@
 
 body {
   font-family: 'Geist', sans-serif;
+}
+
+.btn {
+  @apply px-4 py-2 rounded-lg font-semibold;
 }
