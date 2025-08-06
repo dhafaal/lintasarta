@@ -27,7 +27,7 @@ class Schedules extends Model
 
     public function permissions()
     {
-        return $this->hasMany(Permission::class);
+        return $this->hasMany(Permissions::class);
     }
 }
 

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Shift;
 use App\Models\Schedules;
-use App\Models\Permission;
+use App\Models\Permissions;
 
 class DashboardController extends Controller
 {
@@ -16,7 +16,7 @@ class DashboardController extends Controller
             'totalUsers'       => User::where('role', '!=', 'Admin')->count(),
             'totalShifts'      => Shift::count(),
             'totalSchedules'   => Schedules::count(),
-            'totalPermissions' => Permission::count(),
+            'totalPermissions' => Permissions::count(),
         ]);
     }
 }
