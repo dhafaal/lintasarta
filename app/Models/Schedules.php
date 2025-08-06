@@ -5,15 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 class Schedules extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'shift_id',
-        'schedule_date',
-    ];
+    protected $fillable = ['user_id', 'shift_id', 'schedule_date'];
 
     public function user()
     {
@@ -24,10 +25,6 @@ class Schedules extends Model
     {
         return $this->belongsTo(Shift::class);
     }
-
-    public function permissions()
-    {
-        return $this->hasMany(Permissions::class);
-    }
 }
+
 
