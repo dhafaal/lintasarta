@@ -12,13 +12,13 @@
 
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <aside class="w-64 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-100 text-gray-900 p-6">
+        <aside class="w-64 p-6">
             <div class="text-xl font-bold mb-8 pl-3">Admin Panel</div>
             <ul class="font-semibold text-gray-600 space-y-2">
-                <li><a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-gray-600 hover:text-white transition">Dashboard</a></li>
-                <li><a href="{{ route('admin.users.index') }}" class="block px-3 py-2 rounded hover:bg-gray-600 hover:text-white transition">Manage Users</a></li>
-                <li><a href="{{ route('admin.schedules.index') }}" class="block px-3 py-2 rounded hover:bg-gray-600 hover:text-white transition">Manage Schedules</a></li>
-                <li><a href="{{ route('admin.schedules.index') }}" class="block px-3 py-2 rounded hover:bg-gray-600 hover:text-white transition">Calendar</a></li>
+                <li><a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Dashboard</a></li>
+                <li><a href="{{ route('admin.users.index') }}" class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Manage Users</a></li>
+                <li><a href="{{ route('admin.schedules.index') }}" class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Manage Schedules</a></li>
+                <li><a href="{{ route('admin.schedules.index') }}" class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Calendar</a></li>
             </ul>
         </aside>
 
