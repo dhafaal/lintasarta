@@ -2,9 +2,12 @@
 
 @section('content')
 <div class="container">
-    <h2>Schedule List</h2>
-
+    <h1>Schedule List</h1>
     <a href="{{ route('admin.schedules.create') }}" class="btn btn-primary mb-3">+ Add Schedule</a>
+
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
     <table class="table table-bordered">
         <thead>
@@ -16,18 +19,16 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($schedules as $schedule)
+            @foreach($schedules as $schedule)
             <tr>
                 <td>{{ $schedule->user->name }}</td>
                 <td>{{ $schedule->shift->name }}</td>
-                <td>{{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d-m-Y') }}</td>
+                <td>{{ $schedule->schedule_date }}</td>
                 <td>
-                    <a href="{{ route('admin.schedules.edit', $schedule->id) }}" class="btn btn-sm btn-warning">Edit</a>
-
-                    <form action="{{ route('admin.schedules.destroy', $schedule->id) }}" method="POST" style="display:inline-block;">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure to delete this schedule?')">Delete</button>
+                    <a href="{{ route('admin.schedules.edit', $schedule) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <form action="{{ route('admin.schedules.destroy', $schedule) }}" method="POST" style="display:inline-block;">
+                        @csrf @method('DELETE')
+                        <button class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">Delete</button>
                     </form>
                 </td>
             </tr>

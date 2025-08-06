@@ -1,27 +1,41 @@
-<form method="POST" action="{{ isset($schedule) ? route('admin.schedules.update', $schedule) : route('admin.schedules.store') }}">
-    @csrf
-    @if(isset($schedule)) @method('PUT') @endif
+@extends('layouts.app')
 
-    <label>User:</label>
-    <select name="user_id" class="form-control" required>
-        @foreach($users as $user)
-        <option value="{{ $user->id }}" {{ isset($schedule) && $schedule->user_id == $user->id ? 'selected' : '' }}>
-            {{ $user->name }}
-        </option>
-        @endforeach
-    </select>
+@section('content')
+<div class="container">
+    <h1>{{ isset($schedule) ? 'Edit' : 'Create' }} Schedule</h1>
 
-    <label>Shift:</label>
-    <select name="shift_id" class="form-control" required>
-        @foreach($shifts as $shift)
-        <option value="{{ $shift->id }}" {{ isset($schedule) && $schedule->shift_id == $shift->id ? 'selected' : '' }}>
-            {{ $shift->name }}
-        </option>
-        @endforeach
-    </select>
+    <form method="POST" action="{{ isset($schedule) ? route('admin.schedules.update', $schedule) : route('admin.schedules.store') }}">
+        @csrf
+        @if(isset($schedule)) @method('PUT') @endif
 
-    <label>Date:</label>
-    <input type="date" name="schedule_date" value="{{ $schedule->schedule_date ?? old('schedule_date') }}" class="form-control" required>
+        <div class="mb-3">
+            <label>User</label>
+            <select name="user_id" class="form-control" required>
+                @foreach($users as $user)
+                <option value="{{ $user->id }}" {{ isset($schedule) && $schedule->user_id == $user->id ? 'selected' : '' }}>
+                    {{ $user->name }}
+                </option>
+                @endforeach
+            </select>
+        </div>
 
-    <button type="submit" class="btn btn-primary mt-2">Save</button>
-</form>
+        <div class="mb-3">
+            <label>Shift</label>
+            <select name="shift_id" class="form-control" required>
+                @foreach($shifts as $shift)
+                <option value="{{ $shift->id }}" {{ isset($schedule) && $schedule->shift_id == $shift->id ? 'selected' : '' }}>
+                    {{ $shift->name }}
+                </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Date</label>
+            <input type="date" name="schedule_date" class="form-control" value="{{ $schedule->schedule_date ?? old('schedule_date') }}" required>
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+    </form>
+</div>
+@endsection
