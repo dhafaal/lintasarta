@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-gray-900  mb-6">Dashboard Admin</h1>
 
         @if(session('success'))
-            <div class="mb-6 p-4 bg-green-100 bg-green-900 text-green-800 text-green-200 rounded-lg">
+            <div class="mb-6 p-4 bg-green-100 text-green-800 rounded-lg">
                 {{ session('success') }}
             </div>
         @endif

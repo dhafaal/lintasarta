@@ -12,7 +12,7 @@
 
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <aside class="w-64 p-6">
+        <aside class="w-64 p-5">
             <div class="text-xl font-bold mb-8 pl-3">Admin Panel</div>
             <ul class="font-semibold text-gray-600 space-y-2">
                 <li><a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Dashboard</a></li>
