@@ -1,41 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - @yield('title')</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-100">
 
-    <!-- Navbar -->
-    <nav class="bg-blue-600 p-4 text-white flex justify-between items-center">
-        <div class="text-lg font-semibold">Admin Panel</div>
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded">
-                Logout
-            </button>
-        </form>
-    </nav>
+<body class="bg-gray-100 min-h-screen font-sans">
 
-    <!-- Sidebar + Content -->
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <aside class="w-64 bg-white shadow-md p-6">
-            <ul class="space-y-4">
-                <li><a href="{{ route('admin.dashboard') }}" class="text-blue-600 hover:underline">Dashboard</a></li>
-                <li><a href="{{ route('admin.users.index') }}" class="text-blue-600 hover:underline">Manage Users</a></li>
-                <li><a href="{{ route('admin.schedules.index') }}" class="text-blue-600 hover:underline">Manage Schedules</a></li>
+        <aside class="w-64 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-100 text-gray-900 p-6">
+            <div class="text-xl font-bold mb-8 pl-3">Admin Panel</div>
+            <ul class="font-semibold text-gray-600 space-y-2">
+                <li><a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-gray-600 hover:text-white transition">Dashboard</a></li>
+                <li><a href="{{ route('admin.users.index') }}" class="block px-3 py-2 rounded hover:bg-gray-600 hover:text-white transition">Manage Users</a></li>
+                <li><a href="{{ route('admin.schedules.index') }}" class="block px-3 py-2 rounded hover:bg-gray-600 hover:text-white transition">Manage Schedules</a></li>
+                <li><a href="{{ route('admin.schedules.index') }}" class="block px-3 py-2 rounded hover:bg-gray-600 hover:text-white transition">Calendar</a></li>
             </ul>
         </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 p-6">
-            <h1 class="text-2xl font-bold mb-4">@yield('title')</h1>
-            @yield('content')
-        </main>
+        <!-- Right Content Area -->
+        <div class="flex-1 flex flex-col min-h-screen bg-gradient-to-r from-gray-100 via-gray-50 to-gray-50">
+            <!-- Header -->
+            <nav class="bg-gradient-to-r from-gray-100 to-gray-50 text-gray-900 px-6 py-4 flex justify-between items-center">
+                <h1 class="text-lg font-semibold">@yield('title')</h1>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="bg-red-500 text-white font-semibold text-md shadow-sm hover:bg-red-600 px-4 py-2 rounded-lg">
+                        Logout
+                    </button>
+                </form>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-4">
+                <div class="bg-white rounded-2xl shadow-md border border-gray-300 p-6 min-h-full">
+                    @yield('content')
+                </div>
+            </main>
+        </div>
     </div>
 
 </body>
+
 </html>

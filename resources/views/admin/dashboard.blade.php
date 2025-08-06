@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container">
-        <h1>Dashboard Admin</h1>
+        <h1 class="text-xl font-bold">Dashboard Admin</h1>
 
         @if(session('success'))
             <div style="color: green;">{{ session('success') }}</div>
