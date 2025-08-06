@@ -1,9 +1,11 @@
         <?php
 
+
         use Illuminate\Support\Facades\Route;
         use Illuminate\Support\Facades\Auth;
         use App\Http\Controllers\AuthController;
 
+        use App\Http\Controllers\FeatureController;
         use App\Http\Controllers\Admin\UserController;
         use App\Http\Controllers\Admin\ShiftController;
         use App\Http\Controllers\Admin\ScheduleController;
@@ -17,12 +19,25 @@
             })->name('admin.dashboard');
             Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-            Route::delete('/users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulkDelete');
-            Route::get('/users/export/pdf', [UserController::class, 'exportPdf'])->name('users.exportPdf');
-            Route::get('/users/export/excel', [UserController::class, 'exportExcel'])->name('users.exportExcel');
+        Route::prefix('admin/users')->name('users.')->middleware('auth')->group(function () {
+            Route::get('/', [FeatureController::class, 'index'])->name('index');
+            Route::get('/create', [FeatureController::class, 'create'])->name('create');
+            Route::post('/', [FeatureController::class, 'store'])->name('store');
+            Route::get('/{user}/edit', [FeatureController::class, 'edit'])->name('edit');
+            Route::put('/{user}', [FeatureController::class, 'update'])->name('update');
+            Route::delete('/{user}', [FeatureController::class, 'destroy'])->name('destroy');
 
-            // Fitur Admin
-            Route::resource('users', UserController::class);
+            // ✅ Bulk delete
+            Route::delete('/bulk-delete', [FeatureController::class, 'bulkDelete'])->name('bulkDelete');
+
+            // ✅ Export
+            Route::get('/export/pdf', [FeatureController::class, 'exportPdf'])->name('exportPdf');
+            Route::get('/export/excel', [FeatureController::class, 'exportExcel'])->name('exportExcel');
+        });
+
+
+        // Fitur Admin
+        Route::resource('users', UserController::class);
             Route::resource('shifts', ShiftController::class);
             Route::resource('schedules', ScheduleController::class);
 
