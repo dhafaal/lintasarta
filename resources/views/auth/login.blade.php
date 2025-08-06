@@ -8,14 +8,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-white flex items-center justify-center relative overflow-hidden">
-    <div class="absolute inset-0 pointer-events-none">
-        <div class="absolute w-16 h-16 bg-white opacity-10 rounded-full top-1/5 left-10 animate-pulse"></div>
-        <div class="absolute w-10 h-10 bg-white opacity-10 rounded-full bottom-1/4 right-10 animate-pulse delay-200"></div>
-        <div class="absolute w-20 h-20 bg-white opacity-10 rounded-full bottom-1/5 left-1/4 animate-pulse delay-400"></div>
-    </div>
+<body class="min-h-screen bg-radial from-sky-200 via-sky-100 to-white flex items-center justify-center relative overflow-hidden">
 
-    <div class="bg-white/90 backdrop-blur-lg border border-white/30 shadow-2xl rounded-2xl px-8 py-10 w-full max-w-md z-10">
+    <div class="bg-white border border-gray-300 shadow-xl rounded-2xl px-8 py-10 w-full max-w-md z-10">
         <div class="flex justify-center mb-6">
             <img src="/Logo-Lintasarta-new.webp" alt="Logo" class="h-20">
         </div>
@@ -24,7 +19,7 @@
             @csrf
 
             <div>
-                <label for="email" class="block text-gray-700 font-medium mb-1">Email Address</label>
+                <label for="email" class="block text-gray-500 font-medium mb-1">Email Address</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail-icon lucide-mail">
@@ -38,7 +33,7 @@
             </div>
 
             <div>
-                <label for="password" class="block text-gray-700 font-medium mb-1">Password</label>
+                <label for="password" class="block text-gray-500 font-medium mb-1">Password</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock">
@@ -53,11 +48,11 @@
 
             <button type="submit"
                 class="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white py-2 rounded-lg font-semibold text-lg shadow hover:shadow-lg transition duration-300 flex justify-center items-center gap-2">
-                Sign In
+                Login
             </button>
         </form>
 
-        <div class="mt-6 text-center">
+        <div class="mt-4 text-center">
             <a href="{{ route('password.request') }}" class="text-blue-500 hover:underline text-sm font-medium">
                 Forgot your password?
             </a>
