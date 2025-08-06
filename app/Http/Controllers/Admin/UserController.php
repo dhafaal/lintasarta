@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -11,7 +10,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::where('role', '!=', 'Admin')->get();
+        $users = User::all();
         return view('admin.users.index', compact('users'));
     }
 
@@ -23,20 +22,20 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'     => 'required',
-            'email'    => 'required|email|unique:users',
-            'role'     => 'required|in:Admin,Operator,User',
-            'password' => 'required|min:6|confirmed',
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6',
+            'role' => 'required|in:admin,operator,user'
         ]);
 
         User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'role'     => $request->role,
+            'name' => $request->name,
+            'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $request->role,
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil ditambahkan.');
+        return redirect()->route('admin.users.index')->with('success', 'User created.');
     }
 
     public function edit(User $user)
@@ -47,19 +46,27 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name'  => 'required',
+            'name' => 'required',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'role'  => 'required|in:Admin,Operator,User',
+            'role' => 'required|in:admin,operator,user'
         ]);
 
-        $user->update($request->only('name', 'email', 'role'));
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'role' => $request->role,
+        ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil diupdate.');
+        if ($request->filled('password')) {
+            $user->update(['password' => Hash::make($request->password)]);
+        }
+
+        return redirect()->route('admin.users.index')->with('success', 'User updated.');
     }
 
     public function destroy(User $user)
     {
         $user->delete();
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus.');
+        return redirect()->route('admin.users.index')->with('success', 'User deleted.');
     }
 }
