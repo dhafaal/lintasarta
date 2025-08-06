@@ -8,12 +8,14 @@
         use App\Http\Controllers\Admin\ShiftController;
         use App\Http\Controllers\Admin\ScheduleController;
         use App\Http\Controllers\Admin\PermissionController;
+        use App\Http\Controllers\Admin\DashboardController;
 
         Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])->prefix('admin')->name('admin.')->group(function () {
             // Dashboard
             Route::get('/admin/dashboard', function () {
                 return view('admin.dashboard');
             })->name('admin.dashboard');
+            Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
             // Fitur Admin
             Route::resource('users', UserController::class);
