@@ -13,7 +13,7 @@ class CreateSchedulesTable extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('shift_id')->constrained()->onDelete('cascade');
-            $table->date('schedule_date');
+            $table->datetime('schedule_date');
             $table->timestamps();
         });
     }

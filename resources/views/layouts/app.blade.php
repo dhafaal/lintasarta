@@ -16,20 +16,44 @@
             <div class="text-xl font-bold mb-8 pl-3">Admin Panel</div>
             <ul class="font-semibold text-gray-600 space-y-2">
                 <ul class="font-semibold text-gray-600 space-y-2">
-                    <li><a href="{{ route('admin.dashboard') }}"
-                            class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Dashboard</a>
+                    <li>
+                        <a href="{{ route('admin.dashboard') }}"
+                            class="block px-3 py-2 rounded-lg transition
+               {{ request()->routeIs('admin.dashboard') ? 'bg-white border border-gray-300 shadow-sm text-blue-800 font-bold' : 'hover:bg-blue-100 hover:text-blue-800 border border-transparent' }}">
+                            Dashboard
+                        </a>
                     </li>
-                    <li><a href="{{ route('admin.users.index') }}"
-                            class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Manage
-                            Users</a></li>
-                    <li><a href="{{ route('admin.schedules.index') }}"
-                            class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Manage
-                            Schedules</a></li>
-                    <li><a href="{{ route('admin.shifts.index') }}"
-                            class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Manage
-                            Shifts</a></li>
-                    <li><a href="{{ route('admin.schedules.index') }}"
-                            class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Calendar</a>
+
+                    <li>
+                        <a href="{{ route('admin.users.index') }}"
+                            class="block px-3 py-2 rounded-lg transition
+               {{ request()->routeIs('admin.users.*') ? 'bg-white border border-gray-300 shadow-sm text-blue-800 font-bold' : 'hover:bg-blue-100 hover:text-blue-800 border border-transparent' }}">
+                            Manage Users
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('admin.schedules.index') }}"
+                            class="block px-3 py-2 rounded-lg transition
+               {{ request()->routeIs('admin.schedules.*') ? 'bg-white border border-gray-300 shadow-sm text-blue-800 font-bold' : 'hover:bg-blue-100 hover:text-blue-800 border border-transparent' }}">
+                            Manage Schedules
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('admin.shifts.index') }}"
+                            class="block px-3 py-2 rounded-lg transition
+               {{ request()->routeIs('admin.shifts.*') ? 'bg-white border border-gray-300 shadow-sm text-blue-800 font-bold' : 'hover:bg-blue-100 hover:text-blue-800 border border-transparent' }}">
+                            Manage Shifts
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="/calender"
+                            class="block px-3 py-2 rounded-lg transition
+               {{ request()->is('calender') ? 'bg-white border border-gray-300 shadow-sm text-blue-800 font-bold' : 'hover:bg-blue-100 hover:text-blue-800 border border-transparent' }}">
+                            Calendar
+                        </a>
                     </li>
                 </ul>
 

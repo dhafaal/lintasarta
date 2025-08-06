@@ -135,9 +135,9 @@ body {
 }
 
 .btn-primary {
-  @apply text-white bg-gray-800 hover:bg-gray-700;
+  @apply text-white border-gray-800 bg-gray-800 hover:bg-gray-700 hover:border-gray-700;
 }
 
 .btn-outline {
-  @apply border-gray-300 shadow-sm text-gray-700 hover:bg-gray-100;
+  @apply border-gray-300 shadow-xs text-gray-700 hover:bg-gray-100;
 }

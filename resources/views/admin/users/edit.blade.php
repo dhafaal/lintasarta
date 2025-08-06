@@ -23,7 +23,7 @@
         </div>
 
         <div class="flex justify-between items-center">
-            <a href="{{ route('admin.users.index') }}" class="btn btn-outline px-6">← Kembali</a>
+            <a href="{{ route('admin.users.index') }}" class="btn btn-outline px-6">← Back</a>
             <button type="submit"
                 class="btn btn-primary">
                 Update

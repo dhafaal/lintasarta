@@ -5,9 +5,9 @@
 @section('content')
 <x-section-content title="Users" subtitle="Manage all users data and Export everywhere">
     <x-slot:actions>
-        <a href="{{ route('admin.users.create') }}" class="btn text-white bg-blue-500 border-blue-500 hover:bg-blue-600">Create User</a>
-        <a href="{{ route('admin.users.exportPdf') }}" class="btn text-white bg-red-600 border-red-600 hover:bg-red-700">Export PDF</a>
-        <a href="{{ route('admin.users.exportExcel') }}" class="btn text-white bg-green-600 border-green-600 hover:bg-green-700">Export Excel</a>
+        <a href="{{ route('admin.users.exportPdf') }}" class="btn btn-outline">Export PDF</a>
+        <a href="{{ route('admin.users.exportExcel') }}" class="btn btn-outline">Export Excel</a>
+        <a href="{{ route('admin.users.create') }}" class="btn btn-primary">Create User</a>
     </x-slot:actions>
 
     <form method="GET" action="{{ route('admin.users.index') }}" class="mb-4">

@@ -1,17 +1,48 @@
 @extends('layouts.app')
 
+@section('title', 'Create User')
+
 @section('content')
-    <h1>Tambah User</h1>
-    <form method="POST" action="{{ route('admin.users.store') }}">
+<x-section-content title="Create User" subtitle="Insert to create users account">
+    <form method="POST" action="{{ route('admin.users.store') }}" class="space-y-6">
         @csrf
-        <input type="text" name="name" placeholder="Nama" required><br>
-        <input type="email" name="email" placeholder="Email" required><br>
-        <input type="password" name="password" placeholder="Password" required><br>
-        <select name="role">
-            <option value="admin">Admin</option>
-            <option value="operator">Operator</option>
-            <option value="user">User</option>
-        </select><br>
-        <button type="submit">Simpan</button>
+
+        <div class="flex items-center space-x-4">
+            <x-input 
+                name="name" 
+                label="Name" 
+                placeholder="Insert user name" 
+                required 
+            />
+
+            <x-input 
+                type="email" 
+                name="email" 
+                label="Email" 
+                placeholder="user@email.com" 
+                required 
+            />
+        </div>
+
+        <x-input 
+            type="password" 
+            name="password" 
+            label="Password" 
+            placeholder="Insert password" 
+            required 
+        />
+
+        <x-select 
+            name="role" 
+            label="Role" 
+            :options="['admin' => 'Admin', 'operator' => 'Operator', 'user' => 'User']" 
+            required 
+        />
+
+        <div class="pt-4 flex justify-between">
+            <a href="{{ route('admin.users.index') }}" class="btn btn-outline">← Cancel</a>
+            <button type="submit" class="btn btn-primary">Create</button>
+        </div>
     </form>
+</x-section-content>
 @endsection
