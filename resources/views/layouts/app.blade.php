@@ -15,21 +15,37 @@
         <aside class="w-64 p-5">
             <div class="text-xl font-bold mb-8 pl-3">Admin Panel</div>
             <ul class="font-semibold text-gray-600 space-y-2">
-                <li><a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Dashboard</a></li>
-                <li><a href="{{ route('admin.users.index') }}" class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Manage Users</a></li>
-                <li><a href="{{ route('admin.schedules.index') }}" class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Manage Schedules</a></li>
-                <li><a href="{{ route('admin.schedules.index') }}" class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Calendar</a></li>
+                <ul class="font-semibold text-gray-600 space-y-2">
+                    <li><a href="{{ route('admin.dashboard') }}"
+                            class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Dashboard</a>
+                    </li>
+                    <li><a href="{{ route('admin.users.index') }}"
+                            class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Manage
+                            Users</a></li>
+                    <li><a href="{{ route('admin.schedules.index') }}"
+                            class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Manage
+                            Schedules</a></li>
+                    <li><a href="{{ route('admin.shifts.index') }}"
+                            class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Manage
+                            Shifts</a></li>
+                    <li><a href="{{ route('admin.schedules.index') }}"
+                            class="block px-3 py-2 rounded hover:bg-blue-100 hover:text-blue-800 transition">Calendar</a>
+                    </li>
+                </ul>
+
             </ul>
         </aside>
 
         <!-- Right Content Area -->
         <div class="flex-1 flex flex-col min-h-screen bg-gradient-to-r from-gray-100 via-gray-50 to-gray-50">
             <!-- Header -->
-            <nav class="bg-gradient-to-r from-gray-100 to-gray-50 text-gray-900 px-6 py-4 flex justify-between items-center">
+            <nav
+                class="bg-gradient-to-r from-gray-100 to-gray-50 text-gray-900 px-6 py-4 flex justify-between items-center">
                 <h1 class="text-lg font-semibold">@yield('title')</h1>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
-                    <button type="submit" class="bg-red-500 text-white font-semibold text-md shadow-sm hover:bg-red-600 px-4 py-2 rounded-lg">
+                    <button type="submit"
+                        class="bg-red-500 text-white font-semibold text-md shadow-sm hover:bg-red-600 px-4 py-2 rounded-lg">
                         Logout
                     </button>
                 </form>
