@@ -1,9 +1,5 @@
 <?php
 
-// app/Models/Permission.php
-
-// app/Models/Schedule.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
