@@ -27,7 +27,7 @@ class ShiftController extends Controller
             'end_time'   => 'required|date_format:H:i|after:start_time',
         ]);
 
-        Shift::create($request->all());
+        Shift::create($request->only('name', 'start_time', 'end_time'));
 
         return redirect()->route('admin.shifts.index')->with('success', 'Shift berhasil ditambahkan.');
     }
@@ -45,7 +45,7 @@ class ShiftController extends Controller
             'end_time'   => 'required|date_format:H:i|after:start_time',
         ]);
 
-        $shift->update($request->all());
+        $shift->update($request->only('name', 'start_time', 'end_time'));
 
         return redirect()->route('admin.shifts.index')->with('success', 'Shift berhasil diupdate.');
     }

@@ -12,7 +12,7 @@ class CreateShiftsTable extends Migration
     {
         Schema::create('shifts', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // contoh: pagi, siang, malam
+            $table->enum('name', ['Pagi', 'Siang', 'Malam']);
             $table->time('start_time');
             $table->time('end_time');
             $table->timestamps();

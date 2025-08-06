@@ -27,13 +27,13 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'required',
-            'shift_id' => 'required',
+            'user_id' => 'required|exists:users,id',
+            'shift_id' => 'required|exists:shifts,id',
             'schedule_date' => 'required|date',
         ]);
 
         Schedules::create($request->all());
-        return redirect()->route('schedules.index')->with('success', 'Schedule created!');
+        return redirect()->route('admin.schedules.index')->with('success', 'Schedule created successfully.');
     }
 
     public function edit(Schedules $schedule)
@@ -46,18 +46,18 @@ class ScheduleController extends Controller
     public function update(Request $request, Schedules $schedule)
     {
         $request->validate([
-            'user_id' => 'required',
-            'shift_id' => 'required',
+            'user_id' => 'required|exists:users,id',
+            'shift_id' => 'required|exists:shifts,id',
             'schedule_date' => 'required|date',
         ]);
 
         $schedule->update($request->all());
-        return redirect()->route('schedules.index')->with('success', 'Schedule updated!');
+        return redirect()->route('admin.schedules.index')->with('success', 'Schedule updated successfully.');
     }
 
     public function destroy(Schedules $schedule)
     {
         $schedule->delete();
-        return redirect()->route('schedules.index')->with('success', 'Schedule deleted!');
+        return redirect()->route('admin.schedules.index')->with('success', 'Schedule deleted successfully.');
     }
 }
