@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('title', 'Schedules')
 
 @section('content')
@@ -56,4 +55,14 @@
         </table>
     </div>
 </x-section-content>
+      </tbody>
+    </table>
+</div>
+@endsection
+
+    </table>
+</div>
+     </tbody>
+    </table>
+</div>
 @endsection
