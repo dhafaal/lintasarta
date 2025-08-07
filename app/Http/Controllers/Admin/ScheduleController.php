@@ -38,7 +38,7 @@ class ScheduleController extends Controller {
     public function edit(Schedules $schedule) {
         $users = User::all();
         $shifts = Shift::all();
-        return view('admin.schedules.form', compact('schedule', 'users', 'shifts'));
+        return view('admin.schedules.edit', compact('schedule', 'users', 'shifts'));
     }
 
     public function update(Request $request, Schedules $schedule) {

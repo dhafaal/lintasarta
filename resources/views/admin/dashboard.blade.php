@@ -1,4 +1,6 @@
-@extends('layouts.app') {{-- sesuaikan dengan layout utama kamu --}}
+@extends('layouts.app')
+
+@section('title', 'Dashboard')
 
 @section('content')
     <div class="container mx-auto px-4 py-8">

@@ -19,7 +19,7 @@
             @csrf
 
             <div>
-                <label for="email" class="block text-gray-500 font-medium mb-1">Email Address</label>
+                <label for="email" class="block text-sm text-gray-600 font-semibold mb-1">Email Address</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail-icon lucide-mail">
@@ -28,12 +28,12 @@
                         </svg>
                     </span>
                     <input type="email" name="email" id="email" required placeholder="Enter your email"
-                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-gray-100">
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent bg-gray-100 transition-all duration-300 ease-in-out">
                 </div>
             </div>
 
             <div>
-                <label for="password" class="block text-gray-500 font-medium mb-1">Password</label>
+                <label for="password" class="block text-sm text-gray-600 font-semibold mb-1">Password</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock">
@@ -42,12 +42,12 @@
                         </svg>
                     </span>
                     <input type="password" name="password" id="password" required placeholder="Enter your password"
-                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-gray-100">
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent bg-gray-100 transition-all duration-300 ease-in-out">
                 </div>
             </div>
 
             <button type="submit"
-                class="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white py-2 rounded-lg font-semibold text-lg shadow hover:shadow-lg transition duration-300 flex justify-center items-center gap-2">
+                class="w-full bg-radial from-blue-600 to-blue-500 text-white py-2 rounded-lg font-semibold text-lg shadow-sm hover:opacity-50 transition duration-300 flex justify-center items-center gap-2">
                 Login
             </button>
         </form>

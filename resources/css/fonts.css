@@ -131,7 +131,7 @@ body {
 }
 
 .btn {
-  @apply px-4 py-2 rounded-lg font-semibold border;
+  @apply text-center items-center px-4 py-2 rounded-lg font-medium border;
 }
 
 .btn-primary {
