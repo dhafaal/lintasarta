@@ -33,4 +33,18 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class);
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedules::class);
+    }
+
+    public function shifts()
+    {
+        return $this->belongsToMany(Shift::class, 'schedules', 'user_id', 'shift_id');
+    }
 }

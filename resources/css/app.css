@@ -5,5 +5,11 @@
   font-family: 'Geist', sans-serif;
 }
 
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: none;
+}
 
 

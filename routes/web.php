@@ -32,6 +32,7 @@
 
             // ✅ Export
             Route::get('/export/pdf', [FeatureController::class, 'exportPdf'])->name('exportPdf');
+            Route::get('/admin/users/export-pdf', [UserController::class, 'exportPdf'])->name('admin.users.exportPdf');
             Route::get('/export/excel', [FeatureController::class, 'exportExcel'])->name('exportExcel');
         });
 
