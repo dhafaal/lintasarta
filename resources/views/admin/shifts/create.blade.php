@@ -1,26 +1,39 @@
 @extends('layouts.app')
 
+@section('title', 'Tambah Shift')
+
 @section('content')
-<h2>Tambah Shift</h2>
+<x-section-content title="Tambah Shift" subtitle="Buat shift baru untuk jadwal kerja">
+    <form method="POST" action="{{ route('admin.shifts.store') }}" class="space-y-6">
+        @csrf
 
-<form method="POST" action="{{ route('admin.shifts.store') }}">
-    @csrf
-    <label>Nama Shift</label>
-    <select name="name">
-        <option value="Pagi">Pagi</option>
-        <option value="Siang">Siang</option>
-        <option value="Malam">Malam</option>
-    </select>
-    <br><br>
+        <x-select 
+            name="name" 
+            label="Nama Shift" 
+            :options="['Pagi' => 'Pagi', 'Siang' => 'Siang', 'Malam' => 'Malam']" 
+            required 
+        />
 
-    <label>Jam Mulai</label>
-    <input type="time" name="start_time" required>
-    <br><br>
+        <div class="flex items-center space-x-2">
+        <x-input 
+            type="time" 
+            name="start_time" 
+            label="Jam Mulai" 
+            required 
+        />
 
-    <label>Jam Selesai</label>
-    <input type="time" name="end_time" required>
-    <br><br>
+        <x-input 
+            type="time" 
+            name="end_time" 
+            label="Jam Selesai" 
+            required 
+        />
+        </div>
 
-    <button type="submit">Simpan</button>
-</form>
+        <div class="pt-4 flex items-center space-x-2 justify-between">
+            <a href="{{ route('admin.shifts.index') }}" class="btn btn-outline">← Cancel</a>
+            <button type="submit" class="btn btn-primary">Simpan</button>
+        </div>
+    </form>
+</x-section-content>
 @endsection

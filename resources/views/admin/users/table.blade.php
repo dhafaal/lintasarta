@@ -2,25 +2,25 @@
     <table class="min-w-full bg-white">
         <thead class="bg-slate-50">
             <tr>
-                <th class="px-6 py-4 text-sm font-semibold text-slate-600">
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600 text-left">
                     <input type="checkbox" id="select-all" class="rounded border-slate-300 focus:ring-indigo-200">
                 </th>
-                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Nama</th>
-                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Email</th>
-                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Role</th>
-                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Shift</th>
-                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Aksi</th>
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600 text-left">Nama</th>
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600 text-left">Email</th>
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600 text-left">Role</th>
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600 text-left">Shift</th>
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600 text-center">Aksi</th>
             </tr>
         </thead>
         <tbody>
             @forelse($users as $user)
             <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-                <td class="px-6 py-4">
+                <td class="px-6 py-4 text-left">
                     <input type="checkbox" name="selected_users[]" value="{{ $user->id }}" class="rounded border-slate-300 focus:ring-indigo-200">
                 </td>
-                <td class="px-6 py-4 text-sm text-slate-700">{{ $user->name }}</td>
-                <td class="px-6 py-4 text-sm text-slate-700">{{ $user->email }}</td>
-                <td class="px-6 py-4">
+                <td class="px-6 py-4 text-sm text-slate-700 text-left">{{ $user->name }}</td>
+                <td class="px-6 py-4 text-sm text-slate-700 text-left">{{ $user->email }}</td>
+                <td class="px-6 py-4 text-left">
                     @php
                         $roleClass = match ($user->role) {
                             'Admin' => 'bg-indigo-100 text-indigo-800',
@@ -32,12 +32,12 @@
                         {{ $user->role }}
                     </span>
                 </td>
-                <td class="px-6 py-4">
+                <td class="px-6 py-4 text-left">
                     <span class="inline-block text-xs font-semibold bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
                         {{ $user->shifts->pluck('name')->implode(', ') ?: ($user->shift ?? 'N/A') }}
                     </span>
                 </td>
-                <td class="px-6 py-4 space-x-4">
+                <td class="px-6 py-4 text-center space-x-4">
                     <a href="{{ route('admin.users.edit', $user) }}"
                        class="text-indigo-600 hover:text-indigo-800 text-sm font-semibold transition">Edit</a>
                     <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline">
