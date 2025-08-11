@@ -15,31 +15,31 @@ class UserController extends Controller
     {
         $query = User::with('shifts');
 
-        // Filter role
-        if ($request->filled('role') && strtolower($request->role) !== 'all') {
-            $query->where('role', $request->role);
+        $role = strtolower($request->get('role', 'all'));
+        if ($role !== 'all' && in_array($role, ['admin', 'operator', 'user'])) {
+            $query->where('role', $role);
         }
 
-        // Filter shift
-        if ($request->filled('shift') && strtolower($request->shift) !== 'all') {
-            $query->whereHas('shifts', function ($q) use ($request) {
-                $q->where('name', $request->shift);
+        $shift = strtolower($request->get('shift', 'all'));
+        if ($shift !== 'all') {
+            $query->whereHas('shifts', function ($q) use ($shift) {
+                $q->whereRaw('LOWER(name) = ?', [$shift]);
             });
         }
 
-        // Search by name or email
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-        $users = $query->orderBy('name', 'asc')->paginate(10);
+        $users = $query->orderBy('name')
+                       ->paginate(10)
+                       ->appends($request->query());
 
-        // Kirim juga data shift supaya dropdown filter bisa diisi
-        $shifts = Shift::orderBy('name', 'asc')->pluck('name');
+        $shifts = Shift::orderBy('name')->pluck('name');
 
         if ($request->ajax()) {
             return view('admin.users.table', compact('users'))->render();
@@ -52,39 +52,33 @@ class UserController extends Controller
     {
         $query = User::with('shifts');
 
-        // Filter role
-        if ($request->filled('role') && strtolower($request->role) !== 'all') {
-            $query->where('role', $request->role);
+        $role = strtolower($request->get('role', 'all'));
+        if ($role !== 'all' && in_array($role, ['admin', 'operator', 'user'])) {
+            $query->where('role', $role);
         }
 
-        // Filter shift
-        if ($request->filled('shift') && strtolower($request->shift) !== 'all') {
-            $query->whereHas('shifts', function ($q) use ($request) {
-                $q->where('name', $request->shift);
+        $shift = strtolower($request->get('shift', 'all'));
+        if ($shift !== 'all') {
+            $query->whereHas('shifts', function ($q) use ($shift) {
+                $q->whereRaw('LOWER(name) = ?', [$shift]);
             });
         }
 
-        // Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-        // Ambil semua data sesuai filter
-        $users = $query->orderBy('name', 'asc')->get();
+        $users = $query->orderBy('name')->get();
 
-        // Render PDF
         $pdf = Pdf::loadView('admin.users.pdf', compact('users'))
-            ->setPaper('a4', 'landscape');
+                  ->setPaper('a4', 'landscape');
 
-        // Download
         return $pdf->download('users-' . now()->format('YmdHis') . '.pdf');
     }
-
-
 
     public function create()
     {
@@ -94,17 +88,17 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users',
+            'name'     => 'required',
+            'email'    => 'required|email|unique:users',
             'password' => 'required|min:6',
-            'role' => 'required|in:admin,operator,user'
+            'role'     => 'required|in:admin,operator,user'
         ]);
 
         User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'role'     => $request->role,
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User created.');
@@ -118,20 +112,22 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,operator,user'
+            'name'     => 'required',
+            'email'    => 'required|email|unique:users,email,' . $user->id,
+            'role'     => 'required|in:admin,operator,user'
         ]);
 
-        $user->update([
-            'name' => $request->name,
+        $data = [
+            'name'  => $request->name,
             'email' => $request->email,
-            'role' => $request->role,
-        ]);
+            'role'  => $request->role,
+        ];
 
         if ($request->filled('password')) {
-            $user->update(['password' => Hash::make($request->password)]);
+            $data['password'] = Hash::make($request->password);
         }
+
+        $user->update($data);
 
         return redirect()->route('admin.users.index')->with('success', 'User updated.');
     }

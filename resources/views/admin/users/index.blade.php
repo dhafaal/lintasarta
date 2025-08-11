@@ -1,97 +1,61 @@
 @extends('layouts.app')
 
-@section('title', 'Users Table')
-
 @section('content')
-    <x-section-content title="Users" subtitle="Manage all users data and Export everywhere">
-        <x-slot:actions>
-            <form method="GET" action="{{ route('admin.users.index') }}" id="filter-form"
-                class="flex flex-wrap gap-4 items-center">
-                {{-- Role Dropdown --}}
-                <x-custom-dropdown name="role" :options="['All' => 'All', 'Admin' => 'Admin', 'Operator' => 'Operator', 'User' => 'User']" selected="{{ request('role', 'All') }}"
-                    placeholder="Select role" />
+<div class="p-6">
+    <h1 class="text-xl font-bold mb-4">User Management</h1>
 
-                {{-- Shift Dropdown --}}
-                <select name="shift" id="shift" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                    @foreach (['All', 'Pagi', 'Siang', 'Malam'] as $shift)
-                        <option value="{{ $shift }}" {{ request('shift', 'All') === $shift ? 'selected' : '' }}>
-                            {{ $shift }}
-                        </option>
-                    @endforeach
-                </select>
+    <form method="GET" action="{{ route('admin.users.index') }}" id="filter-form" class="flex gap-4 mb-4">
+        <select name="role" class="border rounded p-2">
+            @foreach (['All', 'Admin', 'Operator', 'User'] as $role)
+                <option value="{{ strtolower($role) }}" {{ strtolower(request('role', 'all')) === strtolower($role) ? 'selected' : '' }}>
+                    {{ $role }}
+                </option>
+            @endforeach
+        </select>
 
-                {{-- Search --}}
-                <input type="text" name="search" id="search" placeholder="Cari user..."
-                    value="{{ request('search') }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+        <select name="shift" class="border rounded p-2">
+            <option value="all" {{ request('shift', 'all') === 'all' ? 'selected' : '' }}>All Shifts</option>
+            @foreach ($shifts as $shift)
+                <option value="{{ strtolower($shift) }}" {{ strtolower(request('shift', 'all')) === strtolower($shift) ? 'selected' : '' }}>
+                    {{ $shift }}
+                </option>
+            @endforeach
+        </select>
 
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search user..."
+               class="border rounded p-2 flex-1">
 
-                {{-- Buttons --}}
-                <div class="flex gap-2">
-                    <a href="{{ route('admin.users.exportPdf', request()->query()) }}" class="btn btn-outline">Export</a>
-                    <a href="{{ route('admin.users.create') }}" class="btn btn-primary">Create User</a>
-                </div>
-            </form>
-        </x-slot:actions>
+        <a href="{{ route('admin.users.exportPdf', request()->query()) }}" class="bg-gray-200 p-2 rounded">Export PDF</a>
+        <a href="{{ route('admin.users.create') }}" class="bg-blue-500 text-white p-2 rounded">Create</a>
+    </form>
 
-        {{-- Include the users table partial --}}
-        <div id="users-table-container">
-            @include('admin.users.table')
-        </div>
+    <div id="users-table-container">
+        @include('admin.users.table', ['users' => $users])
+    </div>
+</div>
 
-        <!-- Rest of the page (bulk delete form, etc.) -->
-    </x-section-content>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('filter-form');
+    const tableContainer = document.getElementById('users-table-container');
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('filter-form');
-            const usersTableContainer = document.getElementById('users-table-container');
+    form.querySelectorAll('select').forEach(el => el.addEventListener('change', loadData));
+    form.querySelector('input[name="search"]').addEventListener('input', debounce(loadData, 400));
 
-            form.addEventListener('change', handleFilterChange);
-            document.getElementById('search').addEventListener('input', debounce(handleFilterChange, 500));
+    function loadData() {
+        const params = new URLSearchParams(new FormData(form)).toString();
+        fetch(form.action + '?' + params, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(res => res.text())
+            .then(html => tableContainer.innerHTML = html);
+    }
 
-            function handleFilterChange(e) {
-                usersTableContainer.innerHTML = '<div class="text-center py-10">Loading...</div>';
-                const formData = new FormData(form);
-                const params = new URLSearchParams(formData).toString();
-                const url = form.action + '?' + params;
-
-                fetch(url, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        usersTableContainer.innerHTML = html;
-                        initSelectAllCheckbox();
-                    })
-                    .catch(err => {
-                        usersTableContainer.innerHTML =
-                            '<div class="text-center text-red-600 py-10">Failed to load data.</div>';
-                        console.error('Fetch error:', err);
-                    });
-            }
-
-
-            function initSelectAllCheckbox() {
-                const selectAllCheckbox = document.getElementById('select-all');
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.addEventListener('click', () => {
-                        const checkboxes = document.querySelectorAll('input[name="selected_users[]"]');
-                        checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
-                    });
-                }
-            }
-
-            function debounce(fn, delay) {
-                let timer;
-                return function(...args) {
-                    clearTimeout(timer);
-                    timer = setTimeout(() => fn.apply(this, args), delay);
-                };
-            }
-            initSelectAllCheckbox();
-
-        });
-    </script>
+    function debounce(fn, delay) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+});
+</script>
 @endsection
