@@ -1,48 +1,50 @@
-<div class="overflow-x-auto rounded-xl mt-4" id="users-table-wrapper">
-    <table class="min-w-full bg-white border border-gray-200 shadow-md">
-        <thead class="bg-gray-100 text-left">
-            <tr class="rounded-t-xl">
-                <th class="rounded-tl-xl px-4 py-3 uppercase font-base text-gray-500">
-                    <input type="checkbox" id="select-all">
+<div class="overflow-x-auto rounded-xl" id="users-table-wrapper">
+    <table class="min-w-full bg-white">
+        <thead class="bg-slate-50">
+            <tr>
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600">
+                    <input type="checkbox" id="select-all" class="rounded border-slate-300 focus:ring-indigo-200">
                 </th>
-                <th class="px-4 py-3 uppercase font-base text-gray-500">Nama</th>
-                <th class="px-4 py-3 uppercase font-base text-gray-500">Email</th>
-                <th class="px-4 py-3 uppercase font-base text-gray-500">Role</th>
-                <th class="px-4 py-3 uppercase font-base text-gray-500">Shift</th>
-                <th class="rounded-tr-xl px-4 py-3 uppercase font-base text-gray-500">Aksi</th>
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Nama</th>
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Email</th>
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Role</th>
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Shift</th>
+                <th class="px-6 py-4 text-sm font-semibold text-slate-600">Aksi</th>
             </tr>
         </thead>
         <tbody>
             @forelse($users as $user)
-            <tr class="border-b border-gray-200">
-                <td class="p-4">
-                    <input type="checkbox" name="selected_users[]" value="{{ $user->id }}">
+            <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                <td class="px-6 py-4">
+                    <input type="checkbox" name="selected_users[]" value="{{ $user->id }}" class="rounded border-slate-300 focus:ring-indigo-200">
                 </td>
-                <td class="p-4">{{ $user->name }}</td>
-                <td class="p-4">{{ $user->email }}</td>
-                <td class="p-4">
+                <td class="px-6 py-4 text-sm text-slate-700">{{ $user->name }}</td>
+                <td class="px-6 py-4 text-sm text-slate-700">{{ $user->email }}</td>
+                <td class="px-6 py-4">
                     @php
                         $roleClass = match ($user->role) {
-                            'Admin' => 'bg-green-100 text-green-800',
-                            'Operator' => 'bg-yellow-100 text-yellow-800',
-                            default => 'bg-gray-100 text-gray-800',
+                            'Admin' => 'bg-indigo-100 text-indigo-800',
+                            'Operator' => 'bg-amber-100 text-amber-800',
+                            default => 'bg-slate-100 text-slate-800',
                         };
                     @endphp
                     <span class="inline-block text-xs font-semibold rounded-full px-3 py-1 {{ $roleClass }}">
                         {{ $user->role }}
                     </span>
                 </td>
-                <td class="p-4">
-                    <span class="inline-block text-xs font-medium bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-                        {{ $user->shift }}
+                <td class="px-6 py-4">
+                    <span class="inline-block text-xs font-semibold bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                        {{ $user->shifts->pluck('name')->implode(', ') ?: ($user->shift ?? 'N/A') }}
                     </span>
                 </td>
-                <td class="p-4 space-x-2">
-                    <a href="{{ route('admin.users.edit', $user) }}" class="font-semibold text-blue-700">Edit</a>
+                <td class="px-6 py-4 space-x-4">
+                    <a href="{{ route('admin.users.edit', $user) }}"
+                       class="text-indigo-600 hover:text-indigo-800 text-sm font-semibold transition">Edit</a>
                     <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" onclick="return confirm('Hapus user ini?')" class="font-semibold text-red-600">
+                        <button type="submit" onclick="return confirm('Hapus user ini?')"
+                                class="text-red-600 hover:text-red-800 text-sm font-semibold transition">
                             Delete
                         </button>
                     </form>
@@ -50,7 +52,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="text-center px-4 py-2">Tidak ada data.</td>
+                <td colspan="6" class="text-center px-6 py-6 text-slate-500 text-sm">Tidak ada data.</td>
             </tr>
             @endforelse
         </tbody>
