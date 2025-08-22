@@ -2,16 +2,13 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
-
 
     protected $fillable = [
         'name',
@@ -25,7 +22,6 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-
     protected function casts(): array
     {
         return [
@@ -33,16 +29,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function shift()
-    {
-        return $this->belongsTo(Shift::class);
-    }
 
+    // Relasi: 1 user punya banyak schedule
     public function schedules()
     {
         return $this->hasMany(Schedules::class);
     }
 
+    // Relasi: 1 user bisa punya banyak shift lewat schedules
     public function shifts()
     {
         return $this->belongsToMany(Shift::class, 'schedules', 'user_id', 'shift_id');
