@@ -15,6 +15,12 @@ class UserController extends Controller
     {
         $query = User::with('shifts');
 
+        $users = \App\Models\User::all();
+        $countAdmin    = \App\Models\User::where('role', 'admin')->count();
+        $countOperator = \App\Models\User::where('role', 'operator')->count();
+        $countUser     = \App\Models\User::where('role', 'user')->count();
+
+        return view('admin.users.index', compact('users', 'countAdmin', 'countOperator', 'countUser'));
         $role = strtolower($request->get('role', 'all'));
         if ($role !== 'all' && in_array($role, ['admin', 'operator', 'user'])) {
             $query->where('role', $role);
