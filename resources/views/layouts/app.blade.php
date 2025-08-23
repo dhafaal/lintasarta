@@ -13,12 +13,12 @@
 <body class="bg-sky-50 min-h-screen font-sans antialiased">
 
     <!-- Updated Alpine.js data to persist sidebar state in localStorage -->
-    <div class="flex min-h-screen" x-data="{ 
+    <div class="flex min-h-screen" x-data="{
         sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
         usersExpanded: false,
         schedulesExpanded: false,
         shiftsExpanded: false,
-        
+
         toggleSidebar() {
             this.sidebarCollapsed = !this.sidebarCollapsed;
             localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
@@ -41,13 +41,13 @@
                             <p class="text-xs text-sky-200 font-mono">v1.0.0</p>
                         </div>
                     </div>
-                    
+
                     <!-- Repositioned toggle button for collapsed state -->
-                    <button @click="toggleSidebar()" 
+                    <button @click="toggleSidebar()"
                             :class="sidebarCollapsed ? 'mx-auto' : ''"
                             class="p-2 rounded-md hover:bg-sky-500 text-white transition-colors duration-150">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   :d="sidebarCollapsed ? 'M9 5l7 7-7 7' : 'M15 19l-7-7 7-7'"></path>
                         </svg>
                     </button>
@@ -61,7 +61,7 @@
                         class="group flex items-center text-sm font-medium rounded-md transition-all duration-150 relative
                         {{ request()->routeIs('admin.dashboard') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
                         :title="sidebarCollapsed ? 'Dashboard' : ''">
-                        <svg class="w-5 h-5 {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}" 
+                        <svg class="w-5 h-5 {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}"
                              :class="sidebarCollapsed ? 'mr-0' : 'mr-3'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
@@ -77,18 +77,18 @@
                                 class="group flex items-center w-full text-sm font-medium rounded-md transition-all duration-150 relative
                                 {{ request()->routeIs('admin.users.*') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
                                 :title="sidebarCollapsed ? 'Users' : ''">
-                            <svg class="w-5 h-5 {{ request()->routeIs('admin.users.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}" 
+                            <svg class="w-5 h-5 {{ request()->routeIs('admin.users.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}"
                                  :class="sidebarCollapsed ? 'mr-0' : 'mr-3'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
                             </svg>
                             <span x-show="!sidebarCollapsed" x-transition class="flex-1 text-left">USERS</span>
-                            <svg x-show="!sidebarCollapsed" :class="usersExpanded ? 'rotate-90' : ''" 
-                                 class="w-4 h-4 text-sky-200 group-hover:text-white transition-transform duration-150" 
+                            <svg x-show="!sidebarCollapsed" :class="usersExpanded ? 'rotate-90' : ''"
+                                 class="w-4 h-4 text-sky-200 group-hover:text-white transition-transform duration-150"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
                         </button>
-                        
+
                         <!-- Users Submenu -->
                         <div x-show="usersExpanded && !sidebarCollapsed" x-transition class="ml-6 space-y-1">
                             <a href="{{ route('admin.users.index') }}"
@@ -112,18 +112,18 @@
                                 class="group flex items-center w-full text-sm font-medium rounded-md transition-all duration-150 relative
                                 {{ request()->routeIs('admin.schedules.*') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
                                 :title="sidebarCollapsed ? 'Schedules' : ''">
-                            <svg class="w-5 h-5 {{ request()->routeIs('admin.schedules.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}" 
+                            <svg class="w-5 h-5 {{ request()->routeIs('admin.schedules.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}"
                                  :class="sidebarCollapsed ? 'mr-0' : 'mr-3'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                             </svg>
                             <span x-show="!sidebarCollapsed" x-transition class="flex-1 text-left">SCHEDULES</span>
-                            <svg x-show="!sidebarCollapsed" :class="schedulesExpanded ? 'rotate-90' : ''" 
-                                 class="w-4 h-4 text-sky-200 group-hover:text-white transition-transform duration-150" 
+                            <svg x-show="!sidebarCollapsed" :class="schedulesExpanded ? 'rotate-90' : ''"
+                                 class="w-4 h-4 text-sky-200 group-hover:text-white transition-transform duration-150"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
                         </button>
-                        
+
                         <!-- Schedules Submenu -->
                         <div x-show="schedulesExpanded && !sidebarCollapsed" x-transition class="ml-6 space-y-1">
                             <a href="{{ route('admin.schedules.index') }}"
@@ -147,18 +147,18 @@
                                 class="group flex items-center w-full text-sm font-medium rounded-md transition-all duration-150 relative
                                 {{ request()->routeIs('admin.shifts.*') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
                                 :title="sidebarCollapsed ? 'Shifts' : ''">
-                            <svg class="w-5 h-5 {{ request()->routeIs('admin.shifts.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}" 
+                            <svg class="w-5 h-5 {{ request()->routeIs('admin.shifts.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}"
                                  :class="sidebarCollapsed ? 'mr-0' : 'mr-3'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             <span x-show="!sidebarCollapsed" x-transition class="flex-1 text-left">SHIFTS</span>
-                            <svg x-show="!sidebarCollapsed" :class="shiftsExpanded ? 'rotate-90' : ''" 
-                                 class="w-4 h-4 text-sky-200 group-hover:text-white transition-transform duration-150" 
+                            <svg x-show="!sidebarCollapsed" :class="shiftsExpanded ? 'rotate-90' : ''"
+                                 class="w-4 h-4 text-sky-200 group-hover:text-white transition-transform duration-150"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
                         </button>
-                        
+
                         <!-- Shifts Submenu -->
                         <div x-show="shiftsExpanded && !sidebarCollapsed" x-transition class="ml-6 space-y-1">
                             <a href="{{ route('admin.shifts.index') }}"
@@ -180,7 +180,7 @@
                         class="group flex items-center text-sm font-medium rounded-md transition-all duration-150 relative
                         {{ request()->is('calender') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
                         :title="sidebarCollapsed ? 'Calendar' : ''">
-                        <svg class="w-5 h-5 {{ request()->is('calender') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}" 
+                        <svg class="w-5 h-5 {{ request()->is('calender') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}"
                              :class="sidebarCollapsed ? 'mr-0' : 'mr-3'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"></path>
                         </svg>
@@ -212,7 +212,7 @@
                         <h1 class="text-2xl font-semibold text-sky-900">@yield('title')</h1>
                         <p class="text-sm text-sky-600 mt-1">Manage your application</p>
                     </div>
-                    
+
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center space-x-3">
                             <div class="w-8 h-8 bg-sky-600 rounded-full flex items-center justify-center">
@@ -222,7 +222,7 @@
                             </div>
                             <span class="text-sm font-medium text-sky-700">Admin</span>
                         </div>
-                        
+
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button type="submit"

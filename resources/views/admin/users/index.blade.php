@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Daftar Users')
+
 @section('content')
 <div class="min-h-screen bg-white sm:p-6 lg:p-8">
     <div class="max-w-7xl mx-auto space-y-8">
@@ -16,8 +18,8 @@
                     <p class="text-gray-600 mt-1">Kelola semua pengguna dalam sistem</p>
                 </div>
             </div>
-            
-            <a href="{{ route('admin.users.create') }}" 
+
+            <a href="{{ route('admin.users.create') }}"
                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-lg hover:shadow-xl">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -42,7 +44,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="bg-white border-2 border-sky-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
@@ -57,7 +59,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="bg-white border-2 border-sky-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
@@ -73,7 +75,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="bg-white border-2 border-sky-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
@@ -108,7 +110,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50 border-b-2 border-gray-200">
@@ -161,7 +163,7 @@
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap text-right">
                                     <div class="flex items-center justify-end space-x-3">
-                                        <a href="{{ route('admin.users.edit', $user->id) }}" 
+                                        <a href="{{ route('admin.users.edit', $user->id) }}"
                                            class="inline-flex items-center px-4 py-2 bg-sky-100 hover:bg-sky-200 text-sky-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -171,7 +173,7 @@
                                         <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" 
+                                            <button type="submit"
                                                     onclick="return confirm('Yakin ingin menghapus user {{ $user->name }}? Tindakan ini tidak dapat dibatalkan.')"
                                                     class="inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
                                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,7 +196,7 @@
                                         </div>
                                         <h3 class="text-xl font-bold text-gray-900 mb-2">Belum ada user</h3>
                                         <p class="text-gray-600 mb-6 max-w-sm">Mulai dengan membuat user pertama untuk mengakses sistem</p>
-                                        <a href="{{ route('admin.users.create') }}" 
+                                        <a href="{{ route('admin.users.create') }}"
                                            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg">
                                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
