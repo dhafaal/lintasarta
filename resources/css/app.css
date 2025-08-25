@@ -1,36 +1,34 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to sky-inspired Vercel theme colors */
-  --background: oklch(0.99 0.005 200); /* Very light sky background */
-  --foreground: oklch(0.25 0.015 220); /* Deep blue-gray text */
-  --card: oklch(0.98 0.008 200); /* Subtle sky card background */
+  --background: oklch(0.99 0.005 200);
+  --foreground: oklch(0.25 0.015 220);
+  --card: oklch(0.98 0.008 200);
   --card-foreground: oklch(0.25 0.015 220);
   --popover: oklch(0.99 0.005 200);
   --popover-foreground: oklch(0.25 0.015 220);
-  --primary: oklch(0.55 0.15 200); /* Sky-500 primary */
+  --primary: oklch(0.55 0.15 200);
   --primary-foreground: oklch(0.99 0.005 200);
-  --secondary: oklch(0.95 0.02 200); /* Light sky secondary */
+  --secondary: oklch(0.95 0.02 200);
   --secondary-foreground: oklch(0.35 0.02 220);
   --muted: oklch(0.96 0.015 200);
   --muted-foreground: oklch(0.45 0.02 220);
-  --accent: oklch(0.92 0.03 200); /* Sky accent */
+  --accent: oklch(0.92 0.03 200);
   --accent-foreground: oklch(0.35 0.02 220);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.99 0.005 200);
-  --border: oklch(0.88 0.02 200); /* Subtle sky border */
+  --border: oklch(0.88 0.02 200);
   --input: oklch(0.98 0.008 200);
-  --ring: oklch(0.55 0.15 200 / 0.3); /* Sky focus ring */
+  --ring: oklch(0.55 0.15 200 / 0.3);
   --chart-1: oklch(0.55 0.15 200);
   --chart-2: oklch(0.45 0.12 180);
   --chart-3: oklch(0.65 0.18 220);
   --chart-4: oklch(0.35 0.08 200);
   --chart-5: oklch(0.75 0.2 240);
-  --radius: 0.75rem; /* Increased for modern feel */
-  --sidebar: oklch(0.97 0.01 200); /* Light sky sidebar */
+  --radius: 0.75rem;
+  --sidebar: oklch(0.97 0.01 200);
   --sidebar-foreground: oklch(0.25 0.015 220);
   --sidebar-primary: oklch(0.55 0.15 200);
   --sidebar-primary-foreground: oklch(0.99 0.005 200);
@@ -40,8 +38,8 @@
   --sidebar-ring: oklch(0.55 0.15 200 / 0.3);
 }
 
+/* Dark mode */
 .dark {
-  /* Dark mode with sky accents */
   --background: oklch(0.08 0.01 220);
   --foreground: oklch(0.95 0.01 200);
   --card: oklch(0.1 0.015 220);
@@ -71,6 +69,7 @@
   --sidebar-ring: oklch(0.65 0.18 200 / 0.4);
 }
 
+/* Theme mapping */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -110,6 +109,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Base layer */
 @layer base {
   * {
     @apply border-border outline-ring/50;

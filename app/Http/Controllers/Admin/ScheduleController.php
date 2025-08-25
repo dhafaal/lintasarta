@@ -6,7 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Schedules;
 use App\Models\Shift;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use App\Exports\ScheduleReportExport;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 class ScheduleController extends Controller
 {
@@ -124,5 +130,54 @@ class ScheduleController extends Controller
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Schedule berhasil dihapus.');
+    }
+
+    public function calendarView()
+    {
+        return view('admin.schedules.calendar');
+    }
+
+    // Data untuk FullCalendar (JSON)
+    public function calendarData()
+    {
+        $schedules = Schedules::with(['user', 'shift'])->get();
+
+        $events = $schedules->map(function ($schedule) {
+            $date = $schedule->schedule_date;
+
+            // Tangani shift malam (end_time < start_time → berarti selesai besok)
+            $endDate = $date;
+            if (\Carbon\Carbon::parse($schedule->shift->end_time)
+                ->lt(\Carbon\Carbon::parse($schedule->shift->start_time))
+            ) {
+                $endDate = \Carbon\Carbon::parse($date)->addDay()->format('Y-m-d');
+            }
+
+            return [
+                'id'    => $schedule->id,
+                'title' => $schedule->user->name . ' - ' . $schedule->shift->name,
+                'start' => $date . 'T' . $schedule->shift->start_time,
+                'end'   => $endDate . 'T' . $schedule->shift->end_time,
+                'allDay' => false, // ❌ jangan pakai all-day
+            ];
+        });
+
+        return response()->json($events);
+    }
+
+     // View report & export
+    public function report()
+    {
+        return view('admin.schedules.report');
+    }
+
+    // Export Excel
+    public function exportReport(Request $request)
+    {
+        $month = $request->input('month', now()->month);
+        $year  = $request->input('year', now()->year);
+
+        $fileName = "Report_Jadwal_{$month}_{$year}.xlsx";
+        return Excel::download(new ScheduleReportExport($month, $year), $fileName);
     }
 }
