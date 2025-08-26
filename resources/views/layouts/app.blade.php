@@ -24,9 +24,9 @@
             localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
         }
     }">
-        <!-- Updated sidebar with sky theme and collapse functionality -->
+        <!-- Updated sidebar with sky theme, fixed position, and collapse functionality -->
         <aside :class="sidebarCollapsed ? 'w-16' : 'w-72'"
-            class="bg-sky-600 border-r border-sky-500 transition-all duration-300 ease-in-out relative">
+            class="bg-sky-600 border-r border-sky-500 transition-all duration-300 ease-in-out fixed top-0 left-0 h-screen z-10">
             <!-- Updated padding and layout for better collapsed state -->
             <div :class="sidebarCollapsed ? 'p-2' : 'p-6'">
                 <!-- Added collapse toggle button -->
@@ -225,8 +225,8 @@
             </div>
         </aside>
 
-        <!-- Right Content Area -->
-        <div class="flex-1 flex flex-col min-h-screen">
+        <!-- Right Content Area with margin to account for fixed sidebar -->
+        <div class="flex-1 flex flex-col min-h-screen" :class="sidebarCollapsed ? 'ml-16' : 'ml-72'">
             <!-- Updated header with sky theme -->
             <header class="bg-white border-b border-sky-200">
                 <div class="px-6 py-4 flex justify-between items-center">

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login to Dashboard</title>
   @vite(['resources/css/app.css', 'resources/js/app.js'])
-
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @keyframes shake {
       10%, 90% { transform: translateX(-2px); }
@@ -16,32 +16,18 @@
     }
 
     .animate-shake { animation: shake 0.6s; }
-
-    .fade-scale {
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-    .fade-scale.hidden {
-      opacity: 0;
-      transform: scale(0.9);
-      display: none;
-    }
-    .fade-scale.show {
-      opacity: 1;
-      transform: scale(1);
-    }
   </style>
 </head>
 
-<body class="min-h-screen bg-radial from-sky-200 via-sky-100 to-white flex items-center justify-center overflow-hidden">
+<body class="min-h-screen bg-radial from-sky-300 via-sky-100 to-white flex items-center justify-center overflow-hidden relative">
 
-  <div id="loginBox" class="bg-white border border-gray-200 shadow-xl rounded-2xl px-8 py-10 w-full max-w-md">
-    
-    {{-- Logo --}}
+  <div id="loginBox" class="bg-white/90 backdrop-blur-lg border border-sky-200 shadow-2xl rounded-2xl p-8 w-full max-w-md">
+    <!-- Logo -->
     <div class="flex justify-center mb-6">
       <img src="/Logo-Lintasarta-new.webp" alt="Logo" class="h-20">
     </div>
 
-    {{-- Error message dari server --}}
+    <!-- Error message dari server -->
     @if ($errors->any())
       <div id="serverError" class="mb-4 p-3 rounded-lg bg-red-100 text-red-600 text-sm animate-shake">
         {{ $errors->first() }}
@@ -51,39 +37,34 @@
     <form id="loginForm" method="POST" action="{{ route('login') }}" class="space-y-6" novalidate>
       @csrf
 
-      {{-- Email --}}
+      <!-- Email -->
       <div>
-        <label for="email" class="block text-sm font-semibold text-gray-600 mb-1">Email Address</label>
+        <label for="email" class="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
         <input type="email" name="email" id="email" value="{{ old('email') }}"
                placeholder="Enter your email"
-               class="w-full pl-3 pr-4 py-2 border border-gray-300 rounded-lg
-                      focus:outline-none focus:ring-2 focus:ring-blue-300
-                      bg-gray-100 transition">
+               class="w-full px-4 py-2 border border-sky-300 rounded-lg bg-sky-50/50 focus:outline-none focus:ring-2 focus:ring-sky-400 hover:shadow-md transition duration-300">
         <p id="emailError" class="hidden text-sm text-red-600 mt-1"></p>
       </div>
 
-      {{-- Password --}}
+      <!-- Password -->
       <div>
-        <label for="password" class="block text-sm font-semibold text-gray-600 mb-1">Password</label>
+        <label for="password" class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
         <div class="relative">
           <input type="password" name="password" id="password" placeholder="Enter your password"
-                 class="w-full pl-3 pr-14 py-2 border border-gray-300 rounded-lg
-                        focus:outline-none focus:ring-2 focus:ring-blue-300
-                        bg-gray-100 transition">
-
+                 class="w-full px-4 pr-12 py-2 border border-sky-300 rounded-lg bg-sky-50/50 focus:outline-none focus:ring-2 focus:ring-sky-400 hover:shadow-md transition duration-300">
           <button type="button" id="togglePassword"
-                  class="absolute inset-y-0 right-3 flex items-center justify-center text-gray-400 hover:text-gray-600 transition">
-            {{-- Eye open --}}
-            <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                  class="absolute inset-y-0 right-2 flex items-center justify-center text-gray-500 hover:text-sky-600 transition w-12 h-full">
+            <!-- Eye open -->
+            <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                 class="lucide lucide-eye fade-scale show">
+                 class="lucide lucide-eye transition-all duration-300 ease-in-out opacity-100 scale-100">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
               <circle cx="12" cy="12" r="3" />
             </svg>
-            {{-- Eye closed --}}
-            <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+            <!-- Eye closed -->
+            <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                 class="lucide lucide-eye-off fade-scale hidden">
+                 class="lucide lucide-eye-off transition-all duration-300 ease-in-out opacity-0 scale-90 hidden">
               <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12
                        a21.86 21.86 0 0 1 5.17-6.88M9.9 4.24
                        A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8
@@ -96,22 +77,21 @@
         <p id="passwordError" class="hidden text-sm text-red-600 mt-1"></p>
       </div>
 
-      {{-- Remember Me + Forgot Password --}}
+      <!-- Remember Me + Forgot Password -->
       <div class="flex items-center justify-between text-sm">
-        <label class="flex items-center gap-2 text-gray-600">
-          <input type="checkbox" name="remember" class="rounded border-gray-300"
+        <label class="flex items-center gap-2 text-gray-700">
+          <input type="checkbox" name="remember" class="rounded border-sky-300 text-sky-500 focus:ring-sky-400"
                  {{ old('remember') ? 'checked' : '' }}>
           Remember me
         </label>
-        <a href="{{ route('password.request') }}" class="text-blue-500 hover:underline font-medium">
+        <a href="{{ route('password.request') }}" class="text-sky-500 hover:underline font-medium transition">
           Forgot your password?
         </a>
       </div>
 
-      {{-- Submit --}}
+      <!-- Submit -->
       <button id="submitBtn" type="submit"
-              class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 rounded-lg
-                     font-semibold text-lg shadow-sm hover:opacity-80 transition flex justify-center items-center gap-2">
+              class="w-full bg-[#1E90FF] text-white py-2 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg hover:bg-[#1E90FF]/90 transition duration-300 flex justify-center items-center gap-2">
         <span id="btnText">Login</span>
         <svg id="loadingSpinner" class="hidden animate-spin h-5 w-5 text-white"
              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -130,7 +110,7 @@
     const btnText = document.getElementById('btnText');
     const loadingSpinner = document.getElementById('loadingSpinner');
 
-    // toggle show/hide password
+    // Toggle show/hide password with animation
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
     const eyeOpen = document.getElementById('eyeOpen');
@@ -141,17 +121,17 @@
       passwordInput.type = isPassword ? 'text' : 'password';
 
       if (isPassword) {
-        eyeOpen.classList.add('hidden');
+        eyeOpen.classList.add('opacity-0', 'scale-90', 'hidden');
         eyeClosed.classList.remove('hidden');
-        setTimeout(() => eyeClosed.classList.add('show'), 10);
+        setTimeout(() => eyeClosed.classList.remove('opacity-0', 'scale-90'), 10);
       } else {
-        eyeClosed.classList.add('hidden');
+        eyeClosed.classList.add('opacity-0', 'scale-90', 'hidden');
         eyeOpen.classList.remove('hidden');
-        setTimeout(() => eyeOpen.classList.add('show'), 10);
+        setTimeout(() => eyeOpen.classList.remove('opacity-0', 'scale-90'), 10);
       }
     });
 
-    // custom validation
+    // Custom validation
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
       let valid = true;
@@ -181,7 +161,7 @@
         return;
       }
 
-      // tampilkan spinner
+      // Tampilkan spinner
       btnText.textContent = "Logging in...";
       loadingSpinner.classList.remove('hidden');
       submitBtn.disabled = true;
