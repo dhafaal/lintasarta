@@ -8,8 +8,7 @@ use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\DB;
 use App\Exports\ScheduleReportExport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -165,7 +164,7 @@ class ScheduleController extends Controller
         return response()->json($events);
     }
 
-     // View report & export
+    // View report & export
     public function report()
     {
         return view('admin.schedules.report');
@@ -179,5 +178,55 @@ class ScheduleController extends Controller
 
         $fileName = "Report_Jadwal_{$month}_{$year}.xlsx";
         return Excel::download(new ScheduleReportExport($month, $year), $fileName);
+    }
+
+
+    public function bulkCreate()
+    {
+        $users  = User::orderBy('name')->get();
+        $shifts = Shift::orderBy('name')->get();
+
+        return view('admin.schedules.bulk-create', compact('users', 'shifts'));
+    }
+
+    public function bulkStore(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'month'   => 'required|integer|min:1|max:12',
+            'year'    => 'required|integer|min:2000',
+            'shifts'  => 'required|array',
+            'shifts.*' => 'nullable|exists:shifts,id', // validasi per item
+        ]);
+
+        $userId = $request->user_id;
+        $month  = $request->month;
+        $year   = $request->year;
+
+        DB::transaction(function () use ($request, $userId, $month, $year) {
+            foreach ($request->shifts as $day => $shiftId) {
+                if (!$shiftId) continue; // kalau kosong, skip
+
+                try {
+                    $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
+
+                    Schedules::updateOrCreate(
+                        [
+                            'user_id'       => $userId,
+                            'schedule_date' => $date,
+                        ],
+                        [
+                            'shift_id' => $shiftId,
+                        ]
+                    );
+                } catch (\Exception $e) {
+                    // skip kalau tanggal tidak valid (misal 30 Februari)
+                    continue;
+                }
+            }
+        });
+
+        return redirect()->route('admin.schedules.index')
+            ->with('success', 'Jadwal bulanan berhasil disimpan.');
     }
 }

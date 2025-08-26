@@ -22,7 +22,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         // Users (Resource + tambahan fitur export/bulk)
         Route::resource('users', UserController::class);
         Route::get('users/{user}/history', [\App\Http\Controllers\Admin\UserController::class, 'history'])
-        ->name('users.history');
+            ->name('users.history');
 
         // Optional: tambahan fitur export/bulk delete
         Route::delete('users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulkDelete');
@@ -34,6 +34,13 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
 
         // Schedules
         Route::resource('schedules', ScheduleController::class);
+        Route::resource('schedules', \App\Http\Controllers\Admin\ScheduleController::class);
+        Route::post('schedules/bulk-store', [\App\Http\Controllers\Admin\ScheduleController::class, 'bulkStore'])->name('schedules.bulkStore');
+        Route::get('calendar', [\App\Http\Controllers\Admin\ScheduleController::class, 'calendarView'])->name('calendar.view');
+        Route::get('calendar/data', [\App\Http\Controllers\Admin\ScheduleController::class, 'calendarData'])->name('calendar.data');
+        Route::get('calendar/report', [\App\Http\Controllers\Admin\ScheduleController::class, 'report'])->name('calendar.report');
+        Route::get('calendar/export', [\App\Http\Controllers\Admin\ScheduleController::class, 'exportReport'])->name('calendar.export');
+        Route::post('schedules/bulk-store', [ScheduleController::class, 'bulkStore'])->name('schedules.bulkStore');
 
         // Calendar tambahan
         Route::get('calendar', [ScheduleController::class, 'calendarView'])->name('calendar.view');
@@ -66,7 +73,6 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':User'])
         Route::get('calendar', [CalendarController::class, 'calendarView'])->name('calendar.view');
         Route::get('calendar/data', [CalendarController::class, 'calendarData'])->name('calendar.data');
     });
-
 
 // ======= AUTH =======
 Route::get('/', function () {
