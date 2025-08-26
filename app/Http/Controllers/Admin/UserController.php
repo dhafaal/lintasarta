@@ -8,42 +8,38 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Schedules;
+use Carbon\Carbon;
+
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::with('shifts');
+        $query = User::with('shifts'); // Filter keyword (nama/email)
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
 
-        $users = \App\Models\User::all();
-        $countAdmin    = \App\Models\User::where('role', 'admin')->count();
-        $countOperator = \App\Models\User::where('role', 'operator')->count();
-        $countUser     = \App\Models\User::where('role', 'user')->count();
+        // Filter role
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        $users = $query->latest()->paginate(10)->withQueryString();
+
+        $countAdmin = User::where('role', 'admin')->count();
+        $countOperator = User::where('role', 'operator')->count();
+        $countUser = User::where('role', 'user')->count();
 
         return view('admin.users.index', compact('users', 'countAdmin', 'countOperator', 'countUser'));
-        $role = strtolower($request->get('role', 'all'));
-        if ($role !== 'all' && in_array($role, ['admin', 'operator', 'user'])) {
-            $query->where('role', $role);
-        }
-
-        $shift = strtolower($request->get('shift', 'all'));
-        if ($shift !== 'all') {
-            $query->whereHas('shifts', function ($q) use ($shift) {
-                $q->whereRaw('LOWER(name) = ?', [$shift]);
-            });
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
 
         $users = $query->orderBy('name')
-                       ->paginate(10)
-                       ->appends($request->query());
+            ->paginate(10)
+            ->appends($request->query());
 
         $shifts = Shift::orderBy('name')->pluck('name');
 
@@ -74,14 +70,14 @@ class UserController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
         $users = $query->orderBy('name')->get();
 
         $pdf = Pdf::loadView('admin.users.pdf', compact('users'))
-                  ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape');
 
         return $pdf->download('users-' . now()->format('YmdHis') . '.pdf');
     }
@@ -117,30 +113,47 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        // Validasi input
         $request->validate([
-            'name'     => 'required',
-            'email'    => 'required|email|unique:users,email,' . $user->id,
-            'role'     => 'required|in:admin,operator,user'
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8',
+            'role' => 'required|in:admin,operator,user',
         ]);
 
-        $data = [
-            'name'  => $request->name,
-            'email' => $request->email,
-            'role'  => $request->role,
-        ];
+        // Update data user
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->role = $request->role;
 
         if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
+            $user->password = Hash::make($request->password);
         }
 
-        $user->update($data);
+        $user->save();
 
-        return redirect()->route('admin.users.index')->with('success', 'User updated.');
+        return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui!');
     }
+
 
     public function destroy(User $user)
     {
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'User deleted.');
     }
+
+    public function history(User $user)
+    {
+        $today = Carbon::today();
+
+        // Ambil semua schedule user yang sudah lewat
+        $histories = Schedules::with('shift')
+            ->where('user_id', $user->id)
+            ->whereDate('schedule_date', '<', $today)
+            ->orderBy('schedule_date', 'desc')
+            ->paginate(10);
+
+        return view('admin.users.history', compact('user', 'histories'));
+    }
+
 }
