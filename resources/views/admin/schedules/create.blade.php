@@ -15,8 +15,65 @@
             </a>
         </div>
 
-        <!-- Card Form -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 space-y-6">
+        <!-- Tabs -->
+        <div class="flex gap-4 border-b pb-2">
+            <button id="tab-single" class="tab-button font-semibold text-sky-700 border-b-2 border-sky-500">Tambah Satu Jadwal</button>
+            <button id="tab-bulk" class="tab-button font-semibold text-gray-500 hover:text-sky-700">Tambah Jadwal Bulanan</button>
+        </div>
+
+        <!-- Form Single -->
+        <div id="form-single" class="bg-white rounded-2xl shadow-lg p-6 space-y-6">
+            <form action="{{ route('admin.schedules.bulkStore') }}" method="POST">
+                @csrf
+                <input type="hidden" name="single" value="1">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <!-- User -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">👤 Pilih User</label>
+                        <select name="single_user_id" class="w-full border rounded-xl p-2 focus:ring-2 focus:ring-sky-400">
+                            <option value="">-- Pilih User --</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('single_user_id')
+                            <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <!-- Shift -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">🕒 Pilih Shift</label>
+                        <select name="single_shift_id" class="w-full border rounded-xl p-2 focus:ring-2 focus:ring-sky-400">
+                            <option value="">-- Pilih Shift --</option>
+                            @foreach($shifts as $shift)
+                                <option value="{{ $shift->id }}">{{ $shift->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('single_shift_id')
+                            <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <!-- Tanggal -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">📆 Tanggal</label>
+                        <input type="date" name="single_schedule_date"
+                               class="w-full border rounded-xl p-2 focus:ring-2 focus:ring-sky-400">
+                        @error('single_schedule_date')
+                            <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+                <div class="flex justify-end mt-8">
+                    <button type="submit"
+                        class="px-6 py-3 rounded-xl bg-sky-600 text-white font-semibold shadow hover:bg-sky-700 transition">
+                        💾 Simpan Jadwal
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Form Bulk -->
+        <div id="form-bulk" class="bg-white rounded-2xl shadow-lg p-6 space-y-6 hidden">
             <form action="{{ route('admin.schedules.bulkStore') }}" method="POST">
                 @csrf
 
@@ -31,8 +88,8 @@
                                 <option value="{{ $user->id }}">{{ $user->name }}</option>
                             @endforeach
                         </select>
-                        @error('user_id') 
-                            <p class="text-sm text-red-500 mt-1">{{ $message }}</p> 
+                        @error('user_id')
+                            <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -51,7 +108,7 @@
                     <!-- Tahun -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">📆 Tahun</label>
-                        <input type="number" id="year-select" name="year" value="{{ date('Y') }}" 
+                        <input type="number" id="year-select" name="year" value="{{ date('Y') }}"
                                class="w-full border rounded-xl p-2 focus:ring-2 focus:ring-sky-400" />
                     </div>
 
@@ -104,12 +161,36 @@
                 </div>
             </form>
         </div>
+
     </div>
 </div>
 
 <script>
     const shifts = @json($shifts);
 
+    // Tab switch
+    const tabSingle = document.getElementById('tab-single');
+    const tabBulk = document.getElementById('tab-bulk');
+    const formSingle = document.getElementById('form-single');
+    const formBulk = document.getElementById('form-bulk');
+
+    tabSingle.addEventListener('click', () => {
+        tabSingle.classList.add('text-sky-700', 'border-sky-500');
+        tabBulk.classList.remove('text-sky-700', 'border-sky-500');
+        tabBulk.classList.add('text-gray-500');
+        formSingle.classList.remove('hidden');
+        formBulk.classList.add('hidden');
+    });
+
+    tabBulk.addEventListener('click', () => {
+        tabBulk.classList.add('text-sky-700', 'border-sky-500');
+        tabSingle.classList.remove('text-sky-700', 'border-sky-500');
+        tabSingle.classList.add('text-gray-500');
+        formSingle.classList.add('hidden');
+        formBulk.classList.remove('hidden');
+    });
+
+    // Bulk calendar/table rendering
     document.addEventListener("DOMContentLoaded", () => {
         const monthSelect = document.getElementById("month-select");
         const yearSelect = document.getElementById("year-select");
@@ -119,7 +200,7 @@
             const month = parseInt(monthSelect.value);
             const year = parseInt(yearSelect.value);
 
-            const firstDay = new Date(year, month - 1, 1).getDay() || 7; // Minggu=0 jadi 7
+            const firstDay = new Date(year, month - 1, 1).getDay() || 7;
             const daysInMonth = new Date(year, month, 0).getDate();
 
             const calContainer = document.getElementById("calendar-container");
@@ -136,16 +217,13 @@
             });
             calContainer.appendChild(headerRow);
 
-            // Grid
             const grid = document.createElement("div");
             grid.className = "grid grid-cols-7 gap-2 text-center";
 
-            // Kosong sebelum tgl 1
             for (let i = 1; i < firstDay; i++) {
                 grid.appendChild(document.createElement("div"));
             }
 
-            // Isi tanggal
             for (let d = 1; d <= daysInMonth; d++) {
                 const today = new Date();
                 const isToday = (d === today.getDate() && month === today.getMonth()+1 && year === today.getFullYear());
@@ -165,7 +243,7 @@
                 const select = document.createElement("select");
                 select.name = `shifts[${d}]`;
                 select.className = "mt-1 w-full text-sm border rounded-lg p-1 focus:ring-2 focus:ring-sky-400";
-                select.innerHTML = `<option value="">--</option>` + 
+                select.innerHTML = `<option value="">--</option>` +
                     shifts.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
                 cell.appendChild(select);
 
@@ -174,7 +252,6 @@
 
             calContainer.appendChild(grid);
 
-            // Table mode
             const tableBody = document.getElementById("table-body");
             tableBody.innerHTML = "";
             for (let d = 1; d <= daysInMonth; d++) {

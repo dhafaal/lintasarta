@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Permissions extends Model
+class Attendance extends Model
 {
     use HasFactory;
 
@@ -13,9 +13,8 @@ class Permissions extends Model
         'user_id',
         'schedule_id',
         'status',
-        'alasan',
-        'approved_by',
-        'approved_at',
+        'check_in_time',
+        'check_out_time',
     ];
 
     public function user()
@@ -28,14 +27,12 @@ class Permissions extends Model
         return $this->belongsTo(Schedules::class);
     }
 
+    public function permission()
+    {
+        return $this->hasOne(Permissions::class);
+    }
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
-    }
-
-    public function attendance()
-    {
-        return $this->belongsTo(Attendance::class, 'schedule_id', 'schedule_id')
-            ->where('user_id', $this->user_id);
     }
 }

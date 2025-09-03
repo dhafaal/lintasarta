@@ -19,7 +19,7 @@
   </style>
 </head>
 
-<body class="min-h-screen bg-radial from-sky-300 via-sky-100 to-white flex items-center justify-center overflow-hidden relative">
+<body class="min-h-screen bg-radial from-sky-200 via-sky-100 to-white flex items-center justify-center overflow-hidden relative">
 
   <div id="loginBox" class="bg-white/90 backdrop-blur-lg border border-sky-200 shadow-2xl rounded-2xl p-8 w-full max-w-md">
     <!-- Logo -->

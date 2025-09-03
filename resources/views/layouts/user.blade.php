@@ -82,6 +82,22 @@
                         <span x-show="!sidebarCollapsed" x-transition>CALENDAR</span>
                     </a>
 
+                    <!-- Attendance -->
+                    <a href="{{ route('user.attendance.index') }}"
+                        :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-3 py-2'"
+                        class="group flex items-center text-sm font-medium rounded-md transition-all duration-150 relative
+    {{ request()->routeIs('user.attendance.*') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
+                        :title="sidebarCollapsed ? 'Attendance' : ''">
+                        <svg class="w-5 h-5 {{ request()->routeIs('user.attendance.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}"
+                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6M5 6h14M5 6a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2H5z" />
+                        </svg>
+                        <span x-show="!sidebarCollapsed" x-transition>ATTENDANCE</span>
+                    </a>
+
+
                 </nav>
 
                 <!-- Footer -->

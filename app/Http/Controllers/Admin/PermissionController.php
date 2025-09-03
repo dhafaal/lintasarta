@@ -3,33 +3,34 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Permission;
 use App\Models\Permissions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PermissionController extends Controller
 {
-    public function index()
+    public function approve(Request $request, Permissions $permission)
     {
-        $permissions = Permissions::with(['user', 'schedule.shift'])->get();
-        return view('admin.permissions.index', compact('permissions'));
-    }
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+        ]);
 
-    public function approve($id)
-    {
-        $permission = Permissions::findOrFail($id);
-        $permission->status = 'Disetujui';
-        $permission->save();
+        if ($request->action === 'approve') {
+            $permission->update([
+                'status'      => 'approved',
+                'approved_by' => Auth::id(),   // ✅ pakai Auth::id()
+                'approved_at' => now(),
+            ]);
 
-        return back()->with('success', 'Izin disetujui.');
-    }
+            return back()->with('success', 'Izin berhasil disetujui ✅');
+        }
 
-    public function reject($id)
-    {
-        $permission = Permissions::findOrFail($id);
-        $permission->status = 'Ditolak';
-        $permission->save();
+        $permission->update([
+            'status'      => 'rejected',
+            'approved_by' => Auth::id(),   // ✅ pakai Auth::id()
+            'approved_at' => now(),
+        ]);
 
-        return back()->with('success', 'Izin ditolak.');
+        return back()->with('error', 'Izin ditolak ❌');
     }
 }
