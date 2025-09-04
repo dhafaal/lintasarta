@@ -41,4 +41,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Shift::class, 'schedules', 'user_id', 'shift_id');
     }
+
+    public function attendances()
+    {
+        return $this->hasMany(\App\Models\Attendance::class);
+    }
 }

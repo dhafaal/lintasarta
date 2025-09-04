@@ -56,7 +56,7 @@
                             <p class="text-sky-600 text-sm font-bold uppercase tracking-wide">Shift Pagi</p>
                             <p class="text-3xl font-bold text-gray-900 mt-2">{{ $shifts->where('name', 'Pagi')->count() }}
                             </p>
-                            <p class="text-gray-500 text-xs mt-1">06:00 - 14:00</p>
+                            <p class="text-gray-500 text-xs mt-1">Pagi</p>
                         </div>
                         <div
                             class="w-14 h-14 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-xl flex items-center justify-center">
@@ -75,7 +75,7 @@
                             <p class="text-sky-600 text-sm font-bold uppercase tracking-wide">Shift Siang</p>
                             <p class="text-3xl font-bold text-gray-900 mt-2">{{ $shifts->where('name', 'Siang')->count() }}
                             </p>
-                            <p class="text-gray-500 text-xs mt-1">14:00 - 22:00</p>
+                            <p class="text-gray-500 text-xs mt-1">Siang</p>
                         </div>
                         <div
                             class="w-14 h-14 bg-gradient-to-br from-blue-100 to-sky-100 rounded-xl flex items-center justify-center">
@@ -94,7 +94,7 @@
                             <p class="text-sky-600 text-sm font-bold uppercase tracking-wide">Shift Malam</p>
                             <p class="text-3xl font-bold text-gray-900 mt-2">{{ $shifts->where('name', 'Malam')->count() }}
                             </p>
-                            <p class="text-gray-500 text-xs mt-1">22:00 - 06:00</p>
+                            <p class="text-gray-500 text-xs mt-1">Malam</p>
                         </div>
                         <div
                             class="w-14 h-14 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center">
