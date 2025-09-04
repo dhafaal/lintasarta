@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./fonts.css";
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -113,6 +114,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    font-family: "Geist", sans-serif;
   }
   body {
     @apply bg-background text-foreground;
