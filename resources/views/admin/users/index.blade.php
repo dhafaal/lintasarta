@@ -97,10 +97,10 @@
                                     User
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    Bergabung
+                                    Role
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    Role
+                                    Bergabung
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     Aksi
@@ -124,16 +124,16 @@
                                         </div>
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap">
-                                        <div class="text-base font-semibold text-gray-700">{{ $user->created_at->format('d-F-Y') }}</div>
-                                        <div class="text-sm text-gray-500">{{ $user->updated_at->format('d-F-Y') }}</div>
-                                    </td>
-                                    <td class="px-8 py-6 whitespace-nowrap">
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
                                         @if ($user->role == 'Admin') bg-red-100 text-red-800
                                         @elseif($user->role == 'Operator') bg-sky-100 text-sky-800
                                         @else bg-green-100 text-green-800 @endif">
                                             {{ ucfirst($user->role) }}
                                         </span>
+                                    </td>
+                                    <td class="px-8 py-6 whitespace-nowrap">
+                                        <div class="text-base font-semibold text-gray-700">{{ $user->created_at->format('d F Y') }}</div>
+                                        <div class="text-sm text-gray-500">{{ $user->updated_at->format('d F Y') }}</div>
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-left">
                                         <div class="flex items-center justify-start space-x-3">

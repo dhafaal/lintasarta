@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow p-6 mt-8">
+    <div class="mx-auto bg-white rounded-xl shadow p-6 mt-8">
         <h2 class="text-xl font-bold mb-6">Edit Shift</h2>
 
         <form action="{{ route('admin.shifts.update', $shift->id) }}" method="POST">
