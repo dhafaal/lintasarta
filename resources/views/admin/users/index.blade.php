@@ -97,15 +97,12 @@
                                     User
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    Email
+                                    Bergabung
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     Role
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    Bergabung
-                                </th>
-                                <th class="px-8 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     Aksi
                                 </th>
                             </tr>
@@ -138,13 +135,8 @@
                                             {{ ucfirst($user->role) }}
                                         </span>
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap">
-                                        <div class="text-base text-gray-900">{{ $user->created_at->format('d M Y') }}
-                                        </div>
-                                        <div class="text-sm text-gray-500">{{ $user->created_at->diffForHumans() }}</div>
-                                    </td>
-                                    <td class="px-8 py-6 whitespace-nowrap text-right">
-                                        <div class="flex items-center justify-end space-x-3">
+                                    <td class="px-8 py-6 whitespace-nowrap text-left">
+                                        <div class="flex items-center justify-start space-x-3">
                                             <a href="{{ route('admin.users.edit', $user->id) }}"
                                                 class="inline-flex items-center px-4 py-2 bg-sky-100 hover:bg-sky-200 text-sky-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
                                                 Edit
