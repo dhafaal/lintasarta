@@ -2,28 +2,18 @@
 
 @section('content')
 <div class="min-h-screen bg-white sm:p-6 lg:p-8">
-    <div class="max-w-2xl mx-auto">
+    <div class="mx-auto">
         <!-- Enhanced Header -->
         <div class="mb-8">
             <div class="flex items-center gap-4 mb-3">
                 <div class="p-3 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl shadow-sm">
-                    <svg class="w-7 h-7 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-plus-icon lucide-user-plus text-sky-700"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Tambah User Baru</h1>
-                    <p class="text-gray-600 mt-1">Buat akun pengguna baru dengan mengisi informasi di bawah ini</p>
+                    <h1 class="text-3xl font-bold text-gray-700 tracking-tight">Tambah User Baru</h1>
+                    <p class="text-gray-500 mt-1">Buat akun pengguna baru dengan mengisi informasi di bawah ini</p>
                 </div>
             </div>
-            <!-- Added breadcrumb navigation -->
-            <nav class="flex items-center space-x-2 text-sm text-gray-500">
-                <a href="{{ route('admin.users.index') }}" class="hover:text-sky-600 transition-colors">Users</a>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-                <span class="text-gray-900 font-medium">Tambah User</span>
-            </nav>
         </div>
 
         <!-- Enhanced Form Card -->
@@ -179,12 +169,9 @@
                     </div>
 
                     <!-- Enhanced Action Buttons -->
-                    <div class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-200">
-                        <button 
-                            type="submit" 
-                            class="flex-1 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                            id="submitBtn"
-                        >
+                    <div class="flex items-center gap-4 pt-8 border-t border-gray-200">
+                        <button type="submit" class="bg-sky-600 hover:to-sky-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                            id="submitBtn">
                             <span class="flex items-center justify-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -197,10 +184,7 @@
                                 </svg>
                             </span>
                         </button>
-                        <a 
-                            href="{{ route('admin.users.index') }}" 
-                            class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 px-8 rounded-xl transition-all duration-200 text-center focus:outline-none focus:ring-4 focus:ring-gray-200 border-2 border-gray-200 hover:border-gray-300"
-                        >
+                        <a href="{{ route('admin.users.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 px-8 rounded-xl transition-all duration-200 text-center focus:outline-none focus:ring-4 focus:ring-gray-200 border-2 border-gray-200 hover:border-gray-300">
                             <span class="flex items-center justify-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>

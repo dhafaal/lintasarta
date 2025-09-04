@@ -4,9 +4,7 @@
 
 @section('content')
 <div class="min-h-screen bg-white sm:p-6 lg:p-8">
-    <div class="max-w-7xl mx-auto space-y-8">
-        <!-- Updated background to match shifts template gradient -->
-        <!-- Enhanced Header Section matching shifts design -->
+    <div class="mx-auto space-y-8">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div class="flex items-center space-x-4">
                 <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
@@ -15,13 +13,13 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Manajemen Jadwal</h1>
-                    <p class="text-gray-600 mt-1">Kelola semua jadwal kerja karyawan</p>
+                    <h1 class="text-3xl font-bold text-gray-700 tracking-tight">Manajemen Jadwal</h1>
+                    <p class="text-gray-500 mt-1">Kelola semua jadwal kerja karyawan</p>
                 </div>
             </div>
 
             <a href="{{ route('admin.schedules.create') }}" 
-               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-lg hover:shadow-xl">
+               class="inline-flex items-center px-6 py-3 bg-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-lg hover:shadow-xl">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
@@ -29,90 +27,77 @@
             </a>
         </div>
 
-        <!-- Enhanced Stats Cards for schedules -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-gradient-to-br from-sky-500 to-sky-600 rounded-2xl p-6 text-white shadow-xl">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sky-100 text-sm font-medium uppercase tracking-wide">Total Jadwal</p>
-                        <p class="text-3xl font-bold mt-2">{{ $schedules->count() }}</p>
-                        <p class="text-sky-200 text-xs mt-1">Jadwal aktif</p>
-                    </div>
-                    <div class="w-14 h-14 bg-sky-400 bg-opacity-30 rounded-xl flex items-center justify-center">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
+            <x-role-card 
+                title="Total Jadwal"
+                :count="$schedules->count()"
+                subtitle="Jadwal aktif"
+                bgColor="bg-sky-200"
+                icon='
+                    <svg class="w-7 h-7 text-sky-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>'
+                />  
 
-            <div class="bg-white border-2 border-sky-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sky-600 text-sm font-bold uppercase tracking-wide">Hari Ini</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $schedules->where('schedule_date', today()->format('Y-m-d'))->count() }}</p>
-                        <p class="text-gray-500 text-xs mt-1">{{ today()->format('d M Y') }}</p>
-                    </div>
-                    <div class="w-14 h-14 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center">
-                        <svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
+            <x-role-card 
+                title="Hari Ini"
+                :count="$schedules->where('schedule_date', today()->format('Y-m-d'))->count()"
+                :subtitle="today()->translatedFormat('d F Y')"
+                bgColor="bg-gradient-to-br from-green-100 to-emerald-100"
+                icon='
+                    <svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>'
+            />
 
-            <div class="bg-white border-2 border-sky-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sky-600 text-sm font-bold uppercase tracking-wide">Minggu Ini</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $schedules->whereBetween('schedule_date', [now()->startOfWeek(), now()->endOfWeek()])->count() }}</p>
-                        <p class="text-gray-500 text-xs mt-1">{{ now()->startOfWeek()->format('d M') }} - {{ now()->endOfWeek()->format('d M') }}</p>
-                    </div>
-                    <div class="w-14 h-14 bg-gradient-to-br from-blue-100 to-sky-100 rounded-xl flex items-center justify-center">
-                        <svg class="w-7 h-7 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
+            <x-role-card 
+                title="Minggu Ini"
+                :count="$schedules->whereBetween('schedule_date', [now()->startOfWeek(), now()->endOfWeek()])->count()"
+                :subtitle="now()->startOfWeek()->translatedFormat('d M') . ' - ' . now()->endOfWeek()->translatedFormat('d M')"
+                bgColor="bg-gradient-to-br from-blue-100 to-sky-100"
+                icon='
+                    <svg class="w-7 h-7 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>'
+            />  
 
-            <div class="bg-white border-2 border-sky-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sky-600 text-sm font-bold uppercase tracking-wide">Karyawan Aktif</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ $schedules->pluck('user_id')->unique()->count() }}</p>
-                        <p class="text-gray-500 text-xs mt-1">Memiliki jadwal</p>
-                    </div>
-                    <div class="w-14 h-14 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center">
-                        <svg class="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
+            <x-role-card 
+                title="Karyawan Aktif"
+                :count="$schedules->pluck('user_id')->unique()->count()"
+                subtitle="Memiliki jadwal"
+                bgColor="bg-gradient-to-br from-purple-100 to-indigo-100"
+                icon='
+                    <svg class="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>'
+            />      
         </div>
 
-        <!-- Enhanced Table Card with professional styling matching shifts template -->
+
         <div class="bg-white rounded-2xl border-2 border-sky-100 overflow-hidden shadow-xl">
             <div class="px-8 py-6 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-xl font-bold text-gray-900">Daftar Jadwal</h2>
-                        <p class="text-gray-600 mt-1">Semua jadwal kerja karyawan</p>
+                        <h2 class="text-xl font-bold text-sky-900">Daftar Jadwal</h2>
+                        <p class="text-sky-700 mt-1">Semua jadwal kerja karyawan</p>
                     </div>
                     <!-- Enhanced search and filter options -->
                     <div class="flex items-center space-x-3">
                         <form method="GET" action="{{ route('admin.schedules.index') }}" class="flex items-center space-x-3">
                             <div class="relative">
                                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari jadwal..." 
-                                       class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                                       class="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
                                 <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
                             </div>
                             
                             <select name="shift_filter" onchange="this.form.submit()" 
-                                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                                    class="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
                                 <option value="">Semua Shift</option>
                                 <option value="Pagi" {{ request('shift_filter') == 'Pagi' ? 'selected' : '' }}>Pagi</option>
                                 <option value="Siang" {{ request('shift_filter') == 'Siang' ? 'selected' : '' }}>Siang</option>
@@ -120,7 +105,7 @@
                             </select>
 
                             <input type="date" name="date_filter" value="{{ request('date_filter') }}" onchange="this.form.submit()" 
-                                   class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                                   class="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
 
                             @if(request('search') || request('shift_filter') || request('date_filter'))
                                 <a href="{{ route('admin.schedules.index') }}" 
@@ -264,7 +249,6 @@
             </div>
         </div>
 
-        <!-- Enhanced Work Hours Summary with professional styling matching shifts template -->
         @if($schedules->count() > 0 && isset($workHoursSummary))
         <div class="bg-white rounded-2xl shadow-xl border-2 border-sky-100 overflow-hidden">
             <div class="bg-gradient-to-r from-sky-500 to-sky-600 px-8 py-6">
