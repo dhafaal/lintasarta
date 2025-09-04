@@ -236,20 +236,16 @@
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 bg-sky-600 rounded-full flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-heroicon-outline="user-circle">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13a7 7 0 1114 0H5zm7-5a4 4 0 100-8 4 4 0 000 8z" />
-                                    </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-icon lucide-user text-white"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 </div>
                                 <span class="text-base font-medium text-sky-700">{{ auth()->user()->name }}</span>
                             </div>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-medium text-base rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+                                    class="inline-flex gap-x-1 items-center px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-medium text-base rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
                                     aria-label="Log out">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-heroicon-outline="arrow-right-end-on-rectangle">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6m9 10V5m3 3V3h-3" />
-                                    </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out-icon lucide-log-out"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
                                     Logout
                                 </button>
                             </form>

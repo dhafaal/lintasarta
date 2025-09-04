@@ -9,16 +9,13 @@
             {{-- Header --}}
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div class="flex items-center space-x-4">
-                    <div
-                        class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
-                        <svg class="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                    <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-icon lucide-calendar text-sky-700"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
                     </div>
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">📅 Kalender Jadwal Pegawai</h1>
-                        <p class="text-gray-600 mt-1">Visualisasi kalender & tabel jadwal kerja</p>
+                        <h1 class="text-3xl font-bold text-gray-700 tracking-tight">
+                            Kalender Jadwal Pegawai</h1>
+                        <p class="text-gray-500 mt-1">Visualisasi kalender & tabel jadwal kerja</p>
                     </div>
                 </div>
 
@@ -45,8 +42,8 @@
                         @endfor
                     </select>
                     <button type="submit"
-                        class="px-5 py-2 bg-gradient-to-r from-sky-500 to-sky-600 text-white font-semibold rounded-lg shadow hover:from-sky-600 hover:to-sky-700 transition">
-                        📊 Export Excel
+                        class="px-5 py-2 bg-sky-600 text-white font-semibold rounded-lg shadow hover:bg-sky-700 transition">
+                        Export Excel
                     </button>
                 </form>
             </div>
@@ -55,7 +52,7 @@
             <div class="bg-white rounded-2xl border border-gray-200 shadow">
                 <div
                     class="px-8 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-blue-50 flex items-center justify-between">
-                    <h2 class="text-lg font-bold text-gray-900">📋 Tabel Jadwal</h2>
+                    <h2 class="text-lg font-bold text-gray-900">Tabel Jadwal</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full border-collapse text-sm">
