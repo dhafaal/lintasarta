@@ -9,8 +9,17 @@
             {{-- Header --}}
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-icon lucide-calendar text-sky-700"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                    <div
+                        class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-calendar-icon lucide-calendar text-sky-700">
+                            <path d="M8 2v4" />
+                            <path d="M16 2v4" />
+                            <rect width="18" height="18" x="3" y="4" rx="2" />
+                            <path d="M3 10h18" />
+                        </svg>
                     </div>
                     <div>
                         <h1 class="text-3xl font-bold text-gray-700 tracking-tight">
@@ -47,6 +56,30 @@
                     </button>
                 </form>
             </div>
+
+            {{-- Filter Bulan untuk Tabel --}}
+            <form action="{{ route('admin.calendar.view') }}" method="GET" class="flex gap-3 items-center">
+                <select name="month"
+                    class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                    @for ($m = 1; $m <= 12; $m++)
+                        <option value="{{ $m }}" {{ (int) $m === (int) $currentMonth ? 'selected' : '' }}>
+                            {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                        </option>
+                    @endfor
+                </select>
+                <select name="year"
+                    class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                    @for ($y = now()->year - 5; $y <= now()->year + 5; $y++)
+                        <option value="{{ $y }}" {{ (int) $y === (int) $currentYear ? 'selected' : '' }}>
+                            {{ $y }}
+                        </option>
+                    @endfor
+                </select>
+                <button type="submit"
+                    class="px-5 py-2 bg-sky-500 text-white font-semibold rounded-lg shadow hover:bg-sky-600 transition">
+                    Tampilkan
+                </button>
+            </form>
 
             {{-- Tabel Jadwal --}}
             <div class="bg-white rounded-2xl border border-gray-200 shadow">
@@ -93,7 +126,8 @@
                                         rowspan="2">
                                         {{ $index + 1 }}
                                     </td>
-                                    <td class="sticky left-[50px] bg-white z-10 px-4 py-2 border text-left font-medium">
+                                    <td
+                                        class="sticky left-[50px] bg-white z-10 px-4 py-2 border text-left font-medium">
                                         {{ $row['nama'] }}
                                     </td>
                                     @for ($d = 1; $d <= $daysInMonth; $d++)
@@ -106,7 +140,8 @@
                                             {{ $row['shifts'][$d]['shift'] }}
                                         </td>
                                     @endfor
-                                    <td class="sticky right-0 bg-white z-10 px-4 py-2 border text-center" rowspan="2">
+                                    <td class="sticky right-0 bg-white z-10 px-4 py-2 border text-center"
+                                        rowspan="2">
                                         {{ $row['total_jam'] }}
                                     </td>
                                 </tr>
