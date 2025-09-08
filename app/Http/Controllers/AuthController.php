@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\RateLimiter;
+use Carbon\Carbon;
+use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -25,7 +28,6 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        // Validasi standar
         $request->validate([
             'email'    => 'required|email',
             'password' => 'required|min:8',
@@ -38,8 +40,6 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
-
-            // Hapus limiter kalau berhasil login
             RateLimiter::clear($this->throttleKey($request));
 
             $user = Auth::user();
@@ -54,7 +54,6 @@ class AuthController extends Controller
             };
         }
 
-        // Tambah attempt jika gagal login
         RateLimiter::hit($this->throttleKey($request), $seconds = 60);
 
         throw ValidationException::withMessages([
@@ -62,9 +61,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Cek brute force login
-     */
     protected function ensureIsNotRateLimited(Request $request)
     {
         if (! RateLimiter::tooManyAttempts($this->throttleKey($request), 5)) {
@@ -78,17 +74,11 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Generate throttle key berdasarkan email + IP
-     */
     protected function throttleKey(Request $request)
     {
         return Str::lower($request->input('email')).'|'.$request->ip();
     }
 
-    /**
-     * Logout user
-     */
     public function logout(Request $request)
     {
         Auth::logout();
@@ -98,65 +88,80 @@ class AuthController extends Controller
         return redirect()->route('login')->with('status', 'Anda berhasil logout.');
     }
 
-    /**
-     * Forgot Password - tampilkan form
-     */
+    // ------------------------
+    // FORGOT PASSWORD (STEP HANDLING)
+    // ------------------------
+
     public function showForgotPassword()
     {
-        return view('auth.forgot-password');
-    }
-
-    /**
-     * Kirim email reset password
-     */
-    public function sendResetLink(Request $request)
-    {
-        $request->validate(['email' => 'required|email|exists:users,email']);
-
-        $status = Password::sendResetLink($request->only('email'));
-
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', __($status))
-            : back()->withErrors(['email' => __($status)]);
-    }
-
-    /**
-     * Halaman form reset password
-     */
-    public function showResetForm(Request $request, $token)
-    {
-        return view('auth.reset-password', [
-            'token' => $token,
-            'email' => $request->query('email'),
+        return view('auth.forgot-password')->with([
+            'step'  => 'email',
+            'email' => null,
         ]);
     }
 
-    /**
-     * Proses reset password
-     */
+    public function sendOtp(Request $request)
+    {
+        $request->validate(['email' => 'required|email|exists:users,email']);
+
+        $otp = rand(100000, 999999);
+
+        DB::table('password_otps')->updateOrInsert(
+            ['email' => $request->email],
+            [
+                'otp'        => $otp,
+                'expires_at' => Carbon::now()->addMinutes(5),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        // kirim OTP ke email (sementara ke log/mailhog)
+        Mail::raw("Kode OTP reset password kamu adalah: $otp", function ($m) use ($request) {
+            $m->to($request->email)->subject('OTP Reset Password');
+        });
+
+        return back()->with([
+            'status' => 'OTP sudah dikirim ke email.',
+            'step'   => 'otp',
+            'email'  => $request->email,
+        ]);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'otp'   => 'required|numeric',
+        ]);
+
+        $record = DB::table('password_otps')->where('email', $request->email)->first();
+
+        if (! $record || $record->otp != $request->otp || Carbon::now()->greaterThan($record->expires_at)) {
+            return back()->withErrors(['otp' => 'OTP tidak valid atau sudah expired'])
+                         ->with(['step' => 'otp', 'email' => $request->email]);
+        }
+
+        return back()->with([
+            'status' => 'OTP valid, silakan reset password.',
+            'step'   => 'reset',
+            'email'  => $request->email,
+        ]);
+    }
+
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'token'    => 'required',
             'email'    => 'required|email|exists:users,email',
             'password' => 'required|confirmed|min:8',
         ]);
 
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, $password) {
-                $user->forceFill([
-                    'password'       => Hash::make($password),
-                    'remember_token' => Str::random(60),
-                ])->save();
+        User::where('email', $request->email)->update([
+            'password' => Hash::make($request->password),
+        ]);
 
-                // Auto login setelah reset
-                Auth::login($user);
-            }
-        );
+        DB::table('password_otps')->where('email', $request->email)->delete();
 
-        return $status === Password::PASSWORD_RESET
-            ? redirect()->route('login')->with('status', __('Password berhasil direset. Silakan login dengan password baru.'))
-            : back()->withErrors(['email' => [__($status)]]);
+        return redirect()->route('login')->with('status', 'Password berhasil direset. Silakan login dengan password baru.');
     }
 }

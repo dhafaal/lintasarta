@@ -103,6 +103,6 @@ Route::post('logout', function () {
 })->name('logout');
 
 Route::get('forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-Route::post('forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
-Route::get('reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
-Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+Route::post('forgot-password/send-otp', [AuthController::class, 'sendOtp'])->name('password.send.otp');
+Route::post('forgot-password/verify-otp', [AuthController::class, 'verifyOtp'])->name('password.verify.otp');
+Route::post('forgot-password/reset', [AuthController::class, 'resetPassword'])->name('password.reset');
