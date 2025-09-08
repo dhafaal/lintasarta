@@ -41,7 +41,7 @@
                 <button id="tab-bulk-range"
                     class="tab-button px-4 py-2 font-semibold text-gray-500 hover:text-sky-700 rounded-lg">
                     Rentang Tanggal
-                </button>
+                </button> 
             </div>
         </div>
 
