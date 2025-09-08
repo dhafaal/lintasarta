@@ -76,14 +76,25 @@ class ScheduleController extends Controller
             'schedule_date.*' => 'date',
         ]);
 
-        $count = count($request->user_id);
-        for ($i = 0; $i < $count; $i++) {
-            Schedules::create([
-                'user_id'       => $request->user_id[$i],
-                'shift_id'      => $request->shift_id[$i],
-                'schedule_date' => $request->schedule_date[$i],
-            ]);
-        }
+        DB::transaction(function () use ($request) {
+            $count = count($request->user_id);
+            for ($i = 0; $i < $count; $i++) {
+                // Skip jika shift_id kosong
+                if (empty($request->shift_id[$i])) {
+                    continue;
+                }
+
+                Schedules::updateOrCreate(
+                    [
+                        'user_id'       => $request->user_id[$i],
+                        'schedule_date' => $request->schedule_date[$i],
+                    ],
+                    [
+                        'shift_id' => $request->shift_id[$i],
+                    ]
+                );
+            }
+        });
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Schedule berhasil ditambahkan.');
@@ -183,6 +194,7 @@ class ScheduleController extends Controller
 
     public function bulkStore(Request $request)
     {
+        // Handle single schedule creation
         if ($request->has('single')) {
             $request->validate([
                 'single_user_id'       => 'required|exists:users,id',
@@ -204,42 +216,124 @@ class ScheduleController extends Controller
                 ->with('success', 'Jadwal tunggal berhasil disimpan.');
         }
 
-        $request->validate([
-            'user_id'  => 'required|exists:users,id',
-            'month'    => 'required|integer|min:1|max:12',
-            'year'     => 'required|integer|min:2000',
-            'shifts'   => 'required|array',
-            'shifts.*' => 'nullable|exists:shifts,id',
-        ]);
+        // Handle bulk schedule creation (monthly)
+        if ($request->has('bulk_monthly')) {
+            $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'month'   => 'required|integer|min:1|max:12',
+                'year'    => 'required|integer|min:2000',
+                'shifts'  => 'array', // Tidak required, bisa kosong
+            ]);
 
-        $userId = $request->user_id;
-        $month  = $request->month;
-        $year   = $request->year;
+            $userId = $request->user_id;
+            $month  = $request->month;
+            $year   = $request->year;
+            $shifts = $request->shifts ?? [];
 
-        DB::transaction(function () use ($request, $userId, $month, $year) {
-            foreach ($request->shifts as $day => $shiftId) {
-                if (!$shiftId) continue;
-
-                try {
+            DB::transaction(function () use ($shifts, $userId, $month, $year) {
+                $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
+                
+                for ($day = 1; $day <= $daysInMonth; $day++) {
                     $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
+                    $shiftId = $shifts[$day] ?? null;
 
-                    Schedules::updateOrCreate(
-                        [
-                            'user_id'       => $userId,
-                            'schedule_date' => $date,
-                        ],
-                        [
-                            'shift_id' => $shiftId,
-                        ]
-                    );
-                } catch (\Exception $e) {
-                    continue;
+                    if (empty($shiftId) || $shiftId === '') {
+                        // Jika shift kosong atau null, hapus jadwal yang ada
+                        Schedules::where('user_id', $userId)
+                            ->whereDate('schedule_date', $date)
+                            ->delete();
+                    } else {
+                        // Jika ada shift, buat atau update
+                        Schedules::updateOrCreate(
+                            [
+                                'user_id'       => $userId,
+                                'schedule_date' => $date,
+                            ],
+                            [
+                                'shift_id' => $shiftId,
+                            ]
+                        );
+                    }
                 }
-            }
-        });
+            });
 
-        return redirect()->route('admin.schedules.index')
-            ->with('success', 'Jadwal bulanan berhasil disimpan.');
+            return redirect()->route('admin.schedules.index')
+                ->with('success', 'Jadwal bulanan berhasil diperbarui.');
+        }
+
+        // Handle bulk creation with multiple dates and users
+        if ($request->has('bulk_multiple')) {
+            $request->validate([
+                'users'          => 'required|array|min:1',
+                'users.*'        => 'exists:users,id',
+                'dates'          => 'required|array|min:1',
+                'dates.*'        => 'date',
+                'shift_id'       => 'required|exists:shifts,id',
+            ]);
+
+            DB::transaction(function () use ($request) {
+                foreach ($request->users as $userId) {
+                    foreach ($request->dates as $date) {
+                        Schedules::updateOrCreate(
+                            [
+                                'user_id'       => $userId,
+                                'schedule_date' => $date,
+                            ],
+                            [
+                                'shift_id' => $request->shift_id,
+                            ]
+                        );
+                    }
+                }
+            });
+
+            $userCount = count($request->users);
+            $dateCount = count($request->dates);
+            
+            return redirect()->route('admin.schedules.index')
+                ->with('success', "Berhasil membuat {$userCount} user dengan {$dateCount} tanggal jadwal.");
+        }
+
+        // Handle bulk creation with same shift for multiple dates
+        if ($request->has('bulk_same_shift')) {
+            $request->validate([
+                'user_id'        => 'required|exists:users,id',
+                'shift_id'       => 'required|exists:shifts,id',
+                'start_date'     => 'required|date',
+                'end_date'       => 'required|date|after_or_equal:start_date',
+                'selected_days'  => 'array', // Array hari yang dipilih (0=Minggu, 1=Senin, dst)
+            ]);
+
+            $startDate = Carbon::parse($request->start_date);
+            $endDate = Carbon::parse($request->end_date);
+            $selectedDays = $request->selected_days ?? []; // Jika kosong, semua hari
+
+            DB::transaction(function () use ($request, $startDate, $endDate, $selectedDays) {
+                $currentDate = $startDate->copy();
+                
+                while ($currentDate->lte($endDate)) {
+                    // Jika tidak ada hari yang dipilih, atau hari ini termasuk yang dipilih
+                    if (empty($selectedDays) || in_array($currentDate->dayOfWeek, $selectedDays)) {
+                        Schedules::updateOrCreate(
+                            [
+                                'user_id'       => $request->user_id,
+                                'schedule_date' => $currentDate->format('Y-m-d'),
+                            ],
+                            [
+                                'shift_id' => $request->shift_id,
+                            ]
+                        );
+                    }
+                    
+                    $currentDate->addDay();
+                }
+            });
+
+            return redirect()->route('admin.schedules.index')
+                ->with('success', 'Jadwal berhasil dibuat untuk periode yang dipilih.');
+        }
+
+        return redirect()->back()->withErrors(['error' => 'Tipe bulk tidak valid.']);
     }
 
     public function table(Request $request)

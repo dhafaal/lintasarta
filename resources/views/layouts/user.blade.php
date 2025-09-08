@@ -10,7 +10,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="bg-sky-50 min-h-screen font-sans antialiased">
+<body class="bg-sky-50 min-h-screen antialiased">
 
     <div class="flex min-h-screen" x-data="{
         sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',

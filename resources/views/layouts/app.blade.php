@@ -9,7 +9,7 @@
         <script src="https://cdn.jsdelivr.net/npm/heroicons@2.1.5/24/solid/heroicons.min.js"></script>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="bg-sky-50 min-h-screen font-sans antialiased">
+    <body class="bg-sky-50 min-h-screen antialiased">
         <div class="flex min-h-screen" x-data="{
             sidebarCollapsed: false,
             usersExpanded: false,
