@@ -1,6 +1,6 @@
 import './bootstrap';
 import './calendar.js';
-import { createIcons, Home, Users, Calendar, Clock, CheckCircle, CalendarDays, LogOut, User } from 'lucide';
+import { createIcons, Home, Users, Calendar, Clock, CheckCircle, CalendarDays, LogOut, User, ChevronDown } from 'lucide';
 
 createIcons({
     icons: {
@@ -15,6 +15,5 @@ createIcons({
     }
 });
 
-// Hapus import CSS FullCalendar lama
 // import '@fullcalendar/core/styles/index.css';
 // import '@fullcalendar/daygrid/styles/index.css';
