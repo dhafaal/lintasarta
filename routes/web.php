@@ -37,12 +37,14 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
 
         // Schedules
         Route::resource('schedules', ScheduleController::class);
+        Route::get('schedules/user/{id}', [ScheduleController::class, 'userSchedules'])->name('schedules.user');
         Route::post('schedules/bulk-store', [ScheduleController::class, 'bulkStore'])->name('schedules.bulkStore');
         Route::get('calendar', [ScheduleController::class, 'calendarView'])->name('calendar.view');
         Route::get('calendar/data', [ScheduleController::class, 'calendarData'])->name('calendar.data');
         Route::get('calendar/report', [ScheduleController::class, 'report'])->name('calendar.report');
         Route::get('calendar/export', [ScheduleController::class, 'exportReport'])->name('calendar.export');
-        
+
+
         // Attendances (Admin)
         Route::prefix('attendances')->name('attendances.')->group(function () {
             Route::get('/', [AdminAttendanceController::class, 'index'])->name('index');

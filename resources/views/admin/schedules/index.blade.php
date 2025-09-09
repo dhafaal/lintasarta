@@ -1,10 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Daftar Jadwal')
+@section('title', 'Ringkasan Jadwal Kerja')
 
 @section('content')
 <div class="min-h-screen bg-white sm:p-6 lg:p-8">
     <div class="mx-auto space-y-8">
+        <!-- Header -->
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div class="flex items-center space-x-4">
                 <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
@@ -13,13 +14,12 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-700 tracking-tight">Manajemen Jadwal</h1>
-                    <p class="text-gray-500 mt-1">Kelola semua jadwal kerja karyawan</p>
+                    <h1 class="text-3xl font-bold text-gray-700 tracking-tight">Ringkasan Jadwal Kerja</h1>
+                    <p class="text-gray-500 mt-1">Laporan total jam kerja per karyawan</p>
                 </div>
             </div>
-
-            <a href="{{ route('admin.schedules.create') }}" 
-               class="inline-flex items-center px-6 py-3 bg-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-lg hover:shadow-xl">
+            <a href="{{ route('admin.schedules.create') }}"
+               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-lg hover:shadow-xl">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
@@ -27,84 +27,65 @@
             </a>
         </div>
 
+        <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <x-role-card 
+            <x-role-card
                 title="Total Jadwal"
-                :count="$schedules->count()"
+                :count="$workHoursSummary->count()"
                 subtitle="Jadwal aktif"
-                bgColor="bg-sky-200"
-                icon='
-                    <svg class="w-7 h-7 text-sky-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                bgColor="bg-gradient-to-br from-sky-100 to-sky-200"
+                icon='<svg class="w-7 h-7 text-sky-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>'
-                />  
-
-            <x-role-card 
+            />
+            <x-role-card
                 title="Hari Ini"
                 :count="$schedules->where('schedule_date', today()->format('Y-m-d'))->count()"
                 :subtitle="today()->translatedFormat('d F Y')"
                 bgColor="bg-gradient-to-br from-green-100 to-emerald-100"
-                icon='
-                    <svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                icon='<svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>'
             />
-
-            <x-role-card 
+            <x-role-card
                 title="Minggu Ini"
                 :count="$schedules->whereBetween('schedule_date', [now()->startOfWeek(), now()->endOfWeek()])->count()"
                 :subtitle="now()->startOfWeek()->translatedFormat('d M') . ' - ' . now()->endOfWeek()->translatedFormat('d M')"
                 bgColor="bg-gradient-to-br from-blue-100 to-sky-100"
-                icon='
-                    <svg class="w-7 h-7 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                icon='<svg class="w-7 h-7 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>'
-            />  
-
-            <x-role-card 
+            />
+            <x-role-card
                 title="Karyawan Aktif"
-                :count="$schedules->pluck('user_id')->unique()->count()"
+                :count="$workHoursSummary->pluck('user_id')->unique()->count()"
                 subtitle="Memiliki jadwal"
                 bgColor="bg-gradient-to-br from-purple-100 to-indigo-100"
-                icon='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 text-violet-600 lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>'
-            />      
+                icon='<svg class="w-7 h-7 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>'
+            />
         </div>
 
-
+        <!-- Table Ringkasan -->
         <div class="bg-white rounded-2xl border-2 border-sky-100 overflow-hidden shadow-xl">
             <div class="px-8 py-6 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-xl font-bold text-sky-900">Daftar Jadwal</h2>
-                        <p class="text-sky-700 mt-1">Semua jadwal kerja karyawan</p>
+                        <h2 class="text-xl font-bold text-sky-900">Rekap Total Jam & Shift</h2>
+                        <p class="text-sky-700 mt-1">Laporan total jam kerja per karyawan</p>
                     </div>
-                    <!-- Enhanced search and filter options -->
                     <div class="flex items-center space-x-3">
                         <form method="GET" action="{{ route('admin.schedules.index') }}" class="flex items-center space-x-3">
                             <div class="relative">
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari jadwal..." 
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari karyawan..."
                                        class="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
                                 <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
                             </div>
-                            
-                            <select name="shift_filter" onchange="this.form.submit()" 
-                                    class="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
-                                <option value="">Semua Shift</option>
-                                <option value="Pagi" {{ request('shift_filter') == 'Pagi' ? 'selected' : '' }}>Pagi</option>
-                                <option value="Siang" {{ request('shift_filter') == 'Siang' ? 'selected' : '' }}>Siang</option>
-                                <option value="Malam" {{ request('shift_filter') == 'Malam' ? 'selected' : '' }}>Malam</option>
-                            </select>
-
-                            <input type="date" name="date_filter" value="{{ request('date_filter') }}" onchange="this.form.submit()" 
-                                   class="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
-
                             @if(request('search') || request('shift_filter') || request('date_filter'))
-                                <a href="{{ route('admin.schedules.index') }}" 
+                                <a href="{{ route('admin.schedules.index') }}"
                                    class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition">
                                     Reset
                                 </a>
@@ -113,123 +94,104 @@
                     </div>
                 </div>
             </div>
-            
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50 border-b-2 border-gray-200">
                         <tr>
                             <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                Karyawan
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user text-sky-600 mr-2">
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    Nama Karyawan
+                                </th>
+                            <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar text-sky-600 mr-2">
+                                        <path d="M8 2v4"/>
+                                        <path d="M16 2v4"/>
+                                        <rect width="18" height="18" x="3" y="4" rx="2"/>
+                                        <path d="M3 10h18"/>
+                                    </svg>
+                                    Total Shift
+                                </div>
                             </th>
                             <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                Shift
-                            </th>
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock text-sky-600 mr-2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    Total Jam Kerja
+                                </th>
                             <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                Tanggal
-                            </th>
-                            <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                Jam Kerja
-                            </th>
-                            <th class="px-8 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 Aksi
                             </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @forelse($schedules as $schedule)
+                        @forelse($workHoursSummary as $summary)
                             <tr class="hover:bg-sky-50 transition-colors duration-200 group">
                                 <td class="px-8 py-6 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-4 group-hover:from-sky-200 group-hover:to-sky-300 transition-colors">
-                                            <span class="text-sky-600 font-bold text-sm">{{ substr($schedule->user->name, 0, 1) }}</span>
+                                            <span class="text-sky-600 font-bold text-sm">{{ substr($summary['employee_name'], 0, 1) }}</span>
                                         </div>
                                         <div>
-                                            <div class="text-base font-bold text-gray-900">{{ $schedule->user->name }}</div>
-                                            <div class="text-sm text-gray-500">{{ $schedule->user->role ?? 'Karyawan' }}</div>
+                                            <div class="text-base font-semibold text-gray-700">{{ $summary['employee_name'] }}</div>
+                                            <div class="text-sm text-gray-500">Karyawan</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        @if($schedule->shift->name == 'Pagi')
-                                            <div class="w-8 h-8 bg-gradient-to-br from-orange-100 to-yellow-100 rounded-lg flex items-center justify-center mr-3">
-                                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                                </svg>
-                                            </div>
-                                        @elseif($schedule->shift->name == 'Siang')
-                                            <div class="w-8 h-8 bg-gradient-to-br from-sky-100 to-blue-100 rounded-lg flex items-center justify-center mr-3">
-                                                <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                                </svg>
-                                            </div>
-                                        @else
-                                            <div class="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center mr-3">
-                                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                                                </svg>
-                                            </div>
-                                        @endif
-                                        <div>
-                                            <div class="text-base font-bold text-gray-900">{{ $schedule->shift->name }}</div>
-                                            <div class="text-sm text-gray-500">{{ $schedule->shift->start_time }} - {{ $schedule->shift->end_time }}</div>
-                                        </div>
-                                    </div>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar mr-1">
+                                            <path d="M8 2v4"/>
+                                            <path d="M16 2v4"/>
+                                            <rect width="18" height="18" x="3" y="4" rx="2"/>
+                                            <path d="M3 10h18"/>
+                                        </svg>
+                                        {{ $summary['total_work_days'] }} shift
+                                    </span>
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="text-base font-semibold text-gray-900">{{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}</div>
-                                    <div class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($schedule->schedule_date)->format('l') }}</div>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-sky-100 text-sky-800">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock mr-1">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        {{ $summary['total_work_hours'] }}
+                                    </span>
                                 </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-sky-100 text-sky-800">
-                                        @php
-                                            $start = \Carbon\Carbon::parse($schedule->shift->start_time);
-                                            $end = \Carbon\Carbon::parse($schedule->shift->end_time);
-                                            if ($end->lt($start)) {
-                                                $end->addDay();
-                                            }
-                                            $duration = $start->diffInHours($end);
-                                        @endphp
-                                        {{ $duration }} jam
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap text-right">
-                                    <div class="flex items-center justify-end space-x-3">
-                                        <a href="{{ route('admin.schedules.edit', $schedule->id) }}" 
+                                <td class="px-8 py-6 whitespace-nowrap text-left">
+                                    <div class="flex items-center justify-start space-x-3">
+                                        <a href="{{ route('admin.schedules.user', $summary['user_id']) }}"
                                            class="inline-flex items-center px-4 py-2 bg-sky-100 hover:bg-sky-200 text-sky-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye mr-2">
+                                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7"/>
+                                                <circle cx="12" cy="12" r="3"/>
                                             </svg>
-                                            Edit
+                                            Lihat Jadwal
                                         </a>
-                                        <form action="{{ route('admin.schedules.destroy', $schedule->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" 
-                                                    onclick="return confirm('Yakin ingin menghapus jadwal ini? Tindakan ini tidak dapat dibatalkan.')"
-                                                    class="inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
-                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                </svg>
-                                                Hapus
-                                            </button>
-                                        </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <!-- Professional empty state -->
                             <tr>
-                                <td colspan="5" class="px-8 py-16 text-center">
+                                <td colspan="4" class="px-8 py-16 text-center">
                                     <div class="flex flex-col items-center">
                                         <div class="w-20 h-20 bg-gradient-to-br from-sky-100 to-sky-200 rounded-full flex items-center justify-center mb-6">
-                                            <svg class="w-10 h-10 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar text-sky-400">
+                                                <path d="M8 2v4"/>
+                                                <path d="M16 2v4"/>
+                                                <rect width="18" height="18" x="3" y="4" rx="2"/>
+                                                <path d="M3 10h18"/>
                                             </svg>
                                         </div>
-                                        <h3 class="text-xl font-bold text-gray-900 mb-2">Belum ada jadwal</h3>
-                                        <p class="text-gray-600 mb-6 max-w-sm">Mulai dengan membuat jadwal kerja pertama untuk mengatur waktu kerja karyawan</p>
-                                        <a href="{{ route('admin.schedules.create') }}" 
+                                        <h3 class="text-xl font-bold text-gray-900 mb-2">Belum ada jadwal yang tercatat</h3>
+                                        <p class="text-gray-600 mb-6 max-w-sm">Mulai dengan membuat jadwal kerja untuk melihat ringkasan</p>
+                                        <a href="{{ route('admin.schedules.create') }}"
                                            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg">
                                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -244,92 +206,6 @@
                 </table>
             </div>
         </div>
-
-        @if($schedules->count() > 0 && isset($workHoursSummary))
-        <div class="bg-white rounded-2xl shadow-xl border-2 border-sky-100 overflow-hidden">
-            <div class="bg-gradient-to-r from-sky-500 to-sky-600 px-8 py-6">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-sky-400 bg-opacity-30 rounded-xl flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-bold text-white">Total Jam Kerja per User</h2>
-                        <p class="text-sky-100 mt-1">Ringkasan jam kerja karyawan</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="p-8">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 border-b-2 border-gray-200">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    <div class="flex items-center">
-                                        <svg class="w-4 h-4 mr-2 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                        </svg>
-                                        User
-                                    </div>
-                                </th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    <div class="flex items-center">
-                                        <svg class="w-4 h-4 mr-2 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        Total Jam Kerja
-                                    </div>
-                                </th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    <div class="flex items-center">
-                                        <svg class="w-4 h-4 mr-2 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                        </svg>
-                                        Total Hari Kerja
-                                    </div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach($workHoursSummary as $summary)
-                                <tr class="hover:bg-sky-50 transition-colors duration-200 group">
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-4 group-hover:from-sky-200 group-hover:to-sky-300 transition-colors">
-                                                <span class="text-sky-600 font-bold text-sm">{{ substr($summary['employee_name'], 0, 1) }}</span>
-                                            </div>
-                                            <div>
-                                                <div class="text-base font-bold text-gray-900">{{ $summary['employee_name'] }}</div>
-                                                <div class="text-sm text-gray-500">Karyawan</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <div class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-sky-500 to-sky-600 text-white font-bold rounded-xl shadow-lg">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                            {{ $summary['total_work_hours'] }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <div class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-xl shadow-lg">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                            </svg>
-                                            {{ $summary['total_work_days'] }} hari
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        @endif
     </div>
 </div>
 @endsection

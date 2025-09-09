@@ -14,7 +14,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ScheduleController extends Controller
 {
-    // daftar schedule / index
     public function index(Request $request)
     {
         $query = Schedules::with(['user', 'shift']);
@@ -38,22 +37,62 @@ class ScheduleController extends Controller
 
         $schedules = $query->orderBy('schedule_date', 'asc')->get();
 
-        $workHours = [];
-        foreach ($schedules as $schedule) {
-            $workHours[$schedule->user_id] = ($workHours[$schedule->user_id] ?? 0) + ($schedule->duration_in_minutes ?? 0);
+        // Ringkasan per user
+        $workHoursSummary = [];
+        foreach ($schedules->groupBy('user_id') as $userId => $userSchedules) {
+            $totalMinutes = 0;
+            foreach ($userSchedules as $schedule) {
+                if ($schedule->shift) {
+                    $start = Carbon::parse($schedule->shift->start_time);
+                    $end = Carbon::parse($schedule->shift->end_time);
+                    if ($end->lt($start)) $end->addDay();
+                    $totalMinutes += $start->diffInMinutes($end);
+                }
+            }
+
+            $hours = floor($totalMinutes / 60);
+            $mins = $totalMinutes % 60;
+
+            $workHoursSummary[] = [
+                'user_id' => $userId,
+                'employee_name' => $userSchedules->first()->user->name ?? '-',
+                'total_work_hours' => sprintf("%02dj %02dm", $hours, $mins),
+                'total_work_days' => $userSchedules->count(),
+            ];
         }
 
-        $formattedWorkHours = [];
-        foreach ($workHours as $userId => $minutes) {
-            $hours = floor($minutes / 60);
-            $mins  = $minutes % 60;
-            $formattedWorkHours[$userId] = sprintf("%02dj %02dm", $hours, $mins);
-        }
+        // Convert $workHoursSummary to a collection
+        $workHoursSummary = collect($workHoursSummary);
 
         return view('admin.schedules.index', [
-            'schedules'          => $schedules,
-            'workHours'          => $workHours,
-            'formattedWorkHours' => $formattedWorkHours,
+            'schedules' => $schedules,
+            'workHoursSummary' => $workHoursSummary,
+        ]);
+    }
+
+    // Detail schedule per user
+    public function userSchedules(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $query = Schedules::with('shift')
+            ->where('user_id', $id);
+
+        if ($request->filled('shift_filter')) {
+            $query->whereHas('shift', function ($q) use ($request) {
+                $q->where('name', $request->shift_filter);
+            });
+        }
+
+        if ($request->filled('date_filter')) {
+            $query->whereDate('schedule_date', $request->date_filter);
+        }
+
+        $schedules = $query->orderBy('schedule_date', 'asc')->get();
+
+        return view('admin.schedules.users_schedules', [
+            'user' => $user,
+            'schedules' => $schedules,
         ]);
     }
 
@@ -232,7 +271,7 @@ class ScheduleController extends Controller
 
             DB::transaction(function () use ($shifts, $userId, $month, $year) {
                 $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
-                
+
                 for ($day = 1; $day <= $daysInMonth; $day++) {
                     $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
                     $shiftId = $shifts[$day] ?? null;
@@ -289,7 +328,7 @@ class ScheduleController extends Controller
 
             $userCount = count($request->users);
             $dateCount = count($request->dates);
-            
+
             return redirect()->route('admin.schedules.index')
                 ->with('success', "Berhasil membuat {$userCount} user dengan {$dateCount} tanggal jadwal.");
         }
@@ -310,7 +349,7 @@ class ScheduleController extends Controller
 
             DB::transaction(function () use ($request, $startDate, $endDate, $selectedDays) {
                 $currentDate = $startDate->copy();
-                
+
                 while ($currentDate->lte($endDate)) {
                     // Jika tidak ada hari yang dipilih, atau hari ini termasuk yang dipilih
                     if (empty($selectedDays) || in_array($currentDate->dayOfWeek, $selectedDays)) {
@@ -324,7 +363,7 @@ class ScheduleController extends Controller
                             ]
                         );
                     }
-                    
+
                     $currentDate->addDay();
                 }
             });
