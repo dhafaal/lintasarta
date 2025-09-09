@@ -8,7 +8,7 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">🔑 Lupa Password</h2>
+        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Lupa Password</h2>
 
         {{-- Status / Alert --}}
         @if (session('status'))
@@ -38,7 +38,7 @@
             <form method="POST" action="{{ route('password.send.otp') }}" class="space-y-4">
                 @csrf
                 <div>
-                    <label class="block text-gray-700 mb-1">Email</label>
+                    <label class="block text-gray-700 font-semibold mb-1">Email</label>
                     <input type="email" name="email" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" required>
                 </div>
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">
