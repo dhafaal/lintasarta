@@ -11,62 +11,67 @@ use Illuminate\Support\Facades\Auth;
 
 class PermissionController extends Controller
 {
-    public function store(Request $request, $scheduleId)
+    // Form pengajuan izin + riwayat
+    public function create()
     {
-        $request->validate([
-            'keterangan' => 'required|string|max:255',
-        ]);
+        $permissions = Permissions::with('schedule')
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->get();
 
-        Permissions::create([
-            'user_id' => Auth::id(),
-            'schedule_id' => $scheduleId,
-            'keterangan' => $request->keterangan,
-            'status' => 'pending',
-        ]);
-
-        return back()->with('success', 'Izin berhasil diajukan dan menunggu persetujuan.');
+        return view('users.attendances.permission', compact('permissions'));
     }
 
-    public function izin(Request $request, $scheduleId)
+    // Simpan izin baru
+    public function store(Request $request)
     {
         $request->validate([
-            'keterangan' => 'required|string|max:255',
+            'date' => 'required|date',
+            'reason' => 'required|string|max:500',
         ]);
 
-        $schedule = Schedules::findOrFail($scheduleId);
+        $schedule = Schedules::where('schedule_date', $request->date)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$schedule) {
+            return back()->with('error', 'Tidak ada jadwal pada tanggal tersebut.');
+        }
+
+        // Cek apakah sudah ada izin pending/approved untuk tanggal itu
+        $exists = Permissions::where('schedule_id', $schedule->id)
+            ->where('user_id', Auth::id())
+            ->whereIn('status', ['pending', 'approved'])
+            ->exists();
+
+        if ($exists) {
+            return back()->with('error', 'Anda sudah mengajukan izin untuk tanggal ini.');
+        }
 
         Permissions::create([
             'user_id' => Auth::id(),
             'schedule_id' => $schedule->id,
-            'alasan' => $request->keterangan,
+            'reason' => $request->reason,
             'status' => 'pending',
         ]);
 
-        return back()->with('success', 'Izin berhasil diajukan, menunggu persetujuan.');
+        return redirect()->route('user.permissions.index')->with('success', 'Izin berhasil diajukan.');
     }
 
-
-    // Approve izin (dipakai admin nantinya)
-    public function approve($id)
+    // Batalkan izin (hanya jika masih pending)
+    public function cancel(Schedules $schedule)
     {
-        $permission = Permissions::findOrFail($id);
-        $permission->update([
-            'status' => 'approved',
-            'approved_by' => Auth::id(),
-            'approved_at' => now(),
-        ]);
-        return back()->with('success', 'Izin disetujui.');
-    }
+        $permission = Permissions::where('schedule_id', $schedule->id)
+            ->where('user_id', Auth::id())
+            ->where('status', 'pending')
+            ->first();
 
-    // Reject izin (dipakai admin nantinya)
-    public function reject($id)
-    {
-        $permission = Permissions::findOrFail($id);
-        $permission->update([
-            'status' => 'rejected',
-            'approved_by' => Auth::id(),
-            'approved_at' => now(),
-        ]);
-        return back()->with('error', 'Izin ditolak.');
+        if (!$permission) {
+            return back()->with('error', 'Tidak ada izin pending untuk dibatalkan.');
+        }
+
+        $permission->delete();
+
+        return back()->with('success', 'Pengajuan izin berhasil dibatalkan.');
     }
 }

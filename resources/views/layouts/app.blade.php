@@ -262,44 +262,47 @@
                 <div class="my-4 border-t border-sky-200 border-opacity-30"></div>
 
                 <!-- Attendance -->
-                <a href="{{ route('admin.attendances.index') }}"
-                    :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
-                    class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
-       {{ request()->routeIs('admin.attendances.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                    :aria-label="sidebarCollapsed ? 'Attendance' : ''">
-                    <i data-lucide="user-check"
-                        class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.attendances.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                        :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
-                    <span x-show="!sidebarCollapsed" x-transition>Attendance</span>
+                <div class="space-y-1 relative">
+                    <a href="{{ route('admin.attendances.index') }}"
+                        :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                        class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
+            {{ request()->routeIs('admin.attendances.*')
+                ? 'bg-sky-100 text-sky-700 border border-sky-200'
+                : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                        :aria-label="sidebarCollapsed ? 'Attendance' : ''">
+                        <i data-lucide="user-check"
+                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.attendances.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed" x-transition>Attendances</span>
 
-                    <div x-show="sidebarCollapsed"
-                        class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                        Attendance Records
-                        <div
-                            class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
+                        <div x-show="sidebarCollapsed"
+                            class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Attendance Records
+                            <div
+                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
+                            </div>
                         </div>
-                    </div>
-                </a>
+                    </a>
 
-                <!-- Calendar -->
-                <a href="{{ route('admin.calendar.view') }}"
-                    :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
-                    class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
+                    <!-- Calendar -->
+                    <a href="{{ route('admin.calendar.view') }}"
+                        :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                        class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
        {{ request()->routeIs('admin.calendar.view') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                    :aria-label="sidebarCollapsed ? 'Calendar' : ''">
-                    <i data-lucide="calendar-range"
-                        class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.calendar.view') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                        :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
-                    <span x-show="!sidebarCollapsed" x-transition>Calendar</span>
+                        :aria-label="sidebarCollapsed ? 'Calendar' : ''">
+                        <i data-lucide="calendar-range"
+                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.calendar.view') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed" x-transition>Calendar</span>
 
-                    <div x-show="sidebarCollapsed"
-                        class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                        Calendar View
-                        <div
-                            class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
+                        <div x-show="sidebarCollapsed"
+                            class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Calendar View
+                            <div
+                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
+                            </div>
                         </div>
-                    </div>
-                </a>
+                    </a>
             </nav>
 
             <!-- Sidebar Footer -->

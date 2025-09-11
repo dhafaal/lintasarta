@@ -9,11 +9,10 @@ use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\Admin\PermissionController as AdminPermissionController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\AttendanceController as AdminAttendanceController;
-use App\Http\Controllers\Users\AttendanceController as UsersAttendanceController;
+use App\Http\Controllers\Admin\AttendancesController as AdminAttendanceController;
+use App\Http\Controllers\Users\AttendancesController as UsersAttendanceController;
 use App\Http\Controllers\Users\PermissionController as UsersPermissionController;
 use App\Http\Controllers\Users\CalendarController;
-use App\Models\User;
 
 // ======= ADMIN =======
 Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
@@ -22,12 +21,9 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // Users (Resource + tambahan fitur export/bulk)
+        // Users
         Route::resource('users', UserController::class);
-        Route::get('users/{user}/history', [\App\Http\Controllers\Admin\UserController::class, 'history'])
-            ->name('users.history');
-
-        // Optional: tambahan fitur export/bulk delete
+        Route::get('users/{user}/history', [UserController::class, 'history'])->name('users.history');
         Route::delete('users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulkDelete');
         Route::get('users/export/excel', [UserController::class, 'exportExcel'])->name('users.exportExcel');
         Route::get('users/export/pdf', [UserController::class, 'exportPdf'])->name('users.exportPdf');
@@ -45,17 +41,30 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         Route::get('calendar/export', [ScheduleController::class, 'exportReport'])->name('calendar.export');
 
 
-        // Attendances (Admin)
         Route::prefix('attendances')->name('attendances.')->group(function () {
+            // Index tampilkan absensi hari ini (dengan filter date optional)
             Route::get('/', [AdminAttendanceController::class, 'index'])->name('index');
+
+            // Riwayat per tanggal
+            Route::get('/history', [AdminAttendanceController::class, 'history'])->name('history');
+
+            // Approve / Reject permission untuk schedule tertentu
+            // Nama route => admin.attendances.permission.approve / admin.attendances.permission.reject
+            Route::post('/permissions/{permission}/approve', [AdminAttendanceController::class, 'approvePermission'])
+                ->name('permission.approve');
+            Route::post('/permissions/{permission}/reject', [AdminAttendanceController::class, 'rejectPermission'])
+                ->name('permission.reject');
+
+            // (opsional) show per user / destroy attendance (kalau butuh)
             Route::get('/{user}', [AdminAttendanceController::class, 'show'])->name('show');
             Route::delete('/{attendance}', [AdminAttendanceController::class, 'destroy'])->name('destroy');
-            Route::post('/{attendance}/approve', [AdminAttendanceController::class, 'approve'])->name('approve');
         });
 
+
         // Permissions (Admin)
-        Route::post('permissions/{permission}/approve', [AdminPermissionController::class, 'approve'])
-            ->name('permissions.approve');
+        Route::prefix('permissions')->name('permissions.')->group(function () {
+            Route::post('/{permission}/approve', [AdminPermissionController::class, 'approve'])->name('approve');
+        });
     });
 
 // ======= OPERATOR =======
@@ -66,11 +75,10 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Operator'])
         })->name('dashboard');
     });
 
-// ======= USER =======
 Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':User'])
-    ->prefix('user')
-    ->name('user.')
-    ->group(function () {
+    ->prefix('user')->name('user.')->group(function () {
+
+        // Dashboard
         Route::get('/dashboard', function () {
             return view('users.dashboard');
         })->name('dashboard');
@@ -79,21 +87,21 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':User'])
         Route::get('calendar', [CalendarController::class, 'calendarView'])->name('calendar.view');
         Route::get('calendar/data', [CalendarController::class, 'calendarData'])->name('calendar.data');
 
-        // Attendance (User)
-        Route::prefix('attendance')->name('attendance.')->group(function () {
-            Route::get('/', [UsersAttendanceController::class, 'index'])->name('index');
-            Route::post('/{scheduleId}/checkin', [UsersAttendanceController::class, 'store'])->name('store');
-            Route::post('/{scheduleId}/checkout', [UsersAttendanceController::class, 'checkout'])->name('checkout');
-            Route::post('/{scheduleId}/izin', [UsersPermissionController::class, 'izin'])->name('izin');
-        });
+        Route::get('attendances', [UsersAttendanceController::class, 'index'])->name('attendances.index');
+        Route::post('attendances/checkin', [UsersAttendanceController::class, 'checkin'])->name('attendances.checkin');
+        Route::post('attendances/checkout', [UsersAttendanceController::class, 'checkout'])->name('attendances.checkout');
+        Route::get('attendances/history', [UsersAttendanceController::class, 'history'])->name('attendances.history');
+
+        // Permission
+        // Permission
+        Route::get('permissions/create', [UsersPermissionController::class, 'create'])->name('attendances.permission.create');
+        Route::get('permissions', [UsersPermissionController::class, 'create'])->name('permissions.index');
+        Route::post('permissions', [UsersPermissionController::class, 'store'])->name('permissions.store');
+        Route::delete('permissions/{schedule}', [UsersPermissionController::class, 'cancel'])->name('permissions.cancel');
     });
 
-
-
 // ======= AUTH =======
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::get('/', fn() => redirect()->route('login'));
 
 Route::get('login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('login', [AuthController::class, 'login']);
@@ -104,6 +112,7 @@ Route::post('logout', function () {
     return redirect()->route('login');
 })->name('logout');
 
+// Forgot Password
 Route::get('forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
 Route::post('forgot-password/send-otp', [AuthController::class, 'sendOtp'])->name('password.send.otp');
 Route::post('forgot-password/verify-otp', [AuthController::class, 'verifyOtp'])->name('password.verify.otp');

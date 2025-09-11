@@ -66,29 +66,13 @@
                         <span x-show="!sidebarCollapsed" x-transition>DASHBOARD</span>
                     </a>
 
-                    <!-- Calendar -->
-                    <a href="{{ route('user.calendar.view') }}"
-                        :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-3 py-2'"
-                        class="group flex items-center text-sm font-medium rounded-md transition-all duration-150 relative
-                        {{ request()->routeIs('user.calendar.view') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
-                        :title="sidebarCollapsed ? 'Calendar' : ''">
-                        <svg class="w-5 h-5 {{ request()->routeIs('user.calendar.view') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}"
-                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z">
-                            </path>
-                        </svg>
-                        <span x-show="!sidebarCollapsed" x-transition>CALENDAR</span>
-                    </a>
-
                     <!-- Attendance -->
-                    <a href="{{ route('user.attendance.index') }}"
+                    <a href="{{ route('user.attendances.index') }}"
                         :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-3 py-2'"
                         class="group flex items-center text-sm font-medium rounded-md transition-all duration-150 relative
-    {{ request()->routeIs('user.attendance.*') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
+    {{ request()->routeIs('user.attendances.*') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
                         :title="sidebarCollapsed ? 'Attendance' : ''">
-                        <svg class="w-5 h-5 {{ request()->routeIs('user.attendance.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}"
+                        <svg class="w-5 h-5 {{ request()->routeIs('user.attendances.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}"
                             :class="sidebarCollapsed ? 'mr-0' : 'mr-3'" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -96,6 +80,7 @@
                         </svg>
                         <span x-show="!sidebarCollapsed" x-transition>ATTENDANCE</span>
                     </a>
+
 
 
                 </nav>
