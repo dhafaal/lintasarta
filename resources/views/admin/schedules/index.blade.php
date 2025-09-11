@@ -5,7 +5,6 @@
 @section('content')
 <div class="min-h-screen bg-white sm:p-6 lg:p-8">
     <div class="mx-auto space-y-8">
-        <!-- Header -->
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div class="flex items-center space-x-4">
                 <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
@@ -27,20 +26,19 @@
             </a>
         </div>
 
-        <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <x-role-card
-                title="Total Jadwal"
-                :count="$workHoursSummary->count()"
-                subtitle="Jadwal aktif"
+                title="Total Karyawan Terjadwal"
+                :count="$totalEmployeesWithSchedules"
+                subtitle="Karyawan memiliki jadwal"
                 bgColor="bg-gradient-to-br from-sky-100 to-sky-200"
                 icon='<svg class="w-7 h-7 text-sky-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>'
             />
             <x-role-card
-                title="Hari Ini"
-                :count="$schedules->where('schedule_date', today()->format('Y-m-d'))->count()"
+                title="Jadwal Hari Ini"
+                :count="$todaySchedules"
                 :subtitle="today()->translatedFormat('d F Y')"
                 bgColor="bg-gradient-to-br from-green-100 to-emerald-100"
                 icon='<svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,8 +46,8 @@
                     </svg>'
             />
             <x-role-card
-                title="Minggu Ini"
-                :count="$schedules->whereBetween('schedule_date', [now()->startOfWeek(), now()->endOfWeek()])->count()"
+                title="Jadwal Minggu Ini"
+                :count="$thisWeekSchedules"
                 :subtitle="now()->startOfWeek()->translatedFormat('d M') . ' - ' . now()->endOfWeek()->translatedFormat('d M')"
                 bgColor="bg-gradient-to-br from-blue-100 to-sky-100"
                 icon='<svg class="w-7 h-7 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,9 +55,9 @@
                     </svg>'
             />
             <x-role-card
-                title="Karyawan Aktif"
-                :count="$workHoursSummary->pluck('user_id')->unique()->count()"
-                subtitle="Memiliki jadwal"
+                title="Jumlah Total Jadwal"
+                :count="$schedules->count()"
+                subtitle="Semua jadwal yang tercatat"
                 bgColor="bg-gradient-to-br from-purple-100 to-indigo-100"
                 icon='<svg class="w-7 h-7 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -67,7 +65,6 @@
             />
         </div>
 
-        <!-- Table Ringkasan -->
         <div class="bg-white rounded-2xl border-2 border-sky-100 overflow-hidden shadow-xl">
             <div class="px-8 py-6 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50">
                 <div class="flex items-center justify-between">
@@ -105,7 +102,8 @@
                                         <circle cx="12" cy="7" r="4"/>
                                     </svg>
                                     Nama Karyawan
-                                </th>
+                                </div>
+                            </th>
                             <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 <div class="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar text-sky-600 mr-2">
@@ -124,7 +122,8 @@
                                         <polyline points="12 6 12 12 16 14"/>
                                     </svg>
                                     Total Jam Kerja
-                                </th>
+                                </div>
+                            </th>
                             <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 Aksi
                             </th>

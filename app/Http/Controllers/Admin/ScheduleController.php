@@ -37,36 +37,43 @@ class ScheduleController extends Controller
 
         $schedules = $query->orderBy('schedule_date', 'asc')->get();
 
-        // Ringkasan per user
-        $workHoursSummary = [];
-        foreach ($schedules->groupBy('user_id') as $userId => $userSchedules) {
-            $totalMinutes = 0;
-            foreach ($userSchedules as $schedule) {
-                if ($schedule->shift) {
-                    $start = Carbon::parse($schedule->shift->start_time);
-                    $end = Carbon::parse($schedule->shift->end_time);
-                    if ($end->lt($start)) $end->addDay();
-                    $totalMinutes += $start->diffInMinutes($end);
+        // Ringkasan per user menggunakan koleksi Laravel
+        $workHoursSummary = $schedules->groupBy('user_id')->map(function ($items, $userId) {
+            $totalMinutes = $items->sum(function ($item) {
+                if (!$item->shift) {
+                    return 0; // Skip if shift data is missing
                 }
-            }
+                $start = Carbon::parse($item->shift->start_time);
+                $end = Carbon::parse($item->shift->end_time);
+                if ($end->lessThan($start)) {
+                    $end->addDay();
+                }
+                return $end->diffInMinutes($start);
+            });
 
             $hours = floor($totalMinutes / 60);
             $mins = $totalMinutes % 60;
 
-            $workHoursSummary[] = [
+            return [
                 'user_id' => $userId,
-                'employee_name' => $userSchedules->first()->user->name ?? '-',
+                'employee_name' => $items->first()->user->name ?? '-',
                 'total_work_hours' => sprintf("%02dj %02dm", $hours, $mins),
-                'total_work_days' => $userSchedules->count(),
+                'total_work_days' => $items->count(),
             ];
-        }
+        })->values();
 
-        // Convert $workHoursSummary to a collection
-        $workHoursSummary = collect($workHoursSummary);
+        // Menghitung ringkasan untuk card-card
+        $todaySchedules = $schedules->where('schedule_date', today()->toDateString())->count();
+        $thisWeekSchedules = $schedules->whereBetween('schedule_date', [now()->startOfWeek(), now()->endOfWeek()])->count();
+        $totalEmployeesWithSchedules = $workHoursSummary->count();
 
+        // Kirim semua data ke view
         return view('admin.schedules.index', [
             'schedules' => $schedules,
             'workHoursSummary' => $workHoursSummary,
+            'todaySchedules' => $todaySchedules,
+            'thisWeekSchedules' => $thisWeekSchedules,
+            'totalEmployeesWithSchedules' => $totalEmployeesWithSchedules,
         ]);
     }
 
@@ -96,52 +103,192 @@ class ScheduleController extends Controller
         ]);
     }
 
-    public function create()
+    /**
+     * Tampilkan satu halaman untuk semua opsi pembuatan jadwal.
+     */
+    public function create(Request $request)
     {
-        $users  = User::orderBy('name')->get();
+        $users = User::orderBy('name')->get();
         $shifts = Shift::orderBy('name')->get();
+        $month = (int) $request->query('month', now()->month);
+        $year = (int) $request->query('year', now()->year);
+        $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 
-        return view('admin.schedules.create', compact('users', 'shifts'));
+        return view('admin.schedules.create', compact('users', 'shifts', 'daysInMonth', 'month', 'year'));
     }
 
+    /**
+     * Metode terpadu untuk menyimpan semua jenis jadwal (tunggal, massal).
+     */
     public function store(Request $request)
     {
+        // Mendapatkan tipe form dari hidden input
+        $formType = $request->input('form_type');
+
+        switch ($formType) {
+            case 'single':
+                return $this->storeSingle($request);
+            case 'bulk_monthly':
+                return $this->storeMonthly($request);
+            case 'bulk_multiple':
+                return $this->storeMultiple($request);
+            case 'bulk_same_shift':
+                return $this->storeSameShift($request);
+            default:
+                return redirect()->back()->withErrors(['error' => 'Tipe form tidak valid.']);
+        }
+    }
+
+    /**
+     * Menyimpan jadwal tunggal.
+     */
+    private function storeSingle(Request $request)
+    {
         $request->validate([
-            'user_id'         => 'required|array|min:1',
-            'user_id.*'       => 'exists:users,id',
-            'shift_id'        => 'required|array|min:1',
-            'shift_id.*'      => 'exists:shifts,id',
-            'schedule_date'   => 'required|array|min:1',
-            'schedule_date.*' => 'date',
+            'single_user_id'       => 'required|exists:users,id',
+            'single_shift_id'      => 'required|exists:shifts,id',
+            'single_schedule_date' => 'required|date',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $count = count($request->user_id);
-            for ($i = 0; $i < $count; $i++) {
-                // Skip jika shift_id kosong
-                if (empty($request->shift_id[$i])) {
-                    continue;
-                }
+        Schedules::updateOrCreate(
+            [
+                'user_id'       => $request->single_user_id,
+                'schedule_date' => $request->single_schedule_date,
+            ],
+            [
+                'shift_id' => $request->single_shift_id,
+            ]
+        );
 
-                Schedules::updateOrCreate(
-                    [
-                        'user_id'       => $request->user_id[$i],
-                        'schedule_date' => $request->schedule_date[$i],
-                    ],
-                    [
-                        'shift_id' => $request->shift_id[$i],
-                    ]
-                );
+        return redirect()->route('admin.schedules.index')
+            ->with('success', 'Jadwal berhasil disimpan.');
+    }
+
+    /**
+     * Menyimpan jadwal bulanan.
+     */
+    private function storeMonthly(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'month'   => 'required|integer|min:1|max:12',
+            'year'    => 'required|integer|min:2000',
+            'shifts'  => 'array',
+        ]);
+
+        $userId = $request->user_id;
+        $month = $request->month;
+        $year = $request->year;
+        $shifts = $request->shifts ?? [];
+
+        DB::transaction(function () use ($shifts, $userId, $month, $year) {
+            $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
+
+            for ($day = 1; $day <= $daysInMonth; $day++) {
+                $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
+                $shiftId = $shifts[$day] ?? null;
+
+                if (empty($shiftId)) {
+                    Schedules::where('user_id', $userId)
+                        ->whereDate('schedule_date', $date)
+                        ->delete();
+                } else {
+                    Schedules::updateOrCreate(
+                        [
+                            'user_id'       => $userId,
+                            'schedule_date' => $date,
+                        ],
+                        [
+                            'shift_id' => $shiftId,
+                        ]
+                    );
+                }
             }
         });
 
         return redirect()->route('admin.schedules.index')
-            ->with('success', 'Schedule berhasil ditambahkan.');
+            ->with('success', 'Jadwal bulanan berhasil diperbarui.');
+    }
+
+    /**
+     * Menyimpan jadwal massal untuk banyak user dan tanggal.
+     */
+    private function storeMultiple(Request $request)
+    {
+        $request->validate([
+            'users'    => 'required|array|min:1',
+            'users.*'  => 'exists:users,id',
+            'dates'    => 'required|array|min:1',
+            'dates.*'  => 'date',
+            'shift_id' => 'required|exists:shifts,id',
+        ]);
+
+        DB::transaction(function () use ($request) {
+            foreach ($request->users as $userId) {
+                foreach ($request->dates as $date) {
+                    Schedules::updateOrCreate(
+                        [
+                            'user_id'       => $userId,
+                            'schedule_date' => $date,
+                        ],
+                        [
+                            'shift_id' => $request->shift_id,
+                        ]
+                    );
+                }
+            }
+        });
+
+        $userCount = count($request->users);
+        $dateCount = count($request->dates);
+
+        return redirect()->route('admin.schedules.index')
+            ->with('success', "Berhasil membuat {$userCount} user dengan {$dateCount} tanggal jadwal.");
+    }
+
+    /**
+     * Menyimpan jadwal untuk periode tanggal dengan shift yang sama.
+     */
+    private function storeSameShift(Request $request)
+    {
+        $request->validate([
+            'user_id'       => 'required|exists:users,id',
+            'shift_id'      => 'required|exists:shifts,id',
+            'start_date'    => 'required|date',
+            'end_date'      => 'required|date|after_or_equal:start_date',
+            'selected_days' => 'array',
+        ]);
+
+        $startDate = Carbon::parse($request->start_date);
+        $endDate = Carbon::parse($request->end_date);
+        $selectedDays = $request->selected_days ?? [];
+
+        DB::transaction(function () use ($request, $startDate, $endDate, $selectedDays) {
+            $currentDate = $startDate->copy();
+
+            while ($currentDate->lte($endDate)) {
+                if (empty($selectedDays) || in_array($currentDate->dayOfWeek, $selectedDays)) {
+                    Schedules::updateOrCreate(
+                        [
+                            'user_id'       => $request->user_id,
+                            'schedule_date' => $currentDate->format('Y-m-d'),
+                        ],
+                        [
+                            'shift_id' => $request->shift_id,
+                        ]
+                    );
+                }
+                $currentDate->addDay();
+            }
+        });
+
+        return redirect()->route('admin.schedules.index')
+            ->with('success', 'Jadwal berhasil dibuat untuk periode yang dipilih.');
     }
 
     public function edit(Schedules $schedule)
     {
-        $users  = User::orderBy('name')->get();
+        $users = User::orderBy('name')->get();
         $shifts = Shift::orderBy('name')->get();
 
         return view('admin.schedules.edit', compact('schedule', 'users', 'shifts'));
@@ -172,42 +319,86 @@ class ScheduleController extends Controller
     public function calendarView(Request $request)
     {
         $month = (int) $request->query('month', now()->month);
-        $year  = (int) $request->query('year', now()->year);
+        $year = (int) $request->query('year', now()->year);
 
         [$data, $daysInMonth] = $this->buildMonthlyTableData($month, $year);
 
         return view('admin.schedules.calendar', compact('data', 'month', 'year', 'daysInMonth'));
     }
 
+    /**
+     * Provide calendar data for FullCalendar integration
+     */
     public function calendarData()
     {
         $schedules = Schedules::with(['user', 'shift'])->get();
 
         $events = $schedules->map(function ($schedule) {
             $start = $schedule->schedule_date . 'T' . $schedule->shift->start_time;
-            $end   = Carbon::parse($schedule->schedule_date . ' ' . $schedule->shift->end_time);
+            $end = Carbon::parse($schedule->schedule_date . ' ' . $schedule->shift->end_time);
 
             if ($end->lt(Carbon::parse($start))) {
                 $end->addDay();
             }
 
             return [
-                'id'     => $schedule->id,
-                'title'  => "{$schedule->user->name} - {$schedule->shift->name}",
-                'start'  => $start,
-                'end'    => $end->toDateTimeString(),
+                'id' => $schedule->id,
+                'title' => "{$schedule->user->name} - {$schedule->shift->name}",
+                'start' => $start,
+                'end' => $end->toDateTimeString(),
                 'allDay' => false,
                 'extendedProps' => [
-                    'shift'      => $schedule->shift->name,
+                    'shift' => $schedule->shift->name,
                     'start_time' => $schedule->shift->start_time,
-                    'end_time'   => $schedule->shift->end_time,
-                    'user'       => $schedule->user->name,
+                    'end_time' => $schedule->shift->end_time,
+                    'user' => $schedule->user->name,
                 ],
             ];
         });
 
         return response()->json($events);
     }
+
+
+    public function calendarGridData(Request $request)
+    {
+        try {
+            $month = (int) $request->query('month', now()->month);
+            $year = (int) $request->query('year', now()->year);
+
+            if ($month < 1 || $month > 12) {
+                return response()->json(['success' => false, 'message' => 'Bulan tidak valid'], 400);
+            }
+
+            $date = Carbon::createFromDate($year, $month, 1);
+
+            // Pastikan selalu mulai dari Minggu (0 = Minggu, 6 = Sabtu)
+            $firstDayOfMonth = $date->dayOfWeekIso; // 1 = Senin ... 7 = Minggu
+            // Konversi supaya Minggu = 0
+            $firstDayOfMonth = $firstDayOfMonth % 7;
+
+            $shifts = Shift::select('id', 'name')->orderBy('name')->get();
+
+            return response()->json([
+                'success' => true,
+                'month' => $month,
+                'year' => $year,
+                'daysInMonth' => $date->daysInMonth,
+                'firstDayOfMonth' => $firstDayOfMonth,
+                'monthName' => $date->translatedFormat('F'),
+                'shifts' => $shifts,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan server',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+
 
     public function report()
     {
@@ -217,168 +408,16 @@ class ScheduleController extends Controller
     public function exportReport(Request $request)
     {
         $month = $request->input('month', now()->month);
-        $year  = $request->input('year', now()->year);
+        $year = $request->input('year', now()->year);
 
         $fileName = "Report_Jadwal_{$month}_{$year}.xlsx";
         return Excel::download(new ScheduleReportExport($month, $year), $fileName);
     }
 
-    public function bulkCreate()
-    {
-        $users  = User::orderBy('name')->get();
-        $shifts = Shift::orderBy('name')->get();
-
-        return view('admin.schedules.bulk-create', compact('users', 'shifts'));
-    }
-
-    public function bulkStore(Request $request)
-    {
-        // Handle single schedule creation
-        if ($request->has('single')) {
-            $request->validate([
-                'single_user_id'       => 'required|exists:users,id',
-                'single_shift_id'      => 'required|exists:shifts,id',
-                'single_schedule_date' => 'required|date',
-            ]);
-
-            Schedules::updateOrCreate(
-                [
-                    'user_id'       => $request->single_user_id,
-                    'schedule_date' => $request->single_schedule_date,
-                ],
-                [
-                    'shift_id' => $request->single_shift_id,
-                ]
-            );
-
-            return redirect()->route('admin.schedules.index')
-                ->with('success', 'Jadwal tunggal berhasil disimpan.');
-        }
-
-        // Handle bulk schedule creation (monthly)
-        if ($request->has('bulk_monthly')) {
-            $request->validate([
-                'user_id' => 'required|exists:users,id',
-                'month'   => 'required|integer|min:1|max:12',
-                'year'    => 'required|integer|min:2000',
-                'shifts'  => 'array', // Tidak required, bisa kosong
-            ]);
-
-            $userId = $request->user_id;
-            $month  = $request->month;
-            $year   = $request->year;
-            $shifts = $request->shifts ?? [];
-
-            DB::transaction(function () use ($shifts, $userId, $month, $year) {
-                $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
-
-                for ($day = 1; $day <= $daysInMonth; $day++) {
-                    $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
-                    $shiftId = $shifts[$day] ?? null;
-
-                    if (empty($shiftId) || $shiftId === '') {
-                        // Jika shift kosong atau null, hapus jadwal yang ada
-                        Schedules::where('user_id', $userId)
-                            ->whereDate('schedule_date', $date)
-                            ->delete();
-                    } else {
-                        // Jika ada shift, buat atau update
-                        Schedules::updateOrCreate(
-                            [
-                                'user_id'       => $userId,
-                                'schedule_date' => $date,
-                            ],
-                            [
-                                'shift_id' => $shiftId,
-                            ]
-                        );
-                    }
-                }
-            });
-
-            return redirect()->route('admin.schedules.index')
-                ->with('success', 'Jadwal bulanan berhasil diperbarui.');
-        }
-
-        // Handle bulk creation with multiple dates and users
-        if ($request->has('bulk_multiple')) {
-            $request->validate([
-                'users'          => 'required|array|min:1',
-                'users.*'        => 'exists:users,id',
-                'dates'          => 'required|array|min:1',
-                'dates.*'        => 'date',
-                'shift_id'       => 'required|exists:shifts,id',
-            ]);
-
-            DB::transaction(function () use ($request) {
-                foreach ($request->users as $userId) {
-                    foreach ($request->dates as $date) {
-                        Schedules::updateOrCreate(
-                            [
-                                'user_id'       => $userId,
-                                'schedule_date' => $date,
-                            ],
-                            [
-                                'shift_id' => $request->shift_id,
-                            ]
-                        );
-                    }
-                }
-            });
-
-            $userCount = count($request->users);
-            $dateCount = count($request->dates);
-
-            return redirect()->route('admin.schedules.index')
-                ->with('success', "Berhasil membuat {$userCount} user dengan {$dateCount} tanggal jadwal.");
-        }
-
-        // Handle bulk creation with same shift for multiple dates
-        if ($request->has('bulk_same_shift')) {
-            $request->validate([
-                'user_id'        => 'required|exists:users,id',
-                'shift_id'       => 'required|exists:shifts,id',
-                'start_date'     => 'required|date',
-                'end_date'       => 'required|date|after_or_equal:start_date',
-                'selected_days'  => 'array', // Array hari yang dipilih (0=Minggu, 1=Senin, dst)
-            ]);
-
-            $startDate = Carbon::parse($request->start_date);
-            $endDate = Carbon::parse($request->end_date);
-            $selectedDays = $request->selected_days ?? []; // Jika kosong, semua hari
-
-            DB::transaction(function () use ($request, $startDate, $endDate, $selectedDays) {
-                $currentDate = $startDate->copy();
-
-                while ($currentDate->lte($endDate)) {
-                    // Jika tidak ada hari yang dipilih, atau hari ini termasuk yang dipilih
-                    if (empty($selectedDays) || in_array($currentDate->dayOfWeek, $selectedDays)) {
-                        Schedules::updateOrCreate(
-                            [
-                                'user_id'       => $request->user_id,
-                                'schedule_date' => $currentDate->format('Y-m-d'),
-                            ],
-                            [
-                                'shift_id' => $request->shift_id,
-                            ]
-                        );
-                    }
-
-                    $currentDate->addDay();
-                }
-            });
-
-            return redirect()->route('admin.schedules.index')
-                ->with('success', 'Jadwal berhasil dibuat untuk periode yang dipilih.');
-        }
-
-        return redirect()->back()->withErrors(['error' => 'Tipe bulk tidak valid.']);
-    }
-
     public function table(Request $request)
     {
         $month = $request->input('month', now()->month);
-        $year  = $request->input('year', now()->year);
+        $year = $request->input('year', now()->year);
 
         [$data, $daysInMonth] = $this->buildMonthlyTableData($month, $year);
 
@@ -416,7 +455,7 @@ class ScheduleController extends Controller
 
                 if ($schedule && $schedule->shift) {
                     $start = Carbon::parse($schedule->shift->start_time);
-                    $end   = Carbon::parse($schedule->shift->end_time);
+                    $end = Carbon::parse($schedule->shift->end_time);
                     if ($end->lt($start)) $end->addDay();
 
                     $minutes = $start->diffInMinutes($end);

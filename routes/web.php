@@ -31,35 +31,37 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         // Shifts
         Route::resource('shifts', ShiftController::class);
 
-        // Schedules
-        Route::resource('schedules', ScheduleController::class);
+        /**
+         * --- SCHEDULES & CALENDAR ---
+         * NOTE: letakkan custom route DULU sebelum resource supaya tidak bentrok dengan show()
+         */
         Route::get('schedules/user/{id}', [ScheduleController::class, 'userSchedules'])->name('schedules.user');
         Route::post('schedules/bulk-store', [ScheduleController::class, 'bulkStore'])->name('schedules.bulkStore');
-        Route::get('calendar', [ScheduleController::class, 'calendarView'])->name('calendar.view');
-        Route::get('calendar/data', [ScheduleController::class, 'calendarData'])->name('calendar.data');
-        Route::get('calendar/report', [ScheduleController::class, 'report'])->name('calendar.report');
-        Route::get('calendar/export', [ScheduleController::class, 'exportReport'])->name('calendar.export');
+        Route::get('schedules/calendar-grid-data', [ScheduleController::class, 'calendarGridData'])
+            ->name('schedules.calendar-grid-data');
 
+        // Kalender untuk admin
+        Route::prefix('calendar')->name('calendar.')->group(function () {
+            Route::get('/', [ScheduleController::class, 'calendarView'])->name('view');
+            Route::get('/data', [ScheduleController::class, 'calendarData'])->name('data');
+            Route::get('/report', [ScheduleController::class, 'report'])->name('report');
+            Route::get('/export', [ScheduleController::class, 'exportReport'])->name('export');
+        });
 
+        // Baru panggil resource (paling bawah supaya route di atas tidak ketimpa)
+        Route::resource('schedules', ScheduleController::class);
+
+        // Attendances
         Route::prefix('attendances')->name('attendances.')->group(function () {
-            // Index tampilkan absensi hari ini (dengan filter date optional)
             Route::get('/', [AdminAttendanceController::class, 'index'])->name('index');
-
-            // Riwayat per tanggal
             Route::get('/history', [AdminAttendanceController::class, 'history'])->name('history');
-
-            // Approve / Reject permission untuk schedule tertentu
-            // Nama route => admin.attendances.permission.approve / admin.attendances.permission.reject
             Route::post('/permissions/{permission}/approve', [AdminAttendanceController::class, 'approvePermission'])
                 ->name('permission.approve');
             Route::post('/permissions/{permission}/reject', [AdminAttendanceController::class, 'rejectPermission'])
                 ->name('permission.reject');
-
-            // (opsional) show per user / destroy attendance (kalau butuh)
             Route::get('/{user}', [AdminAttendanceController::class, 'show'])->name('show');
             Route::delete('/{attendance}', [AdminAttendanceController::class, 'destroy'])->name('destroy');
         });
-
 
         // Permissions (Admin)
         Route::prefix('permissions')->name('permissions.')->group(function () {
@@ -75,25 +77,22 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Operator'])
         })->name('dashboard');
     });
 
+// ======= USER =======
 Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':User'])
     ->prefix('user')->name('user.')->group(function () {
-
-        // Dashboard
-        Route::get('/dashboard', function () {
-            return view('users.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', fn() => view('users.dashboard'))->name('dashboard');
 
         // Calendar
         Route::get('calendar', [CalendarController::class, 'calendarView'])->name('calendar.view');
         Route::get('calendar/data', [CalendarController::class, 'calendarData'])->name('calendar.data');
 
+        // Attendance
         Route::get('attendances', [UsersAttendanceController::class, 'index'])->name('attendances.index');
         Route::post('attendances/checkin', [UsersAttendanceController::class, 'checkin'])->name('attendances.checkin');
         Route::post('attendances/checkout', [UsersAttendanceController::class, 'checkout'])->name('attendances.checkout');
         Route::get('attendances/history', [UsersAttendanceController::class, 'history'])->name('attendances.history');
 
-        // Permission
-        // Permission
+        // Permissions
         Route::get('permissions/create', [UsersPermissionController::class, 'create'])->name('attendances.permission.create');
         Route::get('permissions', [UsersPermissionController::class, 'create'])->name('permissions.index');
         Route::post('permissions', [UsersPermissionController::class, 'store'])->name('permissions.store');
@@ -102,7 +101,6 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':User'])
 
 // ======= AUTH =======
 Route::get('/', fn() => redirect()->route('login'));
-
 Route::get('login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', function () {
