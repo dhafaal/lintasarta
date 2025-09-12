@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Tambah Jadwal')
+
 @section('content')
     <div class="min-h-screen bg-white sm:p-6 lg:p-8">
         <div class="mx-auto">
@@ -86,24 +88,50 @@
                         </div>
 
                         <!-- Calendar Grid -->
-                        <div class="space-y-3">
-                            <label class="block text-sm font-bold text-gray-800">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">
                                 Jadwal Per Tanggal <span class="text-red-500">*</span>
                             </label>
-                            <div class="bg-gray-50 p-6 rounded-xl border-2 border-gray-200">
-                                <div class="grid grid-cols-7 gap-2 mb-4">
-                                    <div class="text-center font-bold">Ming</div>
-                                    <div class="text-center font-bold">Sen</div>
-                                    <div class="text-center font-bold">Sel</div>
-                                    <div class="text-center font-bold">Rab</div>
-                                    <div class="text-center font-bold">Kam</div>
-                                    <div class="text-center font-bold">Jum</div>
-                                    <div class="text-center font-bold">Sab</div>
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                                <div class="grid grid-cols-7 gap-1 mb-3">
+                                    <div class="text-center text-xs font-semibold text-gray-600">Ming</div>
+                                    <div class="text-center text-xs font-semibold text-gray-600">Sen</div>
+                                    <div class="text-center text-xs font-semibold text-gray-600">Sel</div>
+                                    <div class="text-center text-xs font-semibold text-gray-600">Rab</div>
+                                    <div class="text-center text-xs font-semibold text-gray-600">Kam</div>
+                                    <div class="text-center text-xs font-semibold text-gray-600">Jum</div>
+                                    <div class="text-center text-xs font-semibold text-gray-600">Sab</div>
                                 </div>
-                                <div id="calendarDays" class="grid grid-cols-7 gap-2 text-center text-gray-600">
-                                    <div class="col-span-7 text-center py-8 text-gray-400">Loading...</div>
+                                <div id="calendarDays" class="grid grid-cols-7 gap-1 text-center text-gray-600">
+                                    <div class="col-span-7 text-center py-6 text-gray-400 text-sm">Loading...</div>
                                 </div>
-                                <p class="text-xs text-gray-500 mt-3" id="daysInfo"></p>
+                                <p class="text-xs text-gray-500 mt-2" id="daysInfo"></p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Preset Shift Cepat</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button"
+                                    class="px-3 py-1.5 bg-sky-50 text-sky-600 text-sm font-medium rounded-lg hover:bg-sky-100 transition-colors duration-200"
+                                    onclick="applyQuickPreset('pagi')">
+                                    Isi Pagi
+                                </button>
+                                <button type="button"
+                                    class="px-3 py-1.5 bg-orange-50 text-orange-600 text-sm font-medium rounded-lg hover:bg-orange-100 transition-colors duration-200"
+                                    onclick="applyQuickPreset('siang')">
+                                    Isi Siang
+                                </button>
+                                <button type="button"
+                                    class="px-3 py-1.5 bg-purple-50 text-purple-600 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors duration-200"
+                                    onclick="applyQuickPreset('malam')">
+                                    Isi Malam
+                                </button>
+                                <button type="button"
+                                    class="px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors duration-200"
+                                    onclick="clearPreset()">
+                                    Kosongkan
+                                </button>
                             </div>
                         </div>
 
@@ -165,10 +193,10 @@
 
                 while (day <= data.daysInMonth) {
                     html += `
-                    <div class="p-2 bg-white border rounded-xl flex flex-col items-center">
-                        <span class="font-bold text-gray-700">${day}</span>
+                    <div class="p-2 bg-white border border-gray-100 rounded-lg flex flex-col items-center hover:shadow-sm transition-shadow duration-200">
+                        <span class="text-sm font-semibold text-gray-700">${day}</span>
                         <select name="shifts[${day}]"
-                            class="mt-2 w-full border-2 border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-200 focus:border-sky-500">
+                            class="mt-1 w-full px-2 py-1 border border-gray-200 rounded-md text-xs focus:ring-1 focus:ring-sky-200 focus:border-sky-500 bg-white transition-colors duration-150">
                             <option value="">-- Pilih Shift --</option>
                             @foreach ($shifts as $shift)
                                 <option value="{{ $shift->id }}">{{ $shift->name }}</option>
@@ -192,5 +220,27 @@
             yearSelect.addEventListener("change", loadCalendar);
             loadCalendar();
         });
+
+        // Atur ID shift sesuai dengan ID shift yang ada di database
+        const SHIFT_IDS = {
+            pagi: 1, // ganti sesuai id shift pagi
+            siang: 2, // ganti sesuai id shift siang
+            malam: 3 // ganti sesuai id shift malam
+        };
+
+        function applyQuickPreset(type) {
+            const shiftId = SHIFT_IDS[type];
+            if (!shiftId) return alert("ID shift untuk " + type + " belum diatur!");
+
+            document.querySelectorAll('#calendarDays select').forEach(select => {
+                select.value = shiftId;
+            });
+        }
+
+        function clearPreset() {
+            document.querySelectorAll('#calendarDays select').forEach(select => {
+                select.value = "";
+            });
+        }
     </script>
 @endsection
