@@ -27,7 +27,7 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <x-role-card
+            <x-stats-card
                 title="Total Karyawan Terjadwal"
                 :count="$totalEmployeesWithSchedules"
                 subtitle="Karyawan memiliki jadwal"
@@ -36,7 +36,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>'
             />
-            <x-role-card
+            <x-stats-card
                 title="Jadwal Hari Ini"
                 :count="$todaySchedules"
                 :subtitle="today()->translatedFormat('d F Y')"
@@ -45,7 +45,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>'
             />
-            <x-role-card
+            <x-stats-card
                 title="Jadwal Minggu Ini"
                 :count="$thisWeekSchedules"
                 :subtitle="now()->startOfWeek()->translatedFormat('d M') . ' - ' . now()->endOfWeek()->translatedFormat('d M')"
@@ -54,7 +54,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>'
             />
-            <x-role-card
+            <x-stats-card
                 title="Jumlah Total Jadwal"
                 :count="$schedules->count()"
                 subtitle="Semua jadwal yang tercatat"

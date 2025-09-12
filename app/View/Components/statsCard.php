@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class roleCard extends Component
+class statsCard extends Component
 {
     public $title;
     public $count;
@@ -26,6 +26,6 @@ class roleCard extends Component
 
     public function render(): View|Closure|string
     {
-        return view('components.dashboard.role-card');
+        return view('components.admin.stats-card');
     }
 }

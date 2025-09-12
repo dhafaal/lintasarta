@@ -48,7 +48,7 @@ class ScheduleController extends Controller
                 if ($end->lessThan($start)) {
                     $end->addDay();
                 }
-                return $end->diffInMinutes($start);
+                return abs($end->diffInMinutes($start)); // pastikan selalu positif
             });
 
             $hours = floor($totalMinutes / 60);

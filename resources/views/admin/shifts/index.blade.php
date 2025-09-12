@@ -33,7 +33,7 @@
 
             <!-- Enhanced Stats Cards using x-role-card component -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <x-role-card
+                <x-stats-card
                     title="Total Shifts"
                     :count="$shifts->count()"
                     subtitle="Shift aktif"
@@ -43,7 +43,7 @@
                         </svg>'
                 />
 
-                <x-role-card
+                <x-stats-card
                     title="Shift Pagi"
                     :count="$shifts->where('name', 'Pagi')->count()"
                     subtitle="Pagi"
@@ -53,7 +53,7 @@
                         </svg>'
                 />
 
-                <x-role-card
+                <x-stats-card
                     title="Shift Siang"
                     :count="$shifts->where('name', 'Siang')->count()"
                     subtitle="Siang"
@@ -63,7 +63,7 @@
                         </svg>'
                 />
 
-                <x-role-card
+                <x-stats-card
                     title="Shift Malam"
                     :count="$shifts->where('name', 'Malam')->count()"
                     subtitle="Malam"
