@@ -52,20 +52,20 @@
                 </div>
 
                 <x-stats-card title="Shift Pagi" :count="$shifts->where('name', 'Pagi')->count()" subtitle="Pagi"
-                    bgColor="bg-gradient-to-br from-yellow-100 to-orange-100"
-                    icon='<svg class="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    bgColor="bg-radial from-yellow-200 to-yellow-50"
+                    icon='<svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>' />
 
                 <x-stats-card title="Shift Siang" :count="$shifts->where('name', 'Siang')->count()" subtitle="Siang"
-                    bgColor="bg-gradient-to-br from-blue-100 to-sky-100"
-                    icon='<svg class="w-7 h-7 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    bgColor="bg-radial from-orange-200 to-orange-50"
+                    icon='<svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>' />
 
                 <x-stats-card title="Shift Malam" :count="$shifts->where('name', 'Malam')->count()" subtitle="Malam"
-                    bgColor="bg-gradient-to-br from-indigo-100 to-purple-100"
-                    icon='<svg class="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    bgColor="bg-radial from-indigo-200 to-indigo-50"
+                    icon='<svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                         </svg>' />
             </div>
@@ -188,35 +188,40 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse($shifts as $shift)
-                                <tr class="hover:bg-sky-50 transition-colors duration-200 group">
+                                <tr class="hover:bg-gray-50 transition-colors duration-200 group">
                                     <td class="px-8 py-6 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div
-                                                class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-4 group-hover:from-sky-200 group-hover:to-sky-300 transition-colors">
+                                            <div class="flex items-center justify-center mr-4 transition-colors">
                                                 @if ($shift->name == 'Pagi')
-                                                    <svg class="w-5 h-5 text-orange-500" fill="none"
+                                                <div class="flex items-center justify-center bg-radial from-yellow-200 to-yellow-50 w-10 h-10 rounded-xl">
+                                                    <svg class="w-5 h-5 text-yellow-600" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
                                                             d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
                                                         </path>
                                                     </svg>
+                                                </div>
                                                 @elseif($shift->name == 'Siang')
-                                                    <svg class="w-5 h-5 text-sky-500" fill="none"
+                                                <div class="flex items-center justify-center bg-radial from-orange-200 to-orange-50 w-10 h-10 rounded-xl">
+                                                    <svg class="w-5 h-5 text-orange-600" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
                                                             d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
                                                         </path>
                                                     </svg>
+                                                </div>
                                                 @else
-                                                    <svg class="w-5 h-5 text-indigo-500" fill="none"
+                                                <div class="flex items-center justify-center bg-radial from-indigo-200 to-indigo-50 w-10 h-10 rounded-xl">
+                                                    <svg class="w-5 h-5 text-indigo-600" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
                                                             d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
                                                         </path>
                                                     </svg>
+                                                </div>
                                                 @endif
                                             </div>
                                             <div>
