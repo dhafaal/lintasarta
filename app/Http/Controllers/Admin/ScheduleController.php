@@ -150,15 +150,18 @@ class ScheduleController extends Controller
             'single_schedule_date' => 'required|date',
         ]);
 
-        Schedules::updateOrCreate(
-            [
+        $exists = Schedules::where('user_id', $request->single_user_id)
+            ->whereDate('schedule_date', $request->single_schedule_date)
+            ->where('shift_id', $request->single_shift_id)
+            ->exists();
+
+        if (!$exists) {
+            Schedules::create([
                 'user_id'       => $request->single_user_id,
                 'schedule_date' => $request->single_schedule_date,
-            ],
-            [
-                'shift_id' => $request->single_shift_id,
-            ]
-        );
+                'shift_id'      => $request->single_shift_id,
+            ]);
+        }
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Jadwal berhasil disimpan.');
@@ -188,20 +191,19 @@ class ScheduleController extends Controller
                 $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
                 $shiftId = $shifts[$day] ?? null;
 
-                if (empty($shiftId)) {
-                    Schedules::where('user_id', $userId)
+                if (!empty($shiftId)) {
+                    $exists = Schedules::where('user_id', $userId)
                         ->whereDate('schedule_date', $date)
-                        ->delete();
-                } else {
-                    Schedules::updateOrCreate(
-                        [
+                        ->where('shift_id', $shiftId)
+                        ->exists();
+
+                    if (!$exists) {
+                        Schedules::create([
                             'user_id'       => $userId,
                             'schedule_date' => $date,
-                        ],
-                        [
-                            'shift_id' => $shiftId,
-                        ]
-                    );
+                            'shift_id'      => $shiftId,
+                        ]);
+                    }
                 }
             }
         });
@@ -226,15 +228,18 @@ class ScheduleController extends Controller
         DB::transaction(function () use ($request) {
             foreach ($request->users as $userId) {
                 foreach ($request->dates as $date) {
-                    Schedules::updateOrCreate(
-                        [
+                    $exists = Schedules::where('user_id', $userId)
+                        ->whereDate('schedule_date', $date)
+                        ->where('shift_id', $request->shift_id)
+                        ->exists();
+
+                    if (!$exists) {
+                        Schedules::create([
                             'user_id'       => $userId,
                             'schedule_date' => $date,
-                        ],
-                        [
-                            'shift_id' => $request->shift_id,
-                        ]
-                    );
+                            'shift_id'      => $request->shift_id,
+                        ]);
+                    }
                 }
             }
         });
@@ -268,15 +273,18 @@ class ScheduleController extends Controller
 
             while ($currentDate->lte($endDate)) {
                 if (empty($selectedDays) || in_array($currentDate->dayOfWeek, $selectedDays)) {
-                    Schedules::updateOrCreate(
-                        [
+                    $exists = Schedules::where('user_id', $request->user_id)
+                        ->whereDate('schedule_date', $currentDate->format('Y-m-d'))
+                        ->where('shift_id', $request->shift_id)
+                        ->exists();
+
+                    if (!$exists) {
+                        Schedules::create([
                             'user_id'       => $request->user_id,
                             'schedule_date' => $currentDate->format('Y-m-d'),
-                        ],
-                        [
-                            'shift_id' => $request->shift_id,
-                        ]
-                    );
+                            'shift_id'      => $request->shift_id,
+                        ]);
+                    }
                 }
                 $currentDate->addDay();
             }
@@ -448,22 +456,32 @@ class ScheduleController extends Controller
             for ($day = 1; $day <= $daysInMonth; $day++) {
                 $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
 
-                $schedule = Schedules::with('shift')
+                $schedules = Schedules::with('shift')
                     ->where('user_id', $user->id)
                     ->whereDate('schedule_date', $date)
-                    ->first();
+                    ->get();
 
-                if ($schedule && $schedule->shift) {
-                    $start = Carbon::parse($schedule->shift->start_time);
-                    $end = Carbon::parse($schedule->shift->end_time);
-                    if ($end->lt($start)) $end->addDay();
+                if ($schedules->isNotEmpty()) {
+                    $shiftLetters = [];
+                    $hoursList = [];
 
-                    $minutes = $start->diffInMinutes($end);
-                    $totalMinutes += $minutes;
+                    foreach ($schedules as $schedule) {
+                        if (!$schedule->shift) continue;
+
+                        $start = Carbon::parse($schedule->shift->start_time);
+                        $end = Carbon::parse($schedule->shift->end_time);
+                        if ($end->lt($start)) $end->addDay();
+
+                        $minutes = $start->diffInMinutes($end);
+                        $totalMinutes += $minutes;
+
+                        $shiftLetters[] = strtoupper(substr($schedule->shift->name, 0, 1));
+                        $hoursList[] = round($minutes / 60, 1) . 'j';
+                    }
 
                     $row['shifts'][$day] = [
-                        'shift' => strtoupper(substr($schedule->shift->name, 0, 1)),
-                        'hours' => round($minutes / 60, 1) . 'j',
+                        'shift' => implode(',', $shiftLetters), // contoh: "P,M"
+                        'hours' => implode(' + ', $hoursList), // contoh: "8j + 8j"
                     ];
                 } else {
                     $row['shifts'][$day] = [

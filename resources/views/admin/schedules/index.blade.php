@@ -31,7 +31,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-gradient-to-br from-sky-500 to-sky-600 rounded-2xl p-6 text-white shadow-xl">
+                <div class="bg-gradient-to-br from-sky-500 to-sky-600 rounded-2xl p-6 text-sky-50 shadow-xl">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sky-100 text-sm font-medium uppercase tracking-wide">Total Karyawan Terjadwal</p>
