@@ -83,9 +83,8 @@
 
             {{-- Tabel Jadwal --}}
             <div class="bg-white rounded-2xl border border-gray-200 shadow">
-                <div
-                    class="px-8 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-blue-50 flex items-center justify-between">
-                    <h2 class="text-lg font-bold text-gray-900">Tabel Jadwal</h2>
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-100 flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-gray-700">Tabel Jadwal</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full border-collapse text-sm">
@@ -172,9 +171,8 @@
 
             {{-- Kalender --}}
             <div class="bg-white rounded-2xl border border-gray-200 shadow">
-                <div
-                    class="px-8 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-blue-50 flex items-center justify-between">
-                    <h2 class="text-lg font-bold text-gray-900">Kalender Jadwal</h2>
+                <div class="px-8 py-4 border-b border-gray-200 bg-gray-100 flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-gray-700">Kalender Jadwal</h2>
                 </div>
 
                 {{-- Legend --}}
