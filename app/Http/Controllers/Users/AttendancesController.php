@@ -7,28 +7,29 @@ use App\Models\Attendance;
 use App\Models\Schedules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
 
 class AttendancesController extends Controller
 {
+    // ✅ Koordinat kantor kamu
+    private $officeLat = -6.2903534643805115;
+    private $officeLng = 106.7852134376512;
+    private $officeRadius = 1000; // dalam meter (1 KM)
+
     public function index()
     {
         $user = Auth::user();
-        $today = Carbon::today()->toDateString();
+        $today = now()->toDateString();
 
-        $schedule = Schedules::with('shift')
+        $schedule = Schedules::with(['shift', 'permissions', 'attendances'])
             ->where('user_id', $user->id)
             ->whereDate('schedule_date', $today)
             ->first();
 
-        $attendance = $schedule ? Attendance::where('schedule_id', $schedule->id)
-            ->where('user_id', $user->id)
-            ->first() : null;
+        $attendance = $schedule?->attendances->where('user_id', $user->id)->first();
 
-        $schedules = Schedules::with(['shift', 'attendances', 'permissions'])
+        $schedules = Schedules::with(['shift', 'permissions', 'attendances'])
             ->where('user_id', $user->id)
-            ->orderBy('schedule_date', 'asc')
+            ->orderBy('schedule_date')
             ->get();
 
         return view('users.attendances.index', compact('schedule', 'attendance', 'schedules'));
@@ -38,13 +39,16 @@ class AttendancesController extends Controller
     {
         $request->validate([
             'schedule_id' => 'required|exists:schedules,id',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
         ]);
 
-        $schedule = Schedules::find($request->schedule_id);
-        $user = Auth::user();
+        if (!$this->isWithinRadius($request->latitude, $request->longitude)) {
+            return back()->with('error', 'Anda berada di luar radius 1 KM dari kantor.');
+        }
 
         $attendance = Attendance::firstOrCreate(
-            ['schedule_id' => $schedule->id, 'user_id' => $user->id],
+            ['schedule_id' => $request->schedule_id, 'user_id' => Auth::id()],
             ['status' => 'hadir', 'check_in_time' => now()]
         );
 
@@ -54,7 +58,9 @@ class AttendancesController extends Controller
 
         $attendance->update([
             'status' => 'hadir',
-            'check_in_time' => now()
+            'check_in_time' => now(),
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude
         ]);
 
         return back()->with('success', 'Check-in berhasil.');
@@ -64,13 +70,16 @@ class AttendancesController extends Controller
     {
         $request->validate([
             'schedule_id' => 'required|exists:schedules,id',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
         ]);
 
-        $schedule = Schedules::find($request->schedule_id);
-        $user = Auth::user();
+        if (!$this->isWithinRadius($request->latitude, $request->longitude)) {
+            return back()->with('error', 'Anda berada di luar radius 1 KM dari kantor.');
+        }
 
-        $attendance = Attendance::where('schedule_id', $schedule->id)
-            ->where('user_id', $user->id)
+        $attendance = Attendance::where('schedule_id', $request->schedule_id)
+            ->where('user_id', Auth::id())
             ->first();
 
         if (!$attendance || !$attendance->check_in_time) {
@@ -82,10 +91,33 @@ class AttendancesController extends Controller
         }
 
         $attendance->update([
-            'check_out_time' => now()
+            'check_out_time' => now(),
+            'latitude_checkout' => $request->latitude,
+            'longitude_checkout' => $request->longitude
         ]);
 
         return back()->with('success', 'Check-out berhasil.');
+    }
+
+    private function isWithinRadius($lat, $lng)
+    {
+        $earthRadius = 6371000; // meter
+        $latFrom = deg2rad($lat);
+        $lonFrom = deg2rad($lng);
+        $latTo = deg2rad($this->officeLat);
+        $lonTo = deg2rad($this->officeLng);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $a = sin($latDelta / 2) ** 2 +
+            cos($latFrom) * cos($latTo) * sin($lonDelta / 2) ** 2;
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        $distance = $earthRadius * $c;
+        session()->flash('debug_distance', round($distance, 2) . ' meter'); // ✅ debug jarak
+
+        return $distance <= $this->officeRadius;
     }
 
     public function absent(Request $request)
@@ -121,26 +153,5 @@ class AttendancesController extends Controller
             ->get();
 
         return view('users.attendances.history', compact('attendances'));
-    }
-
-
-
-    private function isWithinRadius($lat, $lng, $centerLat, $centerLng, $radius)
-    {
-        $earthRadius = 6371000; // meter
-        $latFrom = deg2rad($lat);
-        $lonFrom = deg2rad($lng);
-        $latTo = deg2rad($centerLat);
-        $lonTo = deg2rad($centerLng);
-
-        $latDelta = $latTo - $latFrom;
-        $lonDelta = $lonTo - $lonFrom;
-
-        $a = sin($latDelta / 2) ** 2 +
-            cos($latFrom) * cos($latTo) * sin($lonDelta / 2) ** 2;
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        $distance = $earthRadius * $c;
-        return $distance <= $radius;
     }
 }
