@@ -1,4 +1,4 @@
-<div class="bg-white border-2 border-sky-100 hover:border-sky-300 rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
+<a class="bg-white border-2 border-sky-100 hover:border-sky-300 rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
     <div class="flex items-center justify-between">
         <div>
             <p class="text-sky-600 text-sm font-bold uppercase tracking-wide">{{ $title }}</p>
@@ -9,4 +9,4 @@
             {!! $icon !!}
         </div>
     </div>
-</div>
+</a>

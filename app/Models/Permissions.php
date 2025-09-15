@@ -1,22 +1,13 @@
 <?php
 
+// app/Models/Permission.php
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Permissions extends Model
 {
-    use HasFactory;
-
-    protected $fillable = [
-        'user_id',
-        'schedule_id',
-        'status',
-        'alasan',
-        'approved_by',
-        'approved_at',
-    ];
+    protected $fillable = ['user_id', 'schedule_id', 'reason', 'status'];
 
     public function user()
     {
@@ -25,17 +16,6 @@ class Permissions extends Model
 
     public function schedule()
     {
-        return $this->belongsTo(Schedules::class);
-    }
-
-    public function approver()
-    {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
-
-    public function attendance()
-    {
-        return $this->belongsTo(Attendance::class, 'schedule_id', 'schedule_id')
-            ->where('user_id', $this->user_id);
+        return $this->belongsTo(Schedules::class, 'schedule_id');
     }
 }
