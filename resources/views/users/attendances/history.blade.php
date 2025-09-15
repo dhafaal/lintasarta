@@ -1,86 +1,78 @@
 @extends('layouts.user')
 
-@section('content')
-<div class="max-w-6xl mx-auto p-6 bg-white shadow rounded-lg">
-    <h2 class="text-2xl font-bold mb-6">Riwayat Absensi</h2>
+@section('title', 'Riwayat Kehadiran')
 
-    <!-- Filter & Search -->
-    <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-6">
-        <input type="date" name="date" value="{{ $schedule_date }}" 
-            class="border border-gray-300 px-3 py-2 rounded w-full sm:w-auto">
-        <input type="text" name="search" value="{{ $search }}" placeholder="Cari shift..."
-            class="border border-gray-300 px-3 py-2 rounded w-full sm:w-64">
+@section('content')
+<div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">📜 Riwayat Kehadiran</h1>
+
+    {{-- Filter Tanggal --}}
+    <form method="GET" action="{{ route('user.attendances.history') }}" class="mb-6 flex items-center gap-3">
+        <input type="date" name="date" value="{{ $date ?? '' }}"
+               class="border border-gray-300 rounded-lg px-3 py-2">
         <button type="submit"
-            class="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">
+                class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg shadow">
             Filter
         </button>
+        @if(!empty($date))
+            <a href="{{ route('user.attendances.history') }}"
+               class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg">
+               Reset
+            </a>
+        @endif
     </form>
 
-    <!-- Table -->
-    <div class="overflow-x-auto">
-        <table class="min-w-full border border-gray-200 rounded-lg">
-            <thead>
-                <tr class="bg-gray-100 text-left text-sm font-semibold text-gray-700">
-                    <th class="px-4 py-2 border">Tanggal</th>
-                    <th class="px-4 py-2 border">Shift</th>
-                    <th class="px-4 py-2 border">Check In</th>
-                    <th class="px-4 py-2 border">Check Out</th>
-                    <th class="px-4 py-2 border">Status</th>
-                </tr>
-            </thead>
-            <tbody class="text-sm">
-                @forelse($schedules as $schedule)
-                    @php
-                        $attendance = $schedule->attendances->first();
-                        $permission = $schedule->permissions->first();
-                        if ($attendance) {
-                            $status = $attendance->status;
-                        } elseif ($permission) {
-                            $status = 'izin';
-                        } else {
-                            $status = 'alpha';
-                        }
-                    @endphp
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2 border">
-                            {{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}
-                        </td>
-                        <td class="px-4 py-2 border">{{ $schedule->shift->name ?? '-' }}</td>
-                        <td class="px-4 py-2 border">
-                            {{ $attendance && $attendance->check_in_time 
-                                ? \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') 
-                                : '-' }}
-                        </td>
-                        <td class="px-4 py-2 border">
-                            {{ $attendance && $attendance->check_out_time 
-                                ? \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') 
-                                : '-' }}
-                        </td>
-                        <td class="px-4 py-2 border">
-                            <span class="px-2 py-1 text-xs rounded
-                                @if($status === 'hadir') bg-green-100 text-green-700
-                                @elseif($status === 'izin') bg-yellow-100 text-yellow-700
-                                @else bg-red-100 text-red-700 @endif">
-                                {{ ucfirst($status) }}
-                            </span>
-                        </td>
-                    </tr>
-                @empty
+    @if ($schedules->count() > 0)
+        <div class="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
+            <table class="min-w-full text-sm text-left border-collapse">
+                <thead class="bg-gray-100">
                     <tr>
-                        <td colspan="5" class="text-center py-4 text-gray-500">
-                            Tidak ada riwayat absensi
-                        </td>
+                        <th class="px-4 py-2 border-b">Tanggal</th>
+                        <th class="px-4 py-2 border-b">Shift</th>
+                        <th class="px-4 py-2 border-b">Status</th>
+                        <th class="px-4 py-2 border-b">Check-In</th>
+                        <th class="px-4 py-2 border-b">Check-Out</th>
+                        <th class="px-4 py-2 border-b">Keterangan</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody>
+                    @foreach ($schedules as $schedule)
+                        @php
+                            $attendance = $attendances->firstWhere('schedule_id', $schedule->id);
+                            $permission = $permissions->firstWhere('schedule_id', $schedule->id);
 
-    <!-- Pagination -->
-    <div class="mt-4">
-        @if(method_exists($schedules, 'links'))
-            {{ $schedules->appends(request()->query())->links() }}
-        @endif
-    </div>
+                            // Tentukan status otomatis jika tidak ada data
+                            $status = $attendance->status ?? ($permission ? 'izin' : 'alpha');
+                        @endphp
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-2 border-b">{{ $schedule->schedule_date }}</td>
+                            <td class="px-4 py-2 border-b">{{ $schedule->shift->name ?? '-' }}</td>
+                            <td class="px-4 py-2 border-b">
+                                <span class="px-2 py-1 text-xs rounded
+                                    @if ($status === 'hadir') bg-green-100 text-green-700
+                                    @elseif ($status === 'izin') bg-yellow-100 text-yellow-700
+                                    @elseif ($status === 'alpha') bg-red-100 text-red-700 @endif">
+                                    {{ ucfirst($status) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 border-b">
+                                {{ $attendance->check_in_time ?? '-' }}
+                            </td>
+                            <td class="px-4 py-2 border-b">
+                                {{ $attendance->check_out_time ?? '-' }}
+                            </td>
+                            <td class="px-4 py-2 border-b">
+                                {{ $permission->reason ?? '-' }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="p-6 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg text-center">
+            Tidak ada riwayat jadwal.
+        </div>
+    @endif
 </div>
 @endsection

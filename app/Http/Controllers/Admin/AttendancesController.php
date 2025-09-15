@@ -103,37 +103,37 @@ class AttendancesController extends Controller
     }
 
     public function history(Request $request)
-    {
-        $date = $request->input('date', now()->toDateString());
-        $search = $request->input('search');
+{
+    $user = Auth::user();
 
-        // Ambil jadwal sesuai tanggal
-        $schedules = \App\Models\Schedules::with(['user', 'shift'])
-            ->whereDate('schedule_date', $date)
-            ->get();
+    // Ambil tanggal dari request, default hari ini
+    $date = $request->input('date', now()->toDateString());
 
-        // Ambil absensi sesuai jadwal & filter nama
-        $attendances = \App\Models\Attendance::with(['user', 'schedule.shift'])
-            ->whereHas('schedule', function ($q) use ($date, $search) {
-                $q->whereDate('schedule_date', $date);
-                if ($search) {
-                    $q->whereHas('user', fn($u) => $u->where('name', 'like', "%$search%"));
-                }
-            })
-            ->get();
+    // Ambil jadwal user sesuai tanggal
+    $schedules = \App\Models\Schedules::with(['shift'])
+        ->where('user_id', $user->id)
+        ->whereDate('schedule_date', $date)
+        ->get();
 
-        // Ambil izin sesuai tanggal
-        $permissions = \App\Models\Permissions::with(['user', 'schedule'])
-            ->whereHas('schedule', function ($q) use ($date, $search) {
-                $q->whereDate('schedule_date', $date);
-                if ($search) {
-                    $q->whereHas('user', fn($u) => $u->where('name', 'like', "%$search%"));
-                }
-            })
-            ->get();
+    // Ambil absensi user sesuai jadwal
+    $attendances = \App\Models\Attendance::with(['schedule.shift'])
+        ->where('user_id', $user->id)
+        ->whereHas('schedule', function ($q) use ($date) {
+            $q->whereDate('schedule_date', $date);
+        })
+        ->get();
 
-        return view('admin.attendances.history', compact('attendances', 'permissions', 'schedules', 'date', 'search'));
-    }
+    // Ambil izin user sesuai tanggal
+    $permissions = \App\Models\Permissions::with(['schedule'])
+        ->where('user_id', $user->id)
+        ->whereHas('schedule', function ($q) use ($date) {
+            $q->whereDate('schedule_date', $date);
+        })
+        ->get();
+
+    return view('users.attendances.history', compact('attendances', 'permissions', 'schedules', 'date'));
+}
+
 
 
     // optional: show() dan destroy() jika memang kamu pakai di routes

@@ -78,6 +78,21 @@ class AttendancesController extends Controller
             return back()->with('error', 'Anda berada di luar radius 1 KM dari kantor.');
         }
 
+        // Ambil schedule + shift untuk mendapatkan jam selesai shift
+        $schedule = \App\Models\Schedules::with('shift')->find($request->schedule_id);
+
+        if (!$schedule || !$schedule->shift) {
+            return back()->with('error', 'Data jadwal tidak ditemukan.');
+        }
+
+        // Ambil jam selesai shift dan bandingkan dengan waktu sekarang
+        $shiftEnd = \Carbon\Carbon::parse($schedule->shift->end_time);
+        $now = now();
+
+        if ($now->lt($shiftEnd)) {
+            return back()->with('error', 'Anda belum bisa check-out. Waktu shift belum selesai.');
+        }
+
         $attendance = Attendance::where('schedule_id', $request->schedule_id)
             ->where('user_id', Auth::id())
             ->first();
@@ -91,13 +106,14 @@ class AttendancesController extends Controller
         }
 
         $attendance->update([
-            'check_out_time' => now(),
+            'check_out_time' => $now,
             'latitude_checkout' => $request->latitude,
             'longitude_checkout' => $request->longitude
         ]);
 
         return back()->with('success', 'Check-out berhasil.');
     }
+
 
     private function isWithinRadius($lat, $lng)
     {
@@ -143,15 +159,42 @@ class AttendancesController extends Controller
         return back()->with('success', 'Anda ditandai Alpha.');
     }
 
-    public function history()
-    {
-        $user = Auth::user();
+    public function history(Request $request)
+{
+    $user = Auth::user();
+    $date = $request->input('date');
 
-        $attendances = Attendance::with('schedule.shift')
-            ->where('user_id', $user->id)
-            ->orderByDesc('created_at')
-            ->get();
+    $today = now()->toDateString();
 
-        return view('users.attendances.history', compact('attendances'));
+    // Ambil semua jadwal sampai hari ini
+    $scheduleQuery = \App\Models\Schedules::with('shift')
+        ->where('user_id', $user->id)
+        ->whereDate('schedule_date', '<=', $today);
+
+    $attendanceQuery = \App\Models\Attendance::with('schedule.shift')
+        ->where('user_id', $user->id)
+        ->whereHas('schedule', function ($q) use ($today) {
+            $q->whereDate('schedule_date', '<=', $today);
+        })
+        ->whereIn('status', ['hadir', 'alpha', 'izin']);
+
+    $permissionQuery = \App\Models\Permissions::with('schedule')
+        ->where('user_id', $user->id)
+        ->whereHas('schedule', function ($q) use ($today) {
+            $q->whereDate('schedule_date', '<=', $today);
+        });
+
+    if (!empty($date)) {
+        $scheduleQuery->whereDate('schedule_date', $date);
+        $attendanceQuery->whereHas('schedule', fn($q) => $q->whereDate('schedule_date', $date));
+        $permissionQuery->whereHas('schedule', fn($q) => $q->whereDate('schedule_date', $date));
     }
+
+    $schedules = $scheduleQuery->orderBy('schedule_date', 'desc')->get();
+    $attendances = $attendanceQuery->get();
+    $permissions = $permissionQuery->get();
+
+    return view('users.attendances.history', compact('attendances', 'permissions', 'schedules', 'date'));
+}
+
 }
