@@ -14,7 +14,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-700 tracking-tight">Absensi Tanggal {{ $today }}</h1>
+                        <h1 class="text-3xl font-bold text-gray-700 tracking-tight">Absensi Tanggal {{ $todayFormated }}</h1>
                         <p class="text-gray-500 mt-1">Kelola data absensi harian</p>
                     </div>
                 </div>
@@ -72,7 +72,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <h2 class="text-xl font-bold text-sky-900">Daftar Absensi</h2>
-                            <p class="text-sky-700 mt-1">Data absensi untuk tanggal {{ $today }}</p>
+                            <p class="text-sky-700 mt-1">Data absensi untuk tanggal {{ $todayFormated }}</p>
                         </div>
                         <div class="flex items-center space-x-3">
                             <div class="relative">

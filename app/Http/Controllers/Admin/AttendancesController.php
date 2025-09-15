@@ -16,7 +16,7 @@ class AttendancesController extends Controller
     {
 
         $today = $request->input('date', Carbon::today()->toDateString());
-        $today = Carbon::parse($today)->locale('id')->translatedFormat('l, d F Y');
+        $todayFormated = Carbon::parse($today)->locale('id')->translatedFormat('l, d F Y');
 
 
         // schedules hari ini
@@ -41,6 +41,7 @@ class AttendancesController extends Controller
 
         return view('admin.attendances.index', compact(
             'today',
+            'todayFormated',
             'schedulesToday',
             'attendances',
             'permissions',

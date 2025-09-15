@@ -22,182 +22,108 @@ class AttendancesController extends Controller
             ->whereDate('schedule_date', $today)
             ->first();
 
-        $attendance = null;
-        if ($schedule) {
-            $attendance = Attendance::where('user_id', $user->id)
-                ->where('schedule_id', $schedule->id)
-                ->first();
-        }
-
-        $schedules = Schedules::with(['shift', 'attendances' => function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        }])
+        $attendance = $schedule ? Attendance::where('schedule_id', $schedule->id)
             ->where('user_id', $user->id)
-            ->whereDate('schedule_date', '>=', $today)
+            ->first() : null;
+
+        $schedules = Schedules::with(['shift', 'attendances', 'permissions'])
+            ->where('user_id', $user->id)
             ->orderBy('schedule_date', 'asc')
             ->get();
 
         return view('users.attendances.index', compact('schedule', 'attendance', 'schedules'));
     }
 
-    public function history(Request $request)
-    {
-        $userId = Auth::id();
-        $date = $request->input('date');
-        $search = $request->input('search');
-
-        $query = Schedules::with([
-            'shift',
-            'attendances' => fn($q) => $q->where('user_id', $userId),
-            'permissions' => fn($q) => $q->where('user_id', $userId),
-        ])
-            ->where('user_id', $userId)
-            ->whereDate('schedule_date', '<', Carbon::today());
-
-        if ($date) {
-            $query->whereDate('schedule_date', $date);
-        }
-
-        if ($search) {
-            $query->whereHas('shift', fn($q) => $q->where('name', 'like', "%{$search}%"));
-        }
-
-        $schedules = $query->orderByDesc('schedule_date')->paginate(10);
-
-        foreach ($schedules as $schedule) {
-            $attendance = $schedule->attendances->first();
-            $permission = $schedule->permissions->first();
-
-            if (!$attendance && !$permission) {
-                $schedule->computed_status = 'alpha';
-            } elseif ($attendance) {
-                $schedule->computed_status = $attendance->status;
-            } elseif ($permission) {
-                $schedule->computed_status = 'izin';
-            }
-        }
-
-        return view('users.attendances.history', [
-            'schedules' => $schedules,
-            'schedule_date' => $date,
-            'search' => $search,
-        ]);
-    }
-
     public function checkin(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+        $request->validate([
+            'schedule_id' => 'required|exists:schedules,id',
         ]);
 
-        if ($validator->fails()) {
-            return back()->with('error', 'Lokasi tidak valid.');
-        }
-
+        $schedule = Schedules::find($request->schedule_id);
         $user = Auth::user();
-        $lat = $request->latitude;
-        $lng = $request->longitude;
 
-        $schedule = Schedules::with('shift')
-            ->where('user_id', $user->id)
-            ->whereDate('schedule_date', Carbon::today())
-            ->first();
-
-        if (!$schedule) {
-            return back()->with('error', 'Anda tidak memiliki jadwal hari ini.');
-        }
-
-        // Cegah check-in sebelum jadwal mulai
-        $shiftStart = Carbon::parse($schedule->shift->start_time);
-        if (now()->lt($shiftStart)) {
-            return back()->with('error', 'Belum waktunya check in.');
-        }
-
-        // Cegah check-in jika sudah lebih dari 5 jam dari shift start
-        if (now()->gt($shiftStart->copy()->addHours(5))) {
-            return back()->with('error', 'Waktu check in sudah lewat (Alpha).');
-        }
-
-        // Validasi lokasi kantor
-        if (!$this->isWithinRadius($lat, $lng, -6.200000, 106.816666, 200)) {
-            return back()->with('error', 'Anda berada di luar area kantor.');
-        }
-
-        $attendance = Attendance::where('user_id', $user->id)
-            ->where('schedule_id', $schedule->id)
-            ->first();
-
-        if ($attendance && $attendance->check_in_time) {
-            return back()->with('error', 'Anda sudah melakukan check in.');
-        }
-
-        Attendance::updateOrCreate(
-            ['user_id' => $user->id, 'schedule_id' => $schedule->id],
-            [
-                'status' => 'hadir',
-                'check_in_time' => now(),
-                'latitude' => $lat,
-                'longitude' => $lng,
-            ]
+        $attendance = Attendance::firstOrCreate(
+            ['schedule_id' => $schedule->id, 'user_id' => $user->id],
+            ['status' => 'hadir', 'check_in_time' => now()]
         );
 
-        return back()->with('success', 'Berhasil check in.');
+        if (!$attendance->wasRecentlyCreated && $attendance->check_in_time) {
+            return back()->with('error', 'Anda sudah check-in sebelumnya.');
+        }
+
+        $attendance->update([
+            'status' => 'hadir',
+            'check_in_time' => now()
+        ]);
+
+        return back()->with('success', 'Check-in berhasil.');
     }
 
     public function checkout(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+        $request->validate([
+            'schedule_id' => 'required|exists:schedules,id',
         ]);
 
-        if ($validator->fails()) {
-            return back()->with('error', 'Lokasi tidak valid.');
-        }
-
+        $schedule = Schedules::find($request->schedule_id);
         $user = Auth::user();
-        $lat = $request->latitude;
-        $lng = $request->longitude;
 
-        $schedule = Schedules::with('shift')
+        $attendance = Attendance::where('schedule_id', $schedule->id)
             ->where('user_id', $user->id)
-            ->whereDate('schedule_date', Carbon::today())
-            ->first();
-
-        if (!$schedule) {
-            return back()->with('error', 'Anda tidak memiliki jadwal hari ini.');
-        }
-
-        $attendance = Attendance::where('user_id', $user->id)
-            ->where('schedule_id', $schedule->id)
             ->first();
 
         if (!$attendance || !$attendance->check_in_time) {
-            return back()->with('error', 'Anda belum melakukan check in.');
+            return back()->with('error', 'Anda belum check-in.');
         }
 
         if ($attendance->check_out_time) {
-            return back()->with('error', 'Anda sudah melakukan check out.');
-        }
-
-        $shiftEnd = Carbon::parse($schedule->shift->end_time);
-        if (now()->lt($shiftEnd)) {
-            return back()->with('error', 'Anda belum bisa check out sebelum shift selesai.');
-        }
-
-        if (!$this->isWithinRadius($lat, $lng, -6.200000, 106.816666, 200)) {
-            return back()->with('error', 'Anda berada di luar area kantor.');
+            return back()->with('error', 'Anda sudah check-out.');
         }
 
         $attendance->update([
-            'check_out_time' => now(),
-            'latitude' => $lat,
-            'longitude' => $lng,
+            'check_out_time' => now()
         ]);
 
-        return back()->with('success', 'Berhasil check out.');
+        return back()->with('success', 'Check-out berhasil.');
     }
+
+    public function absent(Request $request)
+    {
+        $request->validate([
+            'schedule_id' => 'required|exists:schedules,id',
+        ]);
+
+        $schedule = Schedules::find($request->schedule_id);
+        $user = Auth::user();
+
+        $attendance = Attendance::firstOrCreate(
+            ['schedule_id' => $schedule->id, 'user_id' => $user->id],
+            ['status' => 'alpha']
+        );
+
+        if (!$attendance->wasRecentlyCreated && $attendance->status === 'alpha') {
+            return back()->with('error', 'Anda sudah ditandai Alpha.');
+        }
+
+        $attendance->update(['status' => 'alpha']);
+
+        return back()->with('success', 'Anda ditandai Alpha.');
+    }
+
+    public function history()
+    {
+        $user = Auth::user();
+
+        $attendances = Attendance::with('schedule.shift')
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('users.attendances.history', compact('attendances'));
+    }
+
+
 
     private function isWithinRadius($lat, $lng, $centerLat, $centerLng, $radius)
     {

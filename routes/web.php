@@ -86,17 +86,22 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':User'])
         Route::get('calendar', [CalendarController::class, 'calendarView'])->name('calendar.view');
         Route::get('calendar/data', [CalendarController::class, 'calendarData'])->name('calendar.data');
 
-        // Attendance
-        Route::get('attendances', [UsersAttendanceController::class, 'index'])->name('attendances.index');
-        Route::post('attendances/checkin', [UsersAttendanceController::class, 'checkin'])->name('attendances.checkin');
-        Route::post('attendances/checkout', [UsersAttendanceController::class, 'checkout'])->name('attendances.checkout');
-        Route::get('attendances/history', [UsersAttendanceController::class, 'history'])->name('attendances.history');
+        // Attendances
+        Route::prefix('attendances')->name('attendances.')->group(function () {
+            Route::get('/', [UsersAttendanceController::class, 'index'])->name('index');
+            Route::post('/checkin', [UsersAttendanceController::class, 'checkin'])->name('checkin');
+            Route::post('/checkout', [UsersAttendanceController::class, 'checkout'])->name('checkout');
+            Route::post('/absent', [UsersAttendanceController::class, 'absent'])->name('absent');
+            Route::get('/history', [UsersAttendanceController::class, 'history'])->name('history');
+        });
 
         // Permissions
-        Route::get('permissions/create', [UsersPermissionController::class, 'create'])->name('attendances.permission.create');
-        Route::get('permissions', [UsersPermissionController::class, 'create'])->name('permissions.index');
-        Route::post('permissions', [UsersPermissionController::class, 'store'])->name('permissions.store');
-        Route::delete('permissions/{schedule}', [UsersPermissionController::class, 'cancel'])->name('permissions.cancel');
+        Route::prefix('permissions')->name('permissions.')->group(function () {
+            Route::get('/', [UsersPermissionController::class, 'index'])->name('index');
+            Route::get('/create', [UsersPermissionController::class, 'create'])->name('create');
+            Route::post('/', [UsersPermissionController::class, 'store'])->name('store');
+            Route::delete('/{schedule}', [UsersPermissionController::class, 'cancel'])->name('cancel');
+        });
     });
 
 // ======= AUTH =======
