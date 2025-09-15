@@ -40,7 +40,7 @@ class UserController extends Controller
         $users = $query->orderBy('name')
             ->paginate(10)
             ->appends($request->query());
-
+        
         $shifts = Shift::orderBy('name')->pluck('name');
 
         if ($request->ajax()) {

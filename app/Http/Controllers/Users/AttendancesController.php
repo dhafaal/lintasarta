@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\Schedules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
 class AttendancesController extends Controller
@@ -16,13 +17,11 @@ class AttendancesController extends Controller
         $user = Auth::user();
         $today = Carbon::today()->toDateString();
 
-        // Ambil schedule hari ini (untuk area "Jadwal Anda Hari Ini")
         $schedule = Schedules::with('shift')
             ->where('user_id', $user->id)
             ->whereDate('schedule_date', $today)
             ->first();
 
-        // Ambil attendance hari ini
         $attendance = null;
         if ($schedule) {
             $attendance = Attendance::where('user_id', $user->id)
@@ -30,12 +29,11 @@ class AttendancesController extends Controller
                 ->first();
         }
 
-        // Ambil jadwal mendatang: hari ini dan ke depan
         $schedules = Schedules::with(['shift', 'attendances' => function ($q) use ($user) {
             $q->where('user_id', $user->id);
         }])
             ->where('user_id', $user->id)
-            ->whereDate('schedule_date', '>=', $today) // <-- hanya jadwal mendatang (termasuk hari ini)
+            ->whereDate('schedule_date', '>=', $today)
             ->orderBy('schedule_date', 'asc')
             ->get();
 
@@ -50,37 +48,27 @@ class AttendancesController extends Controller
 
         $query = Schedules::with([
             'shift',
-            'attendances' => function ($q) use ($userId) {
-                $q->where('user_id', $userId);
-            },
-            'permissions' => function ($q) use ($userId) {
-                $q->where('user_id', $userId);
-            }
+            'attendances' => fn($q) => $q->where('user_id', $userId),
+            'permissions' => fn($q) => $q->where('user_id', $userId),
         ])
             ->where('user_id', $userId)
-            ->whereDate('schedule_date', '<', Carbon::today()); // hanya hari yang sudah lewat
+            ->whereDate('schedule_date', '<', Carbon::today());
 
-        // filter tanggal
         if ($date) {
             $query->whereDate('schedule_date', $date);
         }
 
-        // filter shift name
         if ($search) {
-            $query->whereHas('shift', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
-            });
+            $query->whereHas('shift', fn($q) => $q->where('name', 'like', "%{$search}%"));
         }
 
         $schedules = $query->orderByDesc('schedule_date')->paginate(10);
 
-        // tandai alpha otomatis
         foreach ($schedules as $schedule) {
             $attendance = $schedule->attendances->first();
             $permission = $schedule->permissions->first();
 
             if (!$attendance && !$permission) {
-                // jika belum ada record, set status alpha (hanya di view, tidak tulis DB)
                 $schedule->computed_status = 'alpha';
             } elseif ($attendance) {
                 $schedule->computed_status = $attendance->status;
@@ -98,14 +86,42 @@ class AttendancesController extends Controller
 
     public function checkin(Request $request)
     {
-        $user = Auth::user();
+        $validator = Validator::make($request->all(), [
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
 
-        $schedule = Schedules::where('user_id', $user->id)
+        if ($validator->fails()) {
+            return back()->with('error', 'Lokasi tidak valid.');
+        }
+
+        $user = Auth::user();
+        $lat = $request->latitude;
+        $lng = $request->longitude;
+
+        $schedule = Schedules::with('shift')
+            ->where('user_id', $user->id)
             ->whereDate('schedule_date', Carbon::today())
             ->first();
 
         if (!$schedule) {
             return back()->with('error', 'Anda tidak memiliki jadwal hari ini.');
+        }
+
+        // Cegah check-in sebelum jadwal mulai
+        $shiftStart = Carbon::parse($schedule->shift->start_time);
+        if (now()->lt($shiftStart)) {
+            return back()->with('error', 'Belum waktunya check in.');
+        }
+
+        // Cegah check-in jika sudah lebih dari 5 jam dari shift start
+        if (now()->gt($shiftStart->copy()->addHours(5))) {
+            return back()->with('error', 'Waktu check in sudah lewat (Alpha).');
+        }
+
+        // Validasi lokasi kantor
+        if (!$this->isWithinRadius($lat, $lng, -6.200000, 106.816666, 200)) {
+            return back()->with('error', 'Anda berada di luar area kantor.');
         }
 
         $attendance = Attendance::where('user_id', $user->id)
@@ -117,13 +133,12 @@ class AttendancesController extends Controller
         }
 
         Attendance::updateOrCreate(
-            [
-                'user_id' => $user->id,
-                'schedule_id' => $schedule->id,
-            ],
+            ['user_id' => $user->id, 'schedule_id' => $schedule->id],
             [
                 'status' => 'hadir',
                 'check_in_time' => now(),
+                'latitude' => $lat,
+                'longitude' => $lng,
             ]
         );
 
@@ -132,11 +147,22 @@ class AttendancesController extends Controller
 
     public function checkout(Request $request)
     {
-        $user = Auth::user();
+        $validator = Validator::make($request->all(), [
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
 
-        $schedule = Schedules::where('user_id', $user->id)
+        if ($validator->fails()) {
+            return back()->with('error', 'Lokasi tidak valid.');
+        }
+
+        $user = Auth::user();
+        $lat = $request->latitude;
+        $lng = $request->longitude;
+
+        $schedule = Schedules::with('shift')
+            ->where('user_id', $user->id)
             ->whereDate('schedule_date', Carbon::today())
-            ->with('shift')
             ->first();
 
         if (!$schedule) {
@@ -160,10 +186,35 @@ class AttendancesController extends Controller
             return back()->with('error', 'Anda belum bisa check out sebelum shift selesai.');
         }
 
+        if (!$this->isWithinRadius($lat, $lng, -6.200000, 106.816666, 200)) {
+            return back()->with('error', 'Anda berada di luar area kantor.');
+        }
+
         $attendance->update([
-            'check_out_time' => now()
+            'check_out_time' => now(),
+            'latitude' => $lat,
+            'longitude' => $lng,
         ]);
 
         return back()->with('success', 'Berhasil check out.');
+    }
+
+    private function isWithinRadius($lat, $lng, $centerLat, $centerLng, $radius)
+    {
+        $earthRadius = 6371000; // meter
+        $latFrom = deg2rad($lat);
+        $lonFrom = deg2rad($lng);
+        $latTo = deg2rad($centerLat);
+        $lonTo = deg2rad($centerLng);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $a = sin($latDelta / 2) ** 2 +
+            cos($latFrom) * cos($latTo) * sin($lonDelta / 2) ** 2;
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        $distance = $earthRadius * $c;
+        return $distance <= $radius;
     }
 }

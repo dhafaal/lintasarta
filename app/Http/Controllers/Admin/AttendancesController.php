@@ -14,7 +14,10 @@ class AttendancesController extends Controller
 {
     public function index(Request $request)
     {
+
         $today = $request->input('date', Carbon::today()->toDateString());
+        $today = Carbon::parse($today)->locale('id')->translatedFormat('l, d F Y');
+
 
         // schedules hari ini
         $schedulesToday = Schedules::with(['user', 'shift'])

@@ -56,28 +56,38 @@
                 {{-- Belum check in --}}
                 @if (!$attendance || !$attendance->check_in_time)
                     {{-- Check In --}}
-                    <form action="{{ route('user.attendances.checkin') }}" method="POST"
-                          onsubmit="return confirm('Yakin ingin Check In sekarang?')">
+                    <form id="checkin-form" action="{{ route('user.attendances.checkin', $schedule->id) }}" method="POST">
                         @csrf
-                        <button type="submit"
-                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow">
+                        <input type="hidden" name="latitude" id="latitude">
+                        <input type="hidden" name="longitude" id="longitude">
+                        <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow">
                             Check In
                         </button>
                     </form>
 
+                    {{-- Mark as Absent --}}
+                    @if (!$attendance || $attendance->status !== 'alpha')
+                        <form action="{{ route('user.attendances.absent') }}" method="POST"
+                            onsubmit="return confirm('Yakin ingin menandai sebagai absent/alpha?')">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded shadow">
+                                Mark as Absent
+                            </button>
+                        </form>
+                    @endif
+
                     {{-- Ajukan izin atau batalkan --}}
                     @if (!$pendingPermission)
-                        <a href="{{ route('user.attendances.permission.create') }}"
+                        <a href="{{ route('user.attendances.permission.create', $schedule->id) }}"
                             class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded shadow">
                             Ajukan Izin
                         </a>
                     @else
                         <form action="{{ route('user.attendances.permission.cancel', $schedule->id) }}" method="POST"
-                              onsubmit="return confirm('Batalkan pengajuan izin untuk hari ini?')">
+                            onsubmit="return confirm('Batalkan pengajuan izin untuk hari ini?')">
                             @csrf
                             @method('DELETE')
-                            <button type="submit"
-                                class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded shadow">
+                            <button type="submit" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded shadow">
                                 Batalkan Pengajuan
                             </button>
                         </form>
@@ -86,11 +96,12 @@
 
                 {{-- Sudah check in tapi belum check out --}}
                 @if ($attendance && $attendance->check_in_time && !$attendance->check_out_time)
-                    <form action="{{ route('user.attendances.checkout') }}" method="POST"
-                          onsubmit="return confirm('Yakin ingin Check Out sekarang?')">
+                    <form id="checkout-form" action="{{ route('user.attendances.checkout', $schedule->id) }}" method="POST"
+                        onsubmit="return confirm('Yakin ingin Check Out sekarang?')">
                         @csrf
-                        <button type="submit"
-                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow">
+                        <input type="hidden" name="latitude" id="checkout-latitude">
+                        <input type="hidden" name="longitude" id="checkout-longitude">
+                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow">
                             Check Out
                         </button>
                     </form>
@@ -152,8 +163,9 @@
                                 </td>
                                 <td class="border border-gray-200 px-4 py-2">
                                     @if ($perm)
-                                        <span class="px-2 py-1 text-xs rounded
-                                            @if($perm->status === 'pending') bg-yellow-100 text-yellow-700
+                                        <span
+                                            class="px-2 py-1 text-xs rounded
+                                            @if ($perm->status === 'pending') bg-yellow-100 text-yellow-700
                                             @elseif($perm->status === 'approved') bg-green-100 text-green-700
                                             @else bg-red-100 text-red-700 @endif">
                                             {{ ucfirst($perm->status) }}
@@ -174,3 +186,133 @@
         </div>
     </div>
 @endsection
+
+<script>
+// Enhanced geolocation options for better accuracy
+const geoOptions = {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 60000
+};
+
+// Show loading state
+function showLoadingState(button) {
+    button.disabled = true;
+    button.innerHTML = '<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>Mengambil lokasi...';
+}
+
+// Reset button state
+function resetButtonState(button, originalText) {
+    button.disabled = false;
+    button.innerHTML = originalText;
+}
+
+// Handle geolocation errors with detailed messages
+function handleGeolocationError(error, button, originalText) {
+    resetButtonState(button, originalText);
+    
+    let errorMessage = '';
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            errorMessage = 'Akses lokasi ditolak. Silakan izinkan akses lokasi di browser Anda.';
+            break;
+        case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Informasi lokasi tidak tersedia. Pastikan GPS aktif.';
+            break;
+        case error.TIMEOUT:
+            errorMessage = 'Timeout mengambil lokasi. Silakan coba lagi.';
+            break;
+        default:
+            errorMessage = 'Terjadi kesalahan saat mengambil lokasi: ' + error.message;
+            break;
+    }
+    alert(errorMessage);
+}
+
+// Handle Check In form with enhanced location tracking
+document.getElementById('checkin-form')?.addEventListener('submit', function (e) {
+    e.preventDefault();
+    
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+
+    if (!navigator.geolocation) {
+        alert('Browser Anda tidak mendukung geolocation. Silakan gunakan browser yang lebih baru.');
+        return;
+    }
+
+    showLoadingState(submitButton);
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            document.getElementById('latitude').value = position.coords.latitude;
+            document.getElementById('longitude').value = position.coords.longitude;
+            
+            // Show coordinates for debugging (optional)
+            console.log('Check-in Location:', {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy
+            });
+            
+            e.target.submit();
+        },
+        (error) => {
+            handleGeolocationError(error, submitButton, originalText);
+        },
+        geoOptions
+    );
+});
+
+// Handle Check Out form with enhanced location tracking
+document.getElementById('checkout-form')?.addEventListener('submit', function (e) {
+    e.preventDefault();
+    
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+
+    if (!navigator.geolocation) {
+        alert('Browser Anda tidak mendukung geolocation. Silakan gunakan browser yang lebih baru.');
+        return;
+    }
+
+    showLoadingState(submitButton);
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            document.getElementById('checkout-latitude').value = position.coords.latitude;
+            document.getElementById('checkout-longitude').value = position.coords.longitude;
+            
+            // Show coordinates for debugging (optional)
+            console.log('Check-out Location:', {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy
+            });
+            
+            e.target.submit();
+        },
+        (error) => {
+            handleGeolocationError(error, submitButton, originalText);
+        },
+        geoOptions
+    );
+});
+
+// Optional: Show current location on page load for debugging
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            console.log('Current Location:', {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy + ' meters'
+            });
+        },
+        (error) => {
+            console.log('Location error:', error.message);
+        },
+        geoOptions
+    );
+}
+</script>

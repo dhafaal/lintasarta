@@ -33,45 +33,41 @@
 
             <!-- Enhanced Stats Cards using x-role-card component -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <x-stats-card
-                    title="Total Shifts"
-                    :count="$shifts->count()"
-                    subtitle="Shift aktif"
-                    bgColor="bg-gradient-to-br from-sky-100 to-sky-200"
-                    icon='<svg class="w-7 h-7 text-sky-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 01-18 0 9 9 0 0118 0z"/>
-                        </svg>'
-                />
+                <div class="bg-gradient-to-br from-sky-500 to-sky-600 rounded-2xl p-6 text-white shadow-xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sky-100 text-sm font-medium uppercase tracking-wide">Total Shifts</p>
+                            <p class="text-3xl font-bold mt-2">{{ $shifts->count() }}</p>
+                            <p class="text-sky-200 text-xs mt-1">Shift Aktif</p>
+                        </div>
+                        <div class="w-14 h-14 bg-sky-400 bg-opacity-30 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-clock-icon lucide-clock">
+                                <path d="M12 6v6l4 2" />
+                                <circle cx="12" cy="12" r="10" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
 
-                <x-stats-card
-                    title="Shift Pagi"
-                    :count="$shifts->where('name', 'Pagi')->count()"
-                    subtitle="Pagi"
+                <x-stats-card title="Shift Pagi" :count="$shifts->where('name', 'Pagi')->count()" subtitle="Pagi"
                     bgColor="bg-gradient-to-br from-yellow-100 to-orange-100"
                     icon='<svg class="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>'
-                />
+                        </svg>' />
 
-                <x-stats-card
-                    title="Shift Siang"
-                    :count="$shifts->where('name', 'Siang')->count()"
-                    subtitle="Siang"
+                <x-stats-card title="Shift Siang" :count="$shifts->where('name', 'Siang')->count()" subtitle="Siang"
                     bgColor="bg-gradient-to-br from-blue-100 to-sky-100"
                     icon='<svg class="w-7 h-7 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>'
-                />
+                        </svg>' />
 
-                <x-stats-card
-                    title="Shift Malam"
-                    :count="$shifts->where('name', 'Malam')->count()"
-                    subtitle="Malam"
+                <x-stats-card title="Shift Malam" :count="$shifts->where('name', 'Malam')->count()" subtitle="Malam"
                     bgColor="bg-gradient-to-br from-indigo-100 to-purple-100"
                     icon='<svg class="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                        </svg>'
-                />
+                        </svg>' />
             </div>
 
             <!-- Enhanced Table Card -->
@@ -83,14 +79,15 @@
                             <p class="text-sky-700 mt-1">Kelola dan atur semua shift kerja</p>
                         </div>
                         <div class="flex items-center space-x-3">
-                            <form method="GET" action="{{ route('admin.shifts.index') }}" class="flex items-center space-x-3">
+                            <form method="GET" action="{{ route('admin.shifts.index') }}"
+                                class="flex items-center space-x-3">
                                 <!-- Search -->
                                 <div class="relative">
-                                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari shift..."
-                                        oninput="this.form.submit()"
+                                    <input type="text" name="search" value="{{ request('search') }}"
+                                        placeholder="Cari shift..." oninput="this.form.submit()"
                                         class="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
-                                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                     </svg>
@@ -101,8 +98,10 @@
                                     class="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
                                     <option value="">Semua Shift</option>
                                     <option value="Pagi" {{ request('filter') == 'Pagi' ? 'selected' : '' }}>Pagi</option>
-                                    <option value="Siang" {{ request('filter') == 'Siang' ? 'selected' : '' }}>Siang</option>
-                                    <option value="Malam" {{ request('filter') == 'Malam' ? 'selected' : '' }}>Malam</option>
+                                    <option value="Siang" {{ request('filter') == 'Siang' ? 'selected' : '' }}>Siang
+                                    </option>
+                                    <option value="Malam" {{ request('filter') == 'Malam' ? 'selected' : '' }}>Malam
+                                    </option>
                                 </select>
 
                                 <!-- Reset -->
@@ -123,32 +122,61 @@
                             <tr>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
-                                        <svg class="w-4 h-4 text-sky-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 01-18 0 9 9 0 0118 0z"/>
+                                        <svg xmlns="http://www.w3.org/2000/svg""
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-clock-icon lucide-clock text-sky-600 w-4 h-4 mr-2">
+                                            <path d="M12 6v6l4 2" />
+                                            <circle cx="12" cy="12" r="10" />
                                         </svg>
                                         Nama Shift
                                     </div>
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
-                                        <svg class="w-4 h-4 text-sky-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 0v4m0-4h4m-4 0H8"/>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-alarm-clock-plus-icon lucide-alarm-clock-plus text-sky-600 w-4 h-4 mr-2">
+                                            <circle cx="12" cy="13" r="8" />
+                                            <path d="M5 3 2 6" />
+                                            <path d="m22 6-3-3" />
+                                            <path d="M6.38 18.7 4 21" />
+                                            <path d="M17.64 18.67 20 21" />
+                                            <path d="M12 10v6" />
+                                            <path d="M9 13h6" />
                                         </svg>
                                         Jam Mulai
                                     </div>
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
-                                        <svg class="w-4 h-4 text-sky-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 0v4m0-4h4m-4 0H8"/>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            class="lucide lucide-alarm-clock-minus-icon lucide-alarm-clock-minus text-sky-600 w-4 h-4 mr-2">
+                                            <circle cx="12" cy="13" r="8" />
+                                            <path d="M5 3 2 6" />
+                                            <path d="m22 6-3-3" />
+                                            <path d="M6.38 18.7 4 21" />
+                                            <path d="M17.64 18.67 20 21" />
+                                            <path d="M9 13h6" />
                                         </svg>
                                         Jam Selesai
                                     </div>
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
-                                        <svg class="w-4 h-4 text-sky-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            class="lucide lucide-clock-fading-icon lucide-clock-fading text-sky-600 w-4 h-4 mr-2">
+                                            <path d="M12 2a10 10 0 0 1 7.38 16.75" />
+                                            <path d="M12 6v6l4 2" />
+                                            <path d="M2.5 8.875a10 10 0 0 0-.5 3" />
+                                            <path d="M2.83 16a10 10 0 0 0 2.43 3.4" />
+                                            <path d="M4.636 5.235a10 10 0 0 1 .891-.857" />
+                                            <path d="M8.644 21.42a10 10 0 0 0 7.631-.38" />
                                         </svg>
                                         Durasi
                                     </div>
@@ -166,23 +194,26 @@
                                             <div
                                                 class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-4 group-hover:from-sky-200 group-hover:to-sky-300 transition-colors">
                                                 @if ($shift->name == 'Pagi')
-                                                    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    <svg class="w-5 h-5 text-orange-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
                                                             d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
                                                         </path>
                                                     </svg>
                                                 @elseif($shift->name == 'Siang')
-                                                    <svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    <svg class="w-5 h-5 text-sky-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
                                                             d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
                                                         </path>
                                                     </svg>
                                                 @else
-                                                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    <svg class="w-5 h-5 text-indigo-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
                                                             d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
                                                         </path>
                                                     </svg>
@@ -190,7 +221,8 @@
                                             </div>
                                             <div>
                                                 <div class="text-base font-bold text-gray-900">{{ $shift->name }}</div>
-                                                <div class="text-sm text-gray-500">Shift {{ strtolower($shift->name) }}</div>
+                                                <div class="text-sm text-gray-500">Shift {{ strtolower($shift->name) }}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -211,8 +243,10 @@
                                                 }
                                                 $duration = $start->diffInHours($end);
                                             @endphp
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 01-18 0 9 9 0 0118 0z"/>
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 8v4l3 3m6-3a9 9 0 01-18 0 9 9 0 0118 0z" />
                                             </svg>
                                             {{ $duration }} jam
                                         </div>
@@ -238,7 +272,8 @@
                                                     class="inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
                                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
                                                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
                                                         </path>
                                                     </svg>
