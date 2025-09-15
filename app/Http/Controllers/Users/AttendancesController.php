@@ -13,7 +13,7 @@ class AttendancesController extends Controller
     // ✅ Koordinat kantor kamu
     private $officeLat = -6.2903534643805115;
     private $officeLng = 106.7852134376512;
-    private $officeRadius = 1000; // dalam meter (1 KM)
+    private $officeRadius = 1000; // Minimal berjarak 1km
 
     public function index()
     {
