@@ -1,13 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - @yield('title')</title>
+    <link rel="icon" href="">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .sidebar-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .menu-item-transition {
+            transition: all 0.15s ease-in-out;
+        }
+
+        .icon-transition {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .tooltip {
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .menu-item:hover .icon-hover {
+            transform: scale(1.05);
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+    </style>
 </head>
-<body class="bg-sky-50 min-h-screen antialiased">
+
+<body class="min-h-screen bg-white antialiased">
     <div class="flex min-h-screen" x-data="{
         sidebarCollapsed: false,
         usersExpanded: false,
@@ -18,6 +51,12 @@
             this.usersExpanded = localStorage.getItem('usersExpanded') === 'true';
             this.schedulesExpanded = localStorage.getItem('schedulesExpanded') === 'true';
             this.shiftsExpanded = localStorage.getItem('shiftsExpanded') === 'true';
+    
+            setTimeout(() => {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }, 100);
         },
         toggleSidebar() {
             this.sidebarCollapsed = !this.sidebarCollapsed;
@@ -36,176 +75,308 @@
             localStorage.setItem('shiftsExpanded', this.shiftsExpanded);
         }
     }" x-init="init()">
+
+        <!-- Sidebar -->
         <aside :class="sidebarCollapsed ? 'w-16' : 'w-72 sm:w-64'"
-            class="bg-sky-600 border-r border-sky-500 transition-all duration-300 ease-in-out fixed top-0 left-0 h-screen z-10">
-            <div :class="sidebarCollapsed ? 'p-3' : 'p-6'">
-                <div class="flex items-center justify-between mb-8" :class="sidebarCollapsed ? 'mb-4' : 'mb-8'">
-                    <div class="flex items-center space-x-3" x-show="!sidebarCollapsed">
-                        <div class="w-10 h-10 bg-white rounded-md flex items-center justify-center">
-                            <i data-lucide="shield" class="w-5 h-5 text-sky-600"></i>
-                        </div>
+            class="bg-white/90 backdrop-blur-lg border-r border-sky-200 sidebar-transition fixed top-0 left-0 h-screen z-10 flex flex-col">
+
+            <!-- Sidebar Header -->
+            <div :class="sidebarCollapsed ? 'p-3' : 'p-4 sm:p-6'" class="border-b border-sky-200 flex-shrink-0">
+                <div class="flex items-center justify-between" :class="sidebarCollapsed ? 'mb-0' : 'mb-2'">
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-3"
+                        x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
                         <div>
-                            <h1 class="text-xl font-semibold text-white">Admin Panel</h1>
-                            <p class="text-sm text-sky-200 font-mono">v1.0.0</p>
+                            <h1 class="text-2xl font-semibold text-gray-700 tracking-tight">Admin Panel</h1>
+                            <p class="text-sm text-gray-500 font-medium">v1.0.0</p>
                         </div>
-                    </div>
+                    </a>
+
                     <button @click="toggleSidebar()" :class="sidebarCollapsed ? 'mx-auto' : ''"
-                        class="p-2 rounded-md hover:bg-sky-500 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-sky-600"
+                        class="p-2.5 rounded-xl hover:bg-sky-100 text-gray-600 menu-item-transition focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 group"
                         aria-label="Toggle sidebar">
-                        <i :data-lucide="sidebarCollapsed ? 'chevron-right' : 'chevron-left'" class="w-5 h-5"></i>
+                        <i :data-lucide="sidebarCollapsed ? 'panel-right-open' : 'panel-left-close'"
+                            class="w-5 h-5 icon-transition group-hover:scale-110"></i>
                     </button>
                 </div>
+            </div>
 
-                <!-- Sidebar Menu -->
-                <nav class="space-y-1" role="navigation">
-                    <!-- Dashboard -->
-                    <a href="{{ route('admin.dashboard') }}"
-                        :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'"
-                        class="group flex items-center text-base font-medium rounded-md transition-all duration-150 relative
-                        {{ request()->routeIs('admin.dashboard') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
-                        :aria-label="sidebarCollapsed ? 'Dashboard' : ''">
-                        <i data-lucide="home" class="w-6 h-6 {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}" :class="sidebarCollapsed ? 'mr-0' : 'mr-4'"></i>
-                        <span x-show="!sidebarCollapsed">DASHBOARD</span>
-                    </a>
+            <!-- Sidebar Navigation -->
+            <nav class="flex-1 space-y-2 p-3 overflow-y-auto" role="navigation">
 
-                    <!-- Users -->
-                    <div class="space-y-1">
-                        <button
-                            @click="sidebarCollapsed ? window.location.href = '{{ route('admin.users.index') }}' : toggleUsers()"
-                            :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'"
-                            class="group flex items-center w-full text-base font-medium rounded-md transition-all duration-150 relative
-                                {{ request()->routeIs('admin.users.*') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
-                            :aria-label="sidebarCollapsed ? 'Users' : ''">
-                            <i data-lucide="users" class="w-6 h-6 {{ request()->routeIs('admin.users.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}" :class="sidebarCollapsed ? 'mr-0' : 'mr-4'"></i>
-                            <span x-show="!sidebarCollapsed" class="flex-1 text-left">USERS</span>
-                            <i x-show="!sidebarCollapsed" data-lucide="chevron-right" :class="usersExpanded ? 'rotate-90' : ''" class="w-5 h-5 text-sky-200 group-hover:text-white transition-transform duration-150"></i>
-                        </button>
-                        <div x-show="usersExpanded && !sidebarCollapsed" class="ml-6 space-y-1">
-                            <a href="{{ route('admin.users.index') }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 {{ request()->routeIs('admin.users.index') ? 'bg-sky-500 text-white' : 'text-sky-200 hover:bg-sky-500 hover:text-white' }}">
-                                <i data-lucide="minus" class="w-5 h-5 mr-2 text-sky-200 group-hover:text-white"></i>
-                                <span>Manage Users</span>
-                            </a>
-                            <a href="{{ route('admin.users.create') }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 {{ request()->routeIs('admin.users.create') ? 'bg-sky-500 text-white' : 'text-sky-200 hover:bg-sky-500 hover:text-white' }}">
-                                <i data-lucide="plus" class="w-5 h-5 mr-2 text-sky-200 group-hover:text-white"></i>
-                                <span>Create Users</span>
-                            </a>
+                <!-- Dashboard -->
+                <a href="{{ route('admin.dashboard') }}"
+                    :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                    class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
+        {{ request()->routeIs('admin.dashboard') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                    :aria-label="sidebarCollapsed ? 'Dashboard' : ''">
+                    <i data-lucide="layout-dashboard"
+                        class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.dashboard') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                        :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
+                    <span x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 translate-x-2"
+                        x-transition:enter-end="opacity-100 translate-x-0">Dashboard</span>
+
+                    <div x-show="sidebarCollapsed"
+                        class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                        Dashboard
+                        <div
+                            class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
                         </div>
                     </div>
+                </a>
 
-                    <!-- Schedules -->
-                    <div class="space-y-1">
-                        <button
-                            @click="sidebarCollapsed ? window.location.href = '{{ route('admin.schedules.index') }}' : toggleSchedules()"
-                            :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'"
-                            class="group flex items-center w-full text-base font-medium rounded-md transition-all duration-150 relative
-                                {{ request()->routeIs('admin.schedules.*') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
-                            :aria-label="sidebarCollapsed ? 'Schedules' : ''">
-                            <i data-lucide="calendar" class="w-6 h-6 {{ request()->routeIs('admin.schedules.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}" :class="sidebarCollapsed ? 'mr-0' : 'mr-4'"></i>
-                            <span x-show="!sidebarCollapsed" class="flex-1 text-left">SCHEDULES</span>
-                            <i x-show="!sidebarCollapsed" data-lucide="chevron-right" :class="schedulesExpanded ? 'rotate-90' : ''" class="w-5 h-5 text-sky-200 group-hover:text-white transition-transform duration-150"></i>
-                        </button>
-                        <div x-show="schedulesExpanded && !sidebarCollapsed" class="ml-6 space-y-1">
-                            <a href="{{ route('admin.schedules.index') }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 {{ request()->routeIs('admin.schedules.index') ? 'bg-sky-500 text-white' : 'text-sky-200 hover:bg-sky-500 hover:text-white' }}">
-                                <i data-lucide="minus" class="w-5 h-5 mr-2 text-sky-200 group-hover:text-white"></i>
-                                <span>Manage Schedules</span>
-                            </a>
-                            <a href="{{ route('admin.schedules.create') }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 {{ request()->routeIs('admin.schedules.create') ? 'bg-sky-500 text-white' : 'text-sky-200 hover:bg-sky-500 hover:text-white' }}">
-                                <i data-lucide="plus" class="w-5 h-5 mr-2 text-sky-200 group-hover:text-white"></i>
-                                <span>Add Schedule</span>
-                            </a>
+                <!-- Users -->
+                <div class="space-y-1 relative">
+                    <button
+                        @click="sidebarCollapsed ? window.location.href = '{{ route('admin.users.index') }}' : toggleUsers()"
+                        :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                        class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
+                {{ request()->routeIs('admin.users.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                        :aria-label="sidebarCollapsed ? 'Users' : ''">
+                        <i data-lucide="users"
+                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.users.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed" class="flex-1 text-left" x-transition>Users</span>
+                        <i x-show="!sidebarCollapsed" data-lucide="chevron-right"
+                            :class="usersExpanded ? 'rotate-90' : 'rotate-0'"
+                            class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
+
+                        <div x-show="sidebarCollapsed"
+                            class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Users Management
+                            <div
+                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
+                            </div>
+                        </div>
+                    </button>
+
+                    <div x-show="usersExpanded && !sidebarCollapsed"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
+                        <a href="{{ route('admin.users.index') }}"
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.users.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="list" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>Manage Users</span>
+                        </a>
+                        <a href="{{ route('admin.users.create') }}"
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.users.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="user-plus" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>Create Users</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Schedules -->
+                <div class="space-y-1 relative">
+                    <button
+                        @click="sidebarCollapsed ? window.location.href = '{{ route('admin.schedules.index') }}' : toggleSchedules()"
+                        :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                        class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
+                {{ request()->routeIs('admin.schedules.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                        :aria-label="sidebarCollapsed ? 'Schedules' : ''">
+                        <i data-lucide="calendar"
+                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.schedules.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed" class="flex-1 text-left" x-transition>Schedules</span>
+                        <i x-show="!sidebarCollapsed" data-lucide="chevron-right"
+                            :class="schedulesExpanded ? 'rotate-90' : 'rotate-0'"
+                            class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
+
+                        <div x-show="sidebarCollapsed"
+                            class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Schedule Management
+                            <div
+                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
+                            </div>
+                        </div>
+                    </button>
+
+                    <div x-show="schedulesExpanded && !sidebarCollapsed"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
+                        <a href="{{ route('admin.schedules.index') }}"
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.schedules.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="calendar-days"
+                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>Manage Schedules</span>
+                        </a>
+                        <a href="{{ route('admin.schedules.create') }}"
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.schedules.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="calendar-plus"
+                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>Add Schedule</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Shifts -->
+                <div class="space-y-1 relative">
+                    <button
+                        @click="sidebarCollapsed ? window.location.href = '{{ route('admin.shifts.index') }}' : toggleShifts()"
+                        :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                        class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
+                {{ request()->routeIs('admin.shifts.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                        :aria-label="sidebarCollapsed ? 'Shifts' : ''">
+                        <i data-lucide="clock"
+                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.shifts.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed" class="flex-1 text-left" x-transition>Shifts</span>
+                        <i x-show="!sidebarCollapsed" data-lucide="chevron-right"
+                            :class="shiftsExpanded ? 'rotate-90' : 'rotate-0'"
+                            class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
+
+                        <div x-show="sidebarCollapsed"
+                            class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Shift Management
+                            <div
+                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
+                            </div>
+                        </div>
+                    </button>
+
+                    <div x-show="shiftsExpanded && !sidebarCollapsed"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
+                        <a href="{{ route('admin.shifts.index') }}"
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.shifts.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="clock-4" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>Manage Shifts</span>
+                        </a>
+                        <a href="{{ route('admin.shifts.create') }}"
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.shifts.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="plus-circle"
+                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>Create Shifts</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="my-4 border-t border-sky-200 border-opacity-30"></div>
+
+                <!-- Attendance -->
+                <a href="{{ route('admin.attendances.index') }}"
+                    :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                    class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
+       {{ request()->routeIs('admin.attendances.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                    :aria-label="sidebarCollapsed ? 'Attendance' : ''">
+                    <i data-lucide="user-check"
+                        class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.attendances.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                        :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
+                    <span x-show="!sidebarCollapsed" x-transition>Attendance</span>
+
+                    <div x-show="sidebarCollapsed"
+                        class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                        Attendance Records
+                        <div
+                            class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
                         </div>
                     </div>
+                </a>
 
-                    <!-- Shifts -->
-                    <div class="space-y-1">
-                        <button
-                            @click="sidebarCollapsed ? window.location.href = '{{ route('admin.shifts.index') }}' : toggleShifts()"
-                            :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'"
-                            class="group flex items-center w-full text-base font-medium rounded-md transition-all duration-150 relative
-                                {{ request()->routeIs('admin.shifts.*') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
-                            :aria-label="sidebarCollapsed ? 'Shifts' : ''">
-                            <i data-lucide="clock" class="w-6 h-6 {{ request()->routeIs('admin.shifts.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}" :class="sidebarCollapsed ? 'mr-0' : 'mr-4'"></i>
-                            <span x-show="!sidebarCollapsed" class="flex-1 text-left">SHIFTS</span>
-                            <i x-show="!sidebarCollapsed" data-lucide="chevron-right" :class="shiftsExpanded ? 'rotate-90' : ''" class="w-5 h-5 text-sky-200 group-hover:text-white transition-transform duration-150"></i>
-                        </button>
-                        <div x-show="shiftsExpanded && !sidebarCollapsed" class="ml-6 space-y-1">
-                            <a href="{{ route('admin.shifts.index') }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 {{ request()->routeIs('admin.shifts.index') ? 'bg-sky-500 text-white' : 'text-sky-200 hover:bg-sky-500 hover:text-white' }}">
-                                <i data-lucide="minus" class="w-5 h-5 mr-2 text-sky-200 group-hover:text-white"></i>
-                                <span>Manage Shifts</span>
-                            </a>
-                            <a href="{{ route('admin.shifts.create') }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-150 {{ request()->routeIs('admin.shifts.create') ? 'bg-sky-500 text-white' : 'text-sky-200 hover:bg-sky-500 hover:text-white' }}">
-                                <i data-lucide="plus" class="w-5 h-5 mr-2 text-sky-200 group-hover:text-white"></i>
-                                <span>Create Shifts</span>
-                            </a>
+                <!-- Calendar -->
+                <a href="{{ route('admin.calendar.view') }}"
+                    :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                    class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
+       {{ request()->routeIs('admin.calendar.view') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                    :aria-label="sidebarCollapsed ? 'Calendar' : ''">
+                    <i data-lucide="calendar-range"
+                        class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.calendar.view') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                        :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
+                    <span x-show="!sidebarCollapsed" x-transition>Calendar</span>
+
+                    <div x-show="sidebarCollapsed"
+                        class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                        Calendar View
+                        <div
+                            class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
                         </div>
                     </div>
+                </a>
+            </nav>
 
-                    <!-- Attendance -->
-                    <a href="{{ route('admin.attendances.index') }}" :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'"
-                        class="group flex items-center text-base font-medium rounded-md transition-all duration-150 relative
-                        {{ request()->routeIs('admin.attendances.*') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
-                        :aria-label="sidebarCollapsed ? 'Attendance' : ''">
-                        <i data-lucide="check-circle" class="w-6 h-6 {{ request()->routeIs('admin.attendances.*') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}" :class="sidebarCollapsed ? 'mr-0' : 'mr-4'"></i>
-                        <span x-show="!sidebarCollapsed">ATTENDANCE</span>
-                    </a>
-
-                    <!-- Calendar -->
-                    <a href="{{ route('admin.calendar.view') }}" :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'"
-                        class="group flex items-center text-base font-medium rounded-md transition-all duration-150 relative
-                        {{ request()->routeIs('admin.calendar.view') ? 'bg-sky-500 text-white border border-sky-400' : 'text-sky-100 hover:bg-sky-500 hover:text-white border border-transparent hover:border-sky-400' }}"
-                        :aria-label="sidebarCollapsed ? 'Calendar' : ''">
-                        <i data-lucide="calendar-days" class="w-6 h-6 {{ request()->routeIs('admin.calendar.view') ? 'text-white' : 'text-sky-200 group-hover:text-white' }}" :class="sidebarCollapsed ? 'mr-0' : 'mr-4'"></i>
-                        <span x-show="!sidebarCollapsed">CALENDAR</span>
-                    </a>
-                </nav>
-
-                <!-- Footer -->
-                <div class="absolute bottom-6 left-6 right-6" x-show="!sidebarCollapsed">
-                    <div class="border-t border-sky-500 pt-4">
-                        <div class="flex items-center space-x-2 text-sm text-sky-200">
-                            <span class="font-mono">Built with</span>
-                            <i data-lucide="shield-check" class="w-4 h-4"></i>
-                            <span class="font-mono">Laravel</span>
-                        </div>
-                    </div>
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer p-4 border-t border-sky-200 border-opacity-30 flex-shrink-0">
+                <div x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    class="flex items-center justify-center space-x-2 text-sm text-gray-500 bg-sky-50 rounded-xl p-3">
+                    <i data-lucide="code" class="w-4 h-4"></i>
+                    <span class="font-medium">Built with Laravel</span>
                 </div>
             </div>
         </aside>
 
-        <!-- Content -->
-        <div class="flex-1 flex flex-col min-h-screen" :class="sidebarCollapsed ? 'ml-16 sm:ml-16' : 'ml-72 sm:ml-64'">
-            <header class="bg-white border-b border-sky-200">
-                <div class="px-6 py-4 flex justify-between items-center">
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col min-h-screen sidebar-transition"
+            :class="sidebarCollapsed ? 'ml-16 sm:ml-16' : 'ml-72 sm:ml-64'">
+
+            <!-- Header -->
+            <header class="bg-white/90 backdrop-blur-lg border-b border-sky-200 flex-shrink-0">
+                <div class="px-4 sm:px-6 py-4 flex justify-between items-center gap-4">
                     <div>
-                        <h1 class="text-3xl font-semibold text-sky-900">@yield('title')</h1>
-                        <p class="text-base text-sky-600">Manage your application</p>
+                        <h1 class="text-2xl font-semibold text-gray-700 tracking-tight">@yield('title')</h1>
+                        <p class="text-base text-gray-500 mt-1">Manage your application</p>
                     </div>
                     <div class="flex items-center space-x-4">
+                        <!-- User Info -->
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-sky-600 rounded-full flex items-center justify-center">
-                                <i data-lucide="user" class="w-6 h-6 text-white"></i>
+                            <div
+                                class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
+                                <i data-lucide="user" class="w-5 h-5 text-sky-700"></i>
                             </div>
-                            <span class="text-base font-medium text-sky-700">{{ auth()->user()->name }}</span>
+                            <span
+                                class="text-base font-semibold text-gray-700 hidden sm:inline">{{ auth()->user()->name }}</span>
                         </div>
+
+                        <!-- Logout Button -->
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button type="submit"
-                                class="inline-flex gap-x-1 items-center px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-medium text-base rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+                                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
                                 aria-label="Log out">
-                                <i data-lucide="log-out" class="w-5 h-5"></i>
-                                Logout
+                                <i data-lucide="log-out" class="w-5 h-5 mr-2"></i>
+                                <span class="hidden sm:inline">Logout</span>
                             </button>
                         </form>
                     </div>
                 </div>
             </header>
-            <main class="flex-1 p-0 bg-sky-50">
-                <div class="bg-white border-sky-200 p-8 min-h-full shadow-sm">
+
+            <!-- Main Content -->
+            <main class="flex-1 bg-white overflow-auto">
+                <div class="p-8 sm:p-6 lg:p-8 min-h-full m-0">
                     @yield('content')
                 </div>
             </main>
         </div>
     </div>
+
+    <script>
+        // Initialize Lucide icons after DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+
+        // Re-initialize icons when Alpine updates the DOM
+        document.addEventListener('alpine:init', () => {
+            setTimeout(() => {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }, 100);
+        });
+    </script>
+
     @stack('scripts')
 </body>
+
 </html>

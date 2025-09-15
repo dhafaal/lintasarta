@@ -84,24 +84,28 @@
                         <!-- Role -->
                         <div class="space-y-3">
                             <label for="role" class="block text-sm font-bold text-gray-800">
-                                Role Pengguna
-                                <span class="text-red-500 ml-1">*</span>
+                                Role Pengguna <span class="text-red-500 ml-1">*</span>
                             </label>
                             <select name="role" id="role"
-                                class="block w-full pl-4 pr-10 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 cursor-pointer"
+                                class="block w-full pl-4 pr-10 py-4 border-2 border-gray-200 rounded-xl 
+               focus:ring-4 focus:ring-sky-100 focus:border-sky-500 transition-all 
+               duration-200 bg-gray-50 focus:bg-white text-gray-900 cursor-pointer"
                                 required>
-                                <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>
+                                @php
+                                    $currentRole = strtolower(old('role', $user->role));
+                                @endphp
+
+                                <option value="admin" {{ $currentRole === 'admin' ? 'selected' : '' }}>
                                     Admin - Akses penuh sistem
                                 </option>
-                                <option value="operator" {{ old('role', $user->role) === 'operator' ? 'selected' : '' }}>
+                                <option value="operator" {{ $currentRole === 'operator' ? 'selected' : '' }}>
                                     Operator - Kelola jadwal dan shift
                                 </option>
-                                <option value="user" {{ old('role', $user->role) === 'user' ? 'selected' : '' }}>
+                                <option value="user" {{ $currentRole === 'user' ? 'selected' : '' }}>
                                     User - Akses terbatas
                                 </option>
                             </select>
                         </div>
-
 
                         <!-- Buttons -->
                         <div class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-200">
