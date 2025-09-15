@@ -18,13 +18,6 @@
                     <p class="text-gray-600 mt-1">Buat shift kerja baru untuk sistem penjadwalan</p>
                 </div>
             </div>
-            <nav class="flex items-center space-x-2 text-sm text-gray-500">
-                <a href="{{ route('admin.shifts.index') }}" class="hover:text-sky-600 transition-colors">Shifts</a>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-                <span class="text-gray-900 font-medium">Tambah Shift</span>
-            </nav>
         </div>
 
         <!-- Enhanced form card to match users module styling -->
