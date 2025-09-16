@@ -14,30 +14,46 @@ class AttendancesController extends Controller
 {
     public function index(Request $request)
     {
-
         $today = $request->input('date', Carbon::today()->toDateString());
         $todayFormated = Carbon::parse($today)->locale('id')->translatedFormat('l, d F Y');
+        $search = $request->input('search', '');
+        $statusFilter = $request->input('status', '');
 
+        // Query builder untuk schedules dengan filter search
+        $schedulesQuery = Schedules::with(['user', 'shift'])
+            ->whereDate('schedule_date', $today);
 
-        // schedules hari ini
-        $schedulesToday = Schedules::with(['user', 'shift'])
-            ->whereDate('schedule_date', $today)
-            ->get();
+        // Filter berdasarkan nama karyawan jika ada search
+        if (!empty($search)) {
+            $schedulesQuery->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
 
-        // attendances terkait schedule hari ini
-        $attendances = Attendance::with(['user', 'schedule.shift'])
-            ->whereHas('schedule', fn($q) => $q->whereDate('schedule_date', $today))
-            ->get();
+        $schedulesToday = $schedulesQuery->get();
+        $scheduleIds = $schedulesToday->pluck('id');
+
+        // Query builder untuk attendances dengan filter status
+        $attendancesQuery = Attendance::with(['user', 'schedule.shift'])
+            ->whereIn('schedule_id', $scheduleIds);
+
+        // Filter berdasarkan status jika dipilih
+        if (!empty($statusFilter)) {
+            $attendancesQuery->where('status', $statusFilter);
+        }
+
+        $attendances = $attendancesQuery->get();
 
         // permissions (izin) yang terkait schedule hari ini
         $permissions = Permissions::with(['user', 'schedule'])
-            ->whereHas('schedule', fn($q) => $q->whereDate('schedule_date', $today))
+            ->whereIn('schedule_id', $scheduleIds)
             ->get();
 
+        // Hitung statistik berdasarkan data yang sudah difilter
         $totalSchedules = $schedulesToday->count();
-        $totalHadir     = $attendances->where('status', 'hadir')->count();
-        $totalIzin      = $attendances->where('status', 'izin')->count();
-        $totalAlpha     = max(0, $totalSchedules - ($totalHadir + $totalIzin));
+        $totalHadir = $attendances->where('status', 'hadir')->count();
+        $totalIzin = $attendances->where('status', 'izin')->count();
+        $totalAlpha = max(0, $totalSchedules - ($totalHadir + $totalIzin));
 
         return view('admin.attendances.index', compact(
             'today',
@@ -48,7 +64,9 @@ class AttendancesController extends Controller
             'totalSchedules',
             'totalHadir',
             'totalIzin',
-            'totalAlpha'
+            'totalAlpha',
+            'search',
+            'statusFilter'
         ));
     }
 
@@ -103,36 +121,39 @@ class AttendancesController extends Controller
     }
 
     public function history(Request $request)
-{
-    $user = Auth::user();
+    {
+        // Ambil tanggal dari request, default hari ini
+        $date = $request->input('date', now()->toDateString());
+        
+        // Ambil search parameter
+        $search = $request->input('search', '');
 
-    // Ambil tanggal dari request, default hari ini
-    $date = $request->input('date', now()->toDateString());
+        // Query builder untuk jadwal dengan relasi user dan shift
+        $schedulesQuery = \App\Models\Schedules::with(['user', 'shift'])
+            ->whereDate('schedule_date', $date);
 
-    // Ambil jadwal user sesuai tanggal
-    $schedules = \App\Models\Schedules::with(['shift'])
-        ->where('user_id', $user->id)
-        ->whereDate('schedule_date', $date)
-        ->get();
+        // Jika ada search, filter berdasarkan nama user
+        if (!empty($search)) {
+            $schedulesQuery->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
 
-    // Ambil absensi user sesuai jadwal
-    $attendances = \App\Models\Attendance::with(['schedule.shift'])
-        ->where('user_id', $user->id)
-        ->whereHas('schedule', function ($q) use ($date) {
-            $q->whereDate('schedule_date', $date);
-        })
-        ->get();
+        $schedules = $schedulesQuery->get();
 
-    // Ambil izin user sesuai tanggal
-    $permissions = \App\Models\Permissions::with(['schedule'])
-        ->where('user_id', $user->id)
-        ->whereHas('schedule', function ($q) use ($date) {
-            $q->whereDate('schedule_date', $date);
-        })
-        ->get();
+        // Ambil absensi berdasarkan schedule_id yang sudah difilter
+        $scheduleIds = $schedules->pluck('id');
+        $attendances = \App\Models\Attendance::with(['schedule.shift'])
+            ->whereIn('schedule_id', $scheduleIds)
+            ->get();
 
-    return view('users.attendances.history', compact('attendances', 'permissions', 'schedules', 'date'));
-}
+        // Ambil izin berdasarkan schedule_id yang sudah difilter
+        $permissions = \App\Models\Permissions::with(['schedule'])
+            ->whereIn('schedule_id', $scheduleIds)
+            ->get();
+
+        return view('admin.attendances.history', compact('attendances', 'permissions', 'schedules', 'date', 'search'));
+    }
 
 
 

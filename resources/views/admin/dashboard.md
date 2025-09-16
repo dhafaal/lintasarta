@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'History Jadwal - ' . $user->name)
 
@@ -57,7 +57,7 @@
 tolong buat ui views di atas, menjadi satu tema dengan refresnsi yang saya kasih, terutama tablenya
 Refrensi:
 
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Daftar Users')
 

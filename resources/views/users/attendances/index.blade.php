@@ -54,7 +54,7 @@
             @if (!$attendance || !$attendance->check_in_time)
                 <form id="checkin-form" action="{{ route('user.attendances.checkin') }}" method="POST">
                     @csrf
-                    <input type="hidden" name="schedule_id" value="{{ $schedule->id }}">
+                    <input type="hidden" name="schedule_id" value="{{ $schedule?->id }}">
                     <input type="hidden" name="latitude" id="latitude">
                     <input type="hidden" name="longitude" id="longitude">
                     <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow">
@@ -67,7 +67,7 @@
             @if ($attendance && $attendance->check_in_time && !$attendance->check_out_time)
                 <form id="checkout-form" action="{{ route('user.attendances.checkout') }}" method="POST">
                     @csrf
-                    <input type="hidden" name="schedule_id" value="{{ $schedule->id }}">
+                    <input type="hidden" name="schedule_id" value="{{ $schedule?->id }}">
                     <input type="hidden" name="latitude" id="checkout-latitude">
                     <input type="hidden" name="longitude" id="checkout-longitude">
                     <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow">
@@ -103,7 +103,7 @@
         <h2 class="text-lg font-bold mb-4">Ajukan Izin</h2>
         <form action="{{ route('user.permissions.store') }}" method="POST" class="space-y-4">
             @csrf
-            <input type="hidden" name="schedule_id" value="{{ $schedule->id }}">
+            <input type="hidden" name="schedule_id" value="{{ $schedule?->id }}">
 
             <div>
                 <label class="block text-sm font-medium mb-1">Tipe Izin</label>

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Ringkasan Jadwal Kerja')
 
@@ -211,8 +211,23 @@
                                                 </svg>
                                                 Lihat Jadwal
                                             </a>
+
+                                            {{-- Tambahkan tombol history di sini --}}
+                                            <a href="{{ route('admin.schedules.history', $summary['user_id']) }}"
+                                                class="inline-flex items-center px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                    class="lucide lucide-history mr-2">
+                                                    <path d="M3 3v5h5" />
+                                                    <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
+                                                    <path d="M12 7v5l4 2" />
+                                                </svg>
+                                                History
+                                            </a>
                                         </div>
                                     </td>
+
                                 </tr>
                             @empty
                                 <tr>

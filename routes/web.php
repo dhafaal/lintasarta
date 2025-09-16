@@ -23,21 +23,16 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
 
         // Users
         Route::resource('users', UserController::class);
-        Route::get('users/{user}/history', [UserController::class, 'history'])->name('users.history');
         Route::delete('users/bulk-delete', [UserController::class, 'bulkDelete'])->name('users.bulkDelete');
         Route::get('users/export/excel', [UserController::class, 'exportExcel'])->name('users.exportExcel');
         Route::get('users/export/pdf', [UserController::class, 'exportPdf'])->name('users.exportPdf');
 
         // Shifts
         Route::resource('shifts', ShiftController::class);
-
-        /**
-         * --- SCHEDULES & CALENDAR ---
-         * NOTE: letakkan custom route DULU sebelum resource supaya tidak bentrok dengan show()
-         */
         Route::get('schedules/user/{id}', [ScheduleController::class, 'userSchedules'])->name('schedules.user');
         Route::post('schedules/bulk-store', [ScheduleController::class, 'bulkStore'])->name('schedules.bulkStore');
-        Route::get('schedules/calendar-grid-data', [ScheduleController::class, 'calendarGridData'])
+        Route::get('schedules/history/{user}', [ScheduleController::class, 'history'])->name('schedules.history');
+        Route::get('schedules/calendAar-grid-data', [ScheduleController::class, 'calendarGridData'])
             ->name('schedules.calendar-grid-data');
 
         // Kalender untuk admin

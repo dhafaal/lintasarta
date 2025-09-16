@@ -497,4 +497,35 @@ class ScheduleController extends Controller
 
         return [$data, $daysInMonth];
     }
+
+    public function history(Request $request, User $user)
+    {
+        $today = Carbon::today();
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $query = Schedules::with(['shift', 'user'])
+            ->where('user_id', $user->id);
+
+        // Filter berdasarkan tanggal jika ada input
+        if ($startDate && $endDate) {
+            $query->whereBetween('schedule_date', [$startDate, $endDate]);
+        } elseif ($startDate) {
+            $query->whereDate('schedule_date', '>=', $startDate);
+        } elseif ($endDate) {
+            $query->whereDate('schedule_date', '<=', $endDate);
+        } else {
+            // Default: tampilkan riwayat (tanggal sebelum hari ini)
+            $query->whereDate('schedule_date', '<', $today);
+        }
+
+        $schedules = $query->orderBy('schedule_date', 'desc')->paginate(10);
+
+        // Ambil attendance & permissions untuk schedule-schedule ini
+        $scheduleIds = $schedules->pluck('id');
+        $attendances = \App\Models\Attendance::whereIn('schedule_id', $scheduleIds)->get();
+        $permissions = \App\Models\Permissions::whereIn('schedule_id', $scheduleIds)->get();
+
+        return view('admin.schedules.history', compact('user', 'schedules', 'attendances', 'permissions', 'startDate', 'endDate'));
+    }
 }

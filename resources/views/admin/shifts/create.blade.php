@@ -1,30 +1,30 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Tambah Shift')
 
 @section('content')
-<div class="min-h-screen bg-white sm:p-6 lg:p-8">
+<div class="min-h-screen bg-white dark:bg-gray-900 sm:p-6 lg:p-8 transition-colors duration-300">
     <div class="mx-auto">
         <!-- Enhanced header to match users module styling -->
         <div class="mb-8">
             <div class="flex items-center gap-4 mb-3">
-                <div class="p-3 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl shadow-sm">
-                    <svg class="w-7 h-7 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-3 bg-gradient-to-br from-sky-100 to-sky-200 dark:from-sky-900 dark:to-sky-800 rounded-xl shadow-sm">
+                    <svg class="w-7 h-7 text-sky-600 dark:text-sky-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Tambah Shift Baru</h1>
-                    <p class="text-gray-600 mt-1">Buat shift kerja baru untuk sistem penjadwalan</p>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Tambah Shift Baru</h1>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Buat shift kerja baru untuk sistem penjadwalan</p>
                 </div>
             </div>
         </div>
 
         <!-- Enhanced form card to match users module styling -->
-        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-            <div class="bg-gradient-to-r from-sky-500 to-sky-600 px-8 py-6">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-600 dark:to-sky-700 px-8 py-6">
                 <h2 class="text-xl font-semibold text-white">Informasi Shift</h2>
-                <p class="text-sky-100 mt-1">Lengkapi semua field yang diperlukan</p>
+                <p class="text-sky-100 dark:text-sky-200 mt-1">Lengkapi semua field yang diperlukan</p>
             </div>
             
             <div class="p-8">
@@ -33,7 +33,7 @@
                     
                     <!-- Enhanced form fields with consistent styling -->
                     <div class="space-y-3">
-                        <label for="name" class="block text-sm font-bold text-gray-800">
+                        <label for="name" class="block text-sm font-bold text-gray-800 dark:text-gray-200">
                             Nama Shift
                             <span class="text-red-500 ml-1">*</span>
                         </label>
@@ -46,7 +46,7 @@
                             <select 
                                 name="name" 
                                 id="name" 
-                                class="block w-full pl-12 pr-10 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 appearance-none cursor-pointer" 
+                                class="block w-full pl-12 pr-10 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-sky-100 dark:focus:ring-sky-900 focus:border-sky-500 dark:focus:border-sky-400 transition-all duration-200 bg-gray-50 dark:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 text-gray-900 dark:text-gray-100 appearance-none cursor-pointer" 
                                 required
                             >
                                 <option value="" disabled selected>Pilih nama shift</option>
@@ -55,12 +55,12 @@
                                 <option value="Malam">Malam</option>
                             </select>
                             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400 group-focus-within:text-sky-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-sky-500 dark:group-focus-within:text-sky-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
                             </div>
                         </div>
-                        <p class="text-xs text-gray-500 flex items-center">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
@@ -69,13 +69,13 @@
                     </div>
 
                     <div class="space-y-3">
-                        <label for="start_time" class="block text-sm font-bold text-gray-800">
+                        <label for="start_time" class="block text-sm font-bold text-gray-800 dark:text-gray-200">
                             Jam Mulai
                             <span class="text-red-500 ml-1">*</span>
                         </label>
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400 group-focus-within:text-sky-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-sky-500 dark:group-focus-within:text-sky-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
@@ -83,11 +83,11 @@
                                 type="time" 
                                 name="start_time" 
                                 id="start_time" 
-                                class="block w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900" 
+                                class="block w-full pl-12 pr-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-sky-100 dark:focus:ring-sky-900 focus:border-sky-500 dark:focus:border-sky-400 transition-all duration-200 bg-gray-50 dark:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 text-gray-900 dark:text-gray-100" 
                                 required
                             >
                         </div>
-                        <p class="text-xs text-gray-500 flex items-center">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
@@ -96,7 +96,7 @@
                     </div>
 
                     <div class="space-y-3">
-                        <label for="end_time" class="block text-sm font-bold text-gray-800">
+                        <label for="end_time" class="block text-sm font-bold text-gray-800 dark:text-gray-200">
                             Jam Selesai
                             <span class="text-red-500 ml-1">*</span>
                         </label>

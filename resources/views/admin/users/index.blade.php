@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Daftar Users')
 
@@ -141,12 +141,6 @@
                                                 class="inline-flex items-center px-4 py-2 bg-sky-100 hover:bg-sky-200 text-sky-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
                                                 Edit
                                             </a>
-
-                                            <a href="{{ route('admin.users.history', $user->id) }}"
-                                                class="inline-flex items-center px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
-                                                History
-                                            </a>
-
                                             <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
                                                 class="inline">
                                                 @csrf

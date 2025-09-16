@@ -142,18 +142,4 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'User deleted.');
     }
 
-    public function history(User $user)
-    {
-        $today = Carbon::today();
-
-        // Ambil semua schedule user yang sudah lewat
-        $histories = Schedules::with('shift')
-            ->where('user_id', $user->id)
-            ->whereDate('schedule_date', '<', $today)
-            ->orderBy('schedule_date', 'desc')
-            ->paginate(10);
-
-        return view('admin.users.history', compact('user', 'histories'));
-    }
-
 }
