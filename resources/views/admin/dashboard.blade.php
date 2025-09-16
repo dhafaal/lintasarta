@@ -10,9 +10,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <div class="p-3 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl shadow-sm">
-                        <svg class="w-8 h-8 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
+                        <i data-lucide="layout-dashboard" class="w-8 h-8 text-sky-600"></i>
                     </div>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
@@ -31,14 +29,10 @@
     @if(session('success'))
         <div class="mb-6 bg-green-50 border border-green-200 rounded-xl p-4">
             <div class="flex items-center">
-                <svg class="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+                <i data-lucide="check-circle" class="w-5 h-5 text-green-600 mr-3"></i>
                 <p class="text-green-700 font-medium">{{ session('success') }}</p>
                 <button type="button" class="ml-auto text-green-500 hover:text-green-700" onclick="this.closest('.mb-6').style.display='none';">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
+                    <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
         </div>
@@ -47,9 +41,7 @@
     <!-- Today's Attendance Summary -->
     <div class="mb-8">
         <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <svg class="w-5 h-5 text-sky-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-            </svg>
+            <i data-lucide="clipboard-check" class="w-5 h-5 text-sky-600 mr-2"></i>
             Today's Attendance
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -61,9 +53,7 @@
                         <p class="text-2xl font-bold text-gray-900">{{ $todaySchedules }}</p>
                     </div>
                     <div class="p-3 bg-gray-100 rounded-lg">
-                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
+                        <i data-lucide="calendar" class="w-6 h-6 text-gray-600"></i>
                     </div>
                 </div>
             </div>
@@ -76,9 +66,7 @@
                         <p class="text-2xl font-bold text-green-700">{{ $todayHadir }}</p>
                     </div>
                     <div class="p-3 bg-green-100 rounded-lg">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
                     </div>
                 </div>
             </div>
@@ -91,9 +79,7 @@
                         <p class="text-2xl font-bold text-yellow-700">{{ $todayIzin }}</p>
                     </div>
                     <div class="p-3 bg-yellow-100 rounded-lg">
-                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                        <i data-lucide="clock" class="w-6 h-6 text-yellow-600"></i>
                     </div>
                 </div>
             </div>
@@ -106,9 +92,7 @@
                         <p class="text-2xl font-bold text-red-700">{{ $todayAlpha }}</p>
                     </div>
                     <div class="p-3 bg-red-100 rounded-lg">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                        <i data-lucide="x-circle" class="w-6 h-6 text-red-600"></i>
                     </div>
                 </div>
             </div>
@@ -121,9 +105,7 @@
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center space-x-3">
                     <div class="p-2 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg">
-                        <svg class="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
+                        <i data-lucide="bar-chart-3" class="w-6 h-6 text-sky-600"></i>
                     </div>
                     <div>
                         <h2 class="text-lg font-semibold text-gray-800">Attendance Statistics</h2>
@@ -180,9 +162,7 @@
                 <div>
                     <div class="flex items-center space-x-3 mb-4">
                         <div class="p-2 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg">
-                            <svg class="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                            </svg>
+                            <i data-lucide="users" class="w-6 h-6 text-sky-600"></i>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-600">Total Users</p>
@@ -191,9 +171,7 @@
                     </div>
                     <a href="{{ route('admin.users.index') }}" class="inline-flex items-center text-sm font-medium text-sky-600 hover:text-sky-700">
                         Manage Users
-                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
+                        <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
                     </a>
                 </div>
             </div>
@@ -205,9 +183,7 @@
                 <div>
                     <div class="flex items-center space-x-3 mb-4">
                         <div class="p-2 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg">
-                            <svg class="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+                            <i data-lucide="clock" class="w-6 h-6 text-sky-600"></i>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-600">Total Shifts</p>
@@ -216,9 +192,7 @@
                     </div>
                     <a href="{{ route('admin.shifts.index') }}" class="inline-flex items-center text-sm font-medium text-sky-600 hover:text-sky-700">
                         Manage Shifts
-                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
+                        <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
                     </a>
                 </div>
             </div>
@@ -230,9 +204,7 @@
                 <div>
                     <div class="flex items-center space-x-3 mb-4">
                         <div class="p-2 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg">
-                            <svg class="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
+                            <i data-lucide="calendar-days" class="w-6 h-6 text-sky-600"></i>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-600">Total Schedules</p>
@@ -241,9 +213,7 @@
                     </div>
                     <a href="{{ route('admin.schedules.index') }}" class="inline-flex items-center text-sm font-medium text-sky-600 hover:text-sky-700">
                         Manage Schedules
-                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
+                        <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
                     </a>
                 </div>
             </div>
@@ -254,9 +224,7 @@
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div class="flex items-center space-x-3 mb-6">
             <div class="p-2 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg">
-                <svg class="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
+                <i data-lucide="zap" class="w-6 h-6 text-sky-600"></i>
             </div>
             <div>
                 <h2 class="text-lg font-semibold text-gray-800">Quick Actions</h2>
@@ -277,9 +245,7 @@
             </a>
             <a href="{{ route('admin.shifts.create') }}" class="flex items-center p-4 bg-sky-50 border border-sky-200 rounded-xl hover:bg-sky-100 hover:shadow-md transition-all group">
                 <div class="p-2 bg-sky-100 rounded-lg mr-3">
-                    <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
+                    <i data-lucide="clock" class="w-5 h-5 text-sky-600"></i>
                 </div>
                 <div>
                     <p class="font-medium text-gray-800 group-hover:text-sky-700">Create Shift</p>
@@ -288,9 +254,7 @@
             </a>
             <a href="{{ route('admin.schedules.create') }}" class="flex items-center p-4 bg-sky-50 border border-sky-200 rounded-xl hover:bg-sky-100 hover:shadow-md transition-all group">
                 <div class="p-2 bg-sky-100 rounded-lg mr-3">
-                    <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
+                    <i data-lucide="calendar-plus" class="w-5 h-5 text-sky-600"></i>
                 </div>
                 <div>
                     <p class="font-medium text-gray-800 group-hover:text-sky-700">New Schedule</p>
