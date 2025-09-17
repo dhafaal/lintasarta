@@ -12,7 +12,9 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('schedule_id')->constrained('schedules')->cascadeOnDelete();
-            $table->enum('status', ['hadir', 'izin', 'alpha'])->default('alpha');
+            $table->enum('status', ['hadir', 'izin', 'telat', 'alpha'])->default('alpha');
+            $table->boolean('is_late')->default(false);
+            $table->integer('late_minutes')->nullable();
             $table->timestamp('check_in_time')->nullable();
             $table->timestamp('check_out_time')->nullable();
             $table->timestamps();

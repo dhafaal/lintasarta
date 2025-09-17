@@ -238,6 +238,19 @@
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-left">
                                         <div class="flex items-center justify-start space-x-3">
+                                            <button onclick="openSwapModal({{ $schedule->id }}, '{{ $schedule->user->name }}', '{{ $schedule->shift->name ?? '-' }}', '{{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}')"
+                                                class="inline-flex items-center px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                    class="lucide lucide-arrow-left-right mr-2">
+                                                    <path d="M8 3 4 7l4 4" />
+                                                    <path d="M4 7h16" />
+                                                    <path d="m16 21 4-4-4-4" />
+                                                    <path d="M20 17H4" />
+                                                </svg>
+                                                Swap
+                                            </button>
                                             <a href="{{ route('admin.schedules.edit', $schedule->id) }}"
                                                 class="inline-flex items-center px-4 py-2 bg-sky-100 hover:bg-sky-200 text-sky-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -314,4 +327,260 @@
             </div>
         </div>
     </div>
+
+    <!-- Swap Schedule Modal -->
+    <div id="swapModal" class="fixed inset-0 bg-gray-600/50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-2xl bg-white">
+            <div class="mt-3">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left-right text-green-600">
+                                <path d="M8 3 4 7l4 4" />
+                                <path d="M4 7h16" />
+                                <path d="m16 21 4-4-4-4" />
+                                <path d="M20 17H4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">Swap Schedule</h3>
+                            <p class="text-gray-600 text-sm">Tukar jadwal dengan karyawan lain</p>
+                        </div>
+                    </div>
+                    <button onclick="closeSwapModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x">
+                            <path d="M18 6 6 18" />
+                            <path d="m6 6 12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Current Schedule Info -->
+                <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                    <h4 class="font-semibold text-gray-800 mb-2">Jadwal yang akan ditukar:</h4>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user text-gray-500">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            <span id="currentUser" class="text-gray-700 font-medium"></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock text-gray-500">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            <span id="currentShift" class="text-gray-700 font-medium"></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar text-gray-500">
+                                <path d="M8 2v4" />
+                                <path d="M16 2v4" />
+                                <rect width="18" height="18" x="3" y="4" rx="2" />
+                                <path d="M3 10h18" />
+                            </svg>
+                            <span id="currentDate" class="text-gray-700 font-medium"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Swap Form -->
+                <form id="swapForm" method="POST">
+                    @csrf
+                    <input type="hidden" id="scheduleId" name="schedule_id" value="">
+                    
+                    <!-- Step 1: Select User -->
+                    <div class="mb-6">
+                        <label for="targetUser" class="block text-sm font-bold text-gray-700 mb-2">
+                            Pilih Karyawan untuk Swap:
+                        </label>
+                        <select id="targetUser" name="target_user_id" onchange="loadUserSchedules(this.value)" 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors">
+                            <option value="">-- Pilih Karyawan --</option>
+                        </select>
+                    </div>
+
+                    <!-- Step 2: Select Target Schedule -->
+                    <div id="targetScheduleContainer" class="mb-6 hidden">
+                        <label for="targetSchedule" class="block text-sm font-bold text-gray-700 mb-2">
+                            Pilih Jadwal untuk Ditukar:
+                        </label>
+                        <div id="schedulesList" class="space-y-2 max-h-60 overflow-y-auto">
+                            <!-- Schedules will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button type="button" onclick="closeSwapModal()" 
+                                class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" id="swapButton" disabled
+                                class="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors">
+                            Tukar Jadwal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedTargetSchedule = null;
+
+        function openSwapModal(scheduleId, userName, shiftName, scheduleDate) {
+            document.getElementById('scheduleId').value = scheduleId;
+            document.getElementById('currentUser').textContent = userName;
+            document.getElementById('currentShift').textContent = shiftName;
+            document.getElementById('currentDate').textContent = scheduleDate;
+            
+            // Reset form
+            document.getElementById('targetUser').value = '';
+            document.getElementById('targetScheduleContainer').classList.add('hidden');
+            document.getElementById('swapButton').disabled = true;
+            selectedTargetSchedule = null;
+            
+            // Load users
+            loadUsers();
+            
+            document.getElementById('swapModal').classList.remove('hidden');
+        }
+
+        function closeSwapModal() {
+            document.getElementById('swapModal').classList.add('hidden');
+        }
+
+        function loadUsers() {
+            fetch('/admin/schedules/users-with-schedules')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('targetUser');
+                    select.innerHTML = '<option value="">-- Pilih Karyawan --</option>';
+                    
+                    data.users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.id;
+                        option.textContent = user.name;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading users:', error);
+                    alert('Gagal memuat daftar karyawan');
+                });
+        }
+
+        function loadUserSchedules(userId) {
+            if (!userId) {
+                document.getElementById('targetScheduleContainer').classList.add('hidden');
+                return;
+            }
+
+            fetch(`/admin/schedules/user-schedules/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('schedulesList');
+                    container.innerHTML = '';
+                    
+                    if (data.schedules.length === 0) {
+                        container.innerHTML = '<p class="text-gray-500 text-center py-4">Tidak ada jadwal tersedia untuk karyawan ini</p>';
+                    } else {
+                        data.schedules.forEach(schedule => {
+                            const scheduleDiv = document.createElement('div');
+                            scheduleDiv.className = 'border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors';
+                            scheduleDiv.onclick = () => selectTargetSchedule(schedule.id, scheduleDiv);
+                            
+                            scheduleDiv.innerHTML = `
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="flex items-center space-x-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock text-gray-500">
+                                                <circle cx="12" cy="12" r="10" />
+                                                <polyline points="12 6 12 12 16 14" />
+                                            </svg>
+                                            <span class="font-medium">${schedule.shift_name}</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar text-gray-500">
+                                                <path d="M8 2v4" />
+                                                <path d="M16 2v4" />
+                                                <rect width="18" height="18" x="3" y="4" rx="2" />
+                                                <path d="M3 10h18" />
+                                            </svg>
+                                            <span class="text-gray-600">${schedule.formatted_date}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm text-gray-500">${schedule.time_range}</div>
+                                </div>
+                            `;
+                            
+                            container.appendChild(scheduleDiv);
+                        });
+                    }
+                    
+                    document.getElementById('targetScheduleContainer').classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error loading schedules:', error);
+                    alert('Gagal memuat jadwal karyawan');
+                });
+        }
+
+        function selectTargetSchedule(scheduleId, element) {
+            // Remove previous selection
+            document.querySelectorAll('#schedulesList > div').forEach(div => {
+                div.classList.remove('bg-green-50', 'border-green-300');
+                div.classList.add('border-gray-200');
+            });
+            
+            // Add selection to clicked element
+            element.classList.remove('border-gray-200');
+            element.classList.add('bg-green-50', 'border-green-300');
+            
+            selectedTargetSchedule = scheduleId;
+            document.getElementById('swapButton').disabled = false;
+        }
+
+        document.getElementById('swapForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!selectedTargetSchedule) {
+                alert('Pilih jadwal yang akan ditukar');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('_token', document.querySelector('input[name="_token"]').value);
+            formData.append('schedule_id', document.getElementById('scheduleId').value);
+            formData.append('target_schedule_id', selectedTargetSchedule);
+            
+            fetch('/admin/schedules/swap', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Jadwal berhasil ditukar!');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Gagal menukar jadwal');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menukar jadwal');
+            });
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('swapModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSwapModal();
+            }
+        });
+    </script>
 @endsection

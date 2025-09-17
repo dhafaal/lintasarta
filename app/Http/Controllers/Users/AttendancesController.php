@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\Schedules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class AttendancesController extends Controller
 {
@@ -47,23 +48,37 @@ class AttendancesController extends Controller
             return back()->with('error', 'Anda berada di luar radius 1 KM dari kantor.');
         }
 
+        // Validate check-in time with late tolerance and early restriction
+        $validation = $this->validateCheckInTime($request->schedule_id);
+        
+        if (!$validation['valid']) {
+            return back()->with('error', $validation['message']);
+        }
+
         $attendance = Attendance::firstOrCreate(
             ['schedule_id' => $request->schedule_id, 'user_id' => Auth::id()],
-            ['status' => 'hadir', 'check_in_time' => now()]
+            [
+                'status' => $validation['status'],
+                'is_late' => $validation['is_late'],
+                'late_minutes' => $validation['late_minutes'],
+                'check_in_time' => now()
+            ]
         );
 
-        if (!$attendance->wasRecentlyCreated && $attendance->check_in_time) {
+        if ($attendance->wasRecentlyCreated === false) {
             return back()->with('error', 'Anda sudah check-in sebelumnya.');
         }
 
         $attendance->update([
-            'status' => 'hadir',
+            'status' => $validation['status'],
+            'is_late' => $validation['is_late'],
+            'late_minutes' => $validation['late_minutes'],
             'check_in_time' => now(),
             'latitude' => $request->latitude,
             'longitude' => $request->longitude
         ]);
 
-        return back()->with('success', 'Check-in berhasil.');
+        return back()->with('success', $validation['message']);
     }
 
     public function checkout(Request $request)
@@ -163,10 +178,14 @@ class AttendancesController extends Controller
 {
     $user = Auth::user();
     $date = $request->input('date');
+    $selectedMonth = $request->input('month', now()->month);
+    $selectedYear = $request->input('year', now()->year);
+    $startDate = $request->input('start_date');
+    $endDate = $request->input('end_date');
 
     $today = now()->toDateString();
 
-    // Ambil semua jadwal sampai hari ini
+    // Base query for schedules
     $scheduleQuery = \App\Models\Schedules::with('shift')
         ->where('user_id', $user->id)
         ->whereDate('schedule_date', '<=', $today);
@@ -176,7 +195,7 @@ class AttendancesController extends Controller
         ->whereHas('schedule', function ($q) use ($today) {
             $q->whereDate('schedule_date', '<=', $today);
         })
-        ->whereIn('status', ['hadir', 'alpha', 'izin']);
+        ->whereIn('status', ['hadir', 'telat', 'alpha', 'izin']);
 
     $permissionQuery = \App\Models\Permissions::with('schedule')
         ->where('user_id', $user->id)
@@ -184,17 +203,114 @@ class AttendancesController extends Controller
             $q->whereDate('schedule_date', '<=', $today);
         });
 
+    // Apply date filters
     if (!empty($date)) {
         $scheduleQuery->whereDate('schedule_date', $date);
         $attendanceQuery->whereHas('schedule', fn($q) => $q->whereDate('schedule_date', $date));
         $permissionQuery->whereHas('schedule', fn($q) => $q->whereDate('schedule_date', $date));
+    } 
+    // Apply month and year filter
+    else if ($request->has('month') || $request->has('year')) {
+        $scheduleQuery->whereMonth('schedule_date', $selectedMonth)
+                     ->whereYear('schedule_date', $selectedYear);
+        $attendanceQuery->whereHas('schedule', function($q) use ($selectedMonth, $selectedYear) {
+            $q->whereMonth('schedule_date', $selectedMonth)
+              ->whereYear('schedule_date', $selectedYear);
+        });
+        $permissionQuery->whereHas('schedule', function($q) use ($selectedMonth, $selectedYear) {
+            $q->whereMonth('schedule_date', $selectedMonth)
+              ->whereYear('schedule_date', $selectedYear);
+        });
+    }
+    // Apply date range filter
+    else if ($startDate && $endDate) {
+        $scheduleQuery->whereBetween('schedule_date', [$startDate, $endDate]);
+        $attendanceQuery->whereHas('schedule', function($q) use ($startDate, $endDate) {
+            $q->whereBetween('schedule_date', [$startDate, $endDate]);
+        });
+        $permissionQuery->whereHas('schedule', function($q) use ($startDate, $endDate) {
+            $q->whereBetween('schedule_date', [$startDate, $endDate]);
+        });
     }
 
     $schedules = $scheduleQuery->orderBy('schedule_date', 'desc')->get();
     $attendances = $attendanceQuery->get();
     $permissions = $permissionQuery->get();
 
-    return view('users.attendances.history', compact('attendances', 'permissions', 'schedules', 'date'));
+    return view('users.attendances.history', compact(
+        'attendances', 
+        'permissions', 
+        'schedules', 
+        'date',
+        'selectedMonth',
+        'selectedYear',
+        'startDate',
+        'endDate'
+    ));
 }
+
+    /**
+     * Check if check-in time is valid (not too early, within tolerance for late)
+     */
+    private function validateCheckInTime($scheduleId, $checkInTime = null)
+    {
+        $checkInTime = $checkInTime ?: now();
+        $schedule = Schedules::with('shift')->find($scheduleId);
+        
+        if (!$schedule || !$schedule->shift) {
+            return ['valid' => false, 'message' => 'Schedule atau shift tidak ditemukan'];
+        }
+
+        // Gabungkan tanggal schedule dengan waktu shift
+        $scheduleDate = Carbon::parse($schedule->schedule_date);
+        $shiftStartTime = Carbon::parse($schedule->shift->start_time);
+        
+        // Buat datetime lengkap untuk shift start
+        $shiftStart = $scheduleDate->copy()->setTimeFrom($shiftStartTime);
+        
+        // Batas check-in paling awal (90 menit sebelum shift)
+        $earliestCheckIn = $shiftStart->copy()->subMinutes(90);
+        
+        // Batas toleransi terlambat (5 menit setelah shift dimulai)
+        $lateToleranceLimit = $shiftStart->copy()->addMinutes(5);
+        
+        $checkIn = Carbon::parse($checkInTime);
+        
+        // Cek apakah terlalu awal
+        if ($checkIn->lt($earliestCheckIn)) {
+            return [
+                'valid' => false, 
+                'message' => 'Belum bisa check-in. Waktu check-in paling awal adalah ' . $earliestCheckIn->format('H:i')
+            ];
+        }
+        
+        // Tentukan status berdasarkan waktu check-in
+        $status = 'hadir';
+        $isLate = false;
+        $lateMinutes = 0;
+        
+        if ($checkIn->gt($shiftStart)) {
+            $lateMinutes = $shiftStart->diffInMinutes($checkIn);
+            if ($lateMinutes <= 5) {
+                // Masih dalam toleransi 5 menit
+                $status = 'telat';
+                $isLate = true;
+            } else {
+                // Lebih dari 5 menit = alpha (tidak bisa check-in)
+                return [
+                    'valid' => false,
+                    'message' => 'Terlambat lebih dari 5 menit. Tidak dapat melakukan check-in.'
+                ];
+            }
+        }
+        
+        return [
+            'valid' => true,
+            'status' => $status,
+            'is_late' => $isLate,
+            'late_minutes' => $lateMinutes,
+            'message' => $status === 'telat' ? "Check-in berhasil (Terlambat {$lateMinutes} menit)" : 'Check-in berhasil'
+        ];
+    }
 
 }

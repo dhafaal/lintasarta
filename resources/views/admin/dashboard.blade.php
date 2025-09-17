@@ -44,7 +44,7 @@
             <i data-lucide="clipboard-check" class="w-5 h-5 text-sky-600 mr-2"></i>
             Today's Attendance
         </h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
             <!-- Total Schedules -->
             <div class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between">
@@ -67,6 +67,19 @@
                     </div>
                     <div class="p-3 bg-green-100 rounded-lg">
                         <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Telat -->
+            <div class="bg-white rounded-xl border border-orange-200 p-6 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-orange-600">Telat</p>
+                        <p class="text-2xl font-bold text-orange-700">{{ $todayTelat }}</p>
+                    </div>
+                    <div class="p-3 bg-orange-100 rounded-lg">
+                        <i data-lucide="clock-alert" class="w-6 h-6 text-orange-600"></i>
                     </div>
                 </div>
             </div>
@@ -276,6 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Extract data for chart
     const hadirData = attendanceData.map(item => item.hadir);
+    const telatData = attendanceData.map(item => item.telat);
     const izinData = attendanceData.map(item => item.izin);
     const alphaData = attendanceData.map(item => item.alpha);
     
@@ -289,6 +303,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     data: hadirData,
                     backgroundColor: '#10b981',
                     borderColor: '#059669',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                },
+                {
+                    label: 'Telat',
+                    data: telatData,
+                    backgroundColor: '#f97316',
+                    borderColor: '#ea580c',
                     borderWidth: 1,
                     borderRadius: 4,
                     borderSkipped: false,

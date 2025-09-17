@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Attendance;
 use App\Models\Schedules;
 use App\Models\Shift;
 use App\Models\User;
@@ -189,15 +190,23 @@ class ScheduleController extends Controller
 
             for ($day = 1; $day <= $daysInMonth; $day++) {
                 $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
-                $shiftId = $shifts[$day] ?? null;
+                
+                // Handle multiple shifts per day
+                $dayShifts = $shifts[$day] ?? [];
+                
+                // If dayShifts is not an array, convert it to array for backward compatibility
+                if (!is_array($dayShifts)) {
+                    $dayShifts = [$dayShifts];
+                }
 
-                if (!empty($shiftId)) {
-                    $exists = Schedules::where('user_id', $userId)
-                        ->whereDate('schedule_date', $date)
-                        ->where('shift_id', $shiftId)
-                        ->exists();
+                // Remove existing schedules for this user and date first
+                Schedules::where('user_id', $userId)
+                    ->whereDate('schedule_date', $date)
+                    ->delete();
 
-                    if (!$exists) {
+                // Create new schedules for each shift
+                foreach ($dayShifts as $shiftId) {
+                    if (!empty($shiftId)) {
                         Schedules::create([
                             'user_id'       => $userId,
                             'schedule_date' => $date,
@@ -456,7 +465,7 @@ class ScheduleController extends Controller
             for ($day = 1; $day <= $daysInMonth; $day++) {
                 $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
 
-                $schedules = Schedules::with('shift')
+                $schedules = Schedules::with(['shift', 'attendance'])
                     ->where('user_id', $user->id)
                     ->whereDate('schedule_date', $date)
                     ->get();
@@ -464,6 +473,7 @@ class ScheduleController extends Controller
                 if ($schedules->isNotEmpty()) {
                     $shiftLetters = [];
                     $hoursList = [];
+                    $attendanceStatuses = [];
 
                     foreach ($schedules as $schedule) {
                         if (!$schedule->shift) continue;
@@ -477,16 +487,27 @@ class ScheduleController extends Controller
 
                         $shiftLetters[] = strtoupper(substr($schedule->shift->name, 0, 1));
                         $hoursList[] = round($minutes / 60, 1) . 'j';
+                        
+                        // Get attendance status for this schedule
+                        $attendanceStatus = null;
+                        if ($schedule->attendance) {
+                            $attendanceStatus = $schedule->attendance->status;
+                        }
+                        $attendanceStatuses[] = $attendanceStatus;
                     }
 
                     $row['shifts'][$day] = [
                         'shift' => implode(',', $shiftLetters), // contoh: "P,M"
                         'hours' => implode(' + ', $hoursList), // contoh: "8j + 8j"
+                        'attendance_statuses' => $attendanceStatuses, // array of attendance statuses for each shift
+                        'primary_attendance' => $attendanceStatuses[0] ?? null, // primary attendance status for coloring
                     ];
                 } else {
                     $row['shifts'][$day] = [
                         'shift' => '',
                         'hours' => '',
+                        'attendance_statuses' => [],
+                        'primary_attendance' => null,
                     ];
                 }
             }
@@ -527,5 +548,78 @@ class ScheduleController extends Controller
         $permissions = \App\Models\Permissions::whereIn('schedule_id', $scheduleIds)->get();
 
         return view('admin.schedules.history', compact('user', 'schedules', 'attendances', 'permissions', 'startDate', 'endDate'));
+    }
+
+    /**
+     * Get users that have schedules for swap functionality
+     */
+    public function getUsersWithSchedules()
+    {
+        $users = User::whereHas('schedules')
+            ->whereIn('role', ['user', 'operator'])
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return response()->json(['users' => $users]);
+    }
+
+    /**
+     * Get schedules for a specific user for swap functionality
+     */
+    public function getUserSchedulesForSwap($userId)
+    {
+        $schedules = Schedules::with('shift')
+            ->where('user_id', $userId)
+            ->whereDate('schedule_date', '>=', Carbon::today())
+            ->orderBy('schedule_date', 'asc')
+            ->get()
+            ->map(function ($schedule) {
+                return [
+                    'id' => $schedule->id,
+                    'shift_name' => $schedule->shift->name ?? '-',
+                    'formatted_date' => Carbon::parse($schedule->schedule_date)->format('d M Y'),
+                    'time_range' => $schedule->shift ? 
+                        Carbon::parse($schedule->shift->start_time)->format('H:i') . ' - ' . 
+                        Carbon::parse($schedule->shift->end_time)->format('H:i') : '-'
+                ];
+            });
+
+        return response()->json(['schedules' => $schedules]);
+    }
+
+    /**
+     * Swap two schedules
+     */
+    public function swapSchedules(Request $request)
+    {
+        $request->validate([
+            'schedule_id' => 'required|exists:schedules,id',
+            'target_schedule_id' => 'required|exists:schedules,id',
+        ]);
+
+        try {
+            DB::transaction(function () use ($request) {
+                $schedule1 = Schedules::findOrFail($request->schedule_id);
+                $schedule2 = Schedules::findOrFail($request->target_schedule_id);
+
+                // Store original values
+                $originalUserId1 = $schedule1->user_id;
+                $originalUserId2 = $schedule2->user_id;
+
+                // Swap user_id values
+                $schedule1->update(['user_id' => $originalUserId2]);
+                $schedule2->update(['user_id' => $originalUserId1]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Jadwal berhasil ditukar'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menukar jadwal: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

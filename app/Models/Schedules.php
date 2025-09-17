@@ -27,6 +27,11 @@ class Schedules extends Model
     {
         return $this->hasMany(Attendance::class, 'schedule_id');
     }
+
+    public function attendance()
+    {
+        return $this->hasOne(Attendance::class, 'schedule_id');
+    }
     
         public function permissions()
     {

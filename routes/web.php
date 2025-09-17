@@ -34,6 +34,14 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         Route::get('schedules/history/{user}', [ScheduleController::class, 'history'])->name('schedules.history');
         Route::get('schedules/calendAar-grid-data', [ScheduleController::class, 'calendarGridData'])
             ->name('schedules.calendar-grid-data');
+        
+        // Swap schedules routes
+        Route::get('schedules/users-with-schedules', [ScheduleController::class, 'getUsersWithSchedules'])
+            ->name('schedules.users-with-schedules');
+        Route::get('schedules/user-schedules/{userId}', [ScheduleController::class, 'getUserSchedulesForSwap'])
+            ->name('schedules.user-schedules-for-swap');
+        Route::post('schedules/swap', [ScheduleController::class, 'swapSchedules'])
+            ->name('schedules.swap');
 
         // Kalender untuk admin
         Route::prefix('calendar')->name('calendar.')->group(function () {

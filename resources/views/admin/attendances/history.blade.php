@@ -151,6 +151,14 @@
                                             <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
                                             Hadir
                                         </span>
+                                    @elseif($attendance?->status === 'telat')
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                            <i data-lucide="clock-alert" class="w-3 h-3 mr-1"></i>
+                                            Telat
+                                            @if($attendance && $attendance->late_minutes)
+                                                <span class="ml-1 text-xs">({{ $attendance->late_minutes }} mnt)</span>
+                                            @endif
+                                        </span>
                                     @elseif($attendance?->status === 'izin')
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                             <i data-lucide="clock" class="w-3 h-3 mr-1"></i>

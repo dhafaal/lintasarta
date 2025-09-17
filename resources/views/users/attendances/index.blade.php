@@ -3,43 +3,68 @@
 @section('title', 'Attendance')
 
 @section('content')
-<div class="max-w-5xl mx-auto">
-    {{-- Notifikasi --}}
+<div class="p-6 space-y-4">
+    {{-- Notifications --}}
     @if (session('success'))
-        <div class="mb-4 p-4 bg-green-100 text-green-800 border border-green-300 rounded">
+        <div class="bg-green-50 text-green-700 px-4 py-2 rounded-lg text-sm">
             {{ session('success') }}
         </div>
     @endif
+
+    @if (session('warning'))
+        <div class="bg-yellow-50 text-yellow-700 px-4 py-2 rounded-lg text-sm">
+            {{ session('warning') }}
+        </div>
+    @endif
+
     @if (session('error'))
-        <div class="mb-4 p-4 bg-red-100 text-red-800 border border-red-300 rounded">
+        <div class="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm">
             {{ session('error') }}
         </div>
     @endif
 
-    {{-- Jadwal Hari Ini --}}
+    {{-- Today's Schedule --}}
     @if ($schedule)
-        <div class="bg-white rounded-lg shadow border border-sky-200 p-6 mb-6">
-            <h2 class="text-lg font-semibold text-sky-800 mb-3">Jadwal Anda Hari Ini</h2>
-            <p class="text-sky-700 mb-2">
-                <strong>Shift:</strong> {{ $schedule->shift->name }} <br>
-                <strong>Jam:</strong> {{ $schedule->shift->start_time }} - {{ $schedule->shift->end_time }}
-            </p>
-
-            @if ($attendance)
-                <p class="text-gray-700 mb-2">
-                    <strong>Status:</strong>
-                    <span class="px-2 py-1 text-xs rounded 
-                        @if ($attendance->status === 'hadir') bg-green-100 text-green-700 
-                        @elseif($attendance->status === 'izin') bg-yellow-100 text-yellow-700 
-                        @else bg-red-100 text-red-700 @endif">
-                        {{ ucfirst($attendance->status) }}
-                    </span><br>
-                    <strong>Check In:</strong> {{ $attendance->check_in_time ?? '-' }} <br>
-                    <strong>Check Out:</strong> {{ $attendance->check_out_time ?? '-' }}
-                </p>
-            @else
-                <p class="text-gray-600">Status: <span class="text-red-500 font-medium">Belum Absen</span></p>
-            @endif
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Today's Schedule</h2>
+            
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Shift</span>
+                    <span class="font-medium">{{ $schedule->shift->name }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Time</span>
+                    <span class="font-medium">{{ $schedule->shift->start_time }} - {{ $schedule->shift->end_time }}</span>
+                </div>
+                
+                @if ($attendance)
+                    <div class="pt-2 border-t border-gray-100">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-gray-600">Status</span>
+                            <span class="px-2 py-1 text-xs font-medium rounded 
+                                @if ($attendance->status === 'hadir') bg-green-100 text-green-700 
+                                @elseif($attendance->status === 'izin') bg-yellow-100 text-yellow-700 
+                                @elseif($attendance->status === 'sakit') bg-orange-100 text-orange-700 
+                                @else bg-red-100 text-red-700 @endif">
+                                {{ ucfirst($attendance->status) }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600">Check In</span>
+                            <span>{{ $attendance->check_in_time ? \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') : '-' }}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600">Check Out</span>
+                            <span>{{ $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') : '-' }}</span>
+                        </div>
+                    </div>
+                @else
+                    <div class="pt-2 border-t border-gray-100 text-center">
+                        <p class="text-sm text-red-600">Not checked in yet</p>
+                    </div>
+                @endif
+            </div>
         </div>
 
         @if (session('debug_distance'))
@@ -48,94 +73,95 @@
             </div>
         @endif
 
-        {{-- Tombol Aksi --}}
-        <div class="flex flex-wrap gap-3 mb-8">
-            {{-- Belum check in --}}
+        {{-- Action Buttons --}}
+        <div class="flex flex-wrap gap-3">
+            {{-- Check In Button --}}
             @if (!$attendance || !$attendance->check_in_time)
                 <form id="checkin-form" action="{{ route('user.attendances.checkin') }}" method="POST">
                     @csrf
                     <input type="hidden" name="schedule_id" value="{{ $schedule?->id }}">
                     <input type="hidden" name="latitude" id="latitude">
                     <input type="hidden" name="longitude" id="longitude">
-                    <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow">
+                    <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
                         Check In
                     </button>
                 </form>
             @endif
 
-            {{-- Sudah check in tapi belum check out --}}
+            {{-- Check Out Button --}}
             @if ($attendance && $attendance->check_in_time && !$attendance->check_out_time)
                 <form id="checkout-form" action="{{ route('user.attendances.checkout') }}" method="POST">
                     @csrf
                     <input type="hidden" name="schedule_id" value="{{ $schedule?->id }}">
                     <input type="hidden" name="latitude" id="checkout-latitude">
                     <input type="hidden" name="longitude" id="checkout-longitude">
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
                         Check Out
                     </button>
                 </form>
             @endif
 
-            {{-- Tombol Ajukan Izin --}}
+            {{-- Request Leave Button --}}
             @if (!$attendance || !$attendance->check_in_time)
                 <button type="button"
                         onclick="document.getElementById('izin-modal').classList.remove('hidden')"
-                        class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded shadow">
-                    Ajukan Izin
+                        class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    Request Leave
                 </button>
             @endif
 
+            {{-- View History Button --}}
             <a href="{{ route('user.attendances.history') }}"
-               class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded shadow">
-               Lihat History
+               class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors">
+                History
             </a>
         </div>
     @else
-        <div class="p-6 bg-white border border-sky-200 rounded-lg shadow text-center mb-8">
-            <p class="text-sky-700 mb-4">Anda tidak memiliki jadwal hari ini.</p>
+        <div class="bg-white rounded-lg border border-gray-200 p-4 text-center">
+            <p class="text-gray-600 mb-2">No schedule for today</p>
+            <p class="text-sm text-gray-500">Please contact admin for schedule information</p>
         </div>
     @endif
 </div>
 
-{{-- Modal Form Ajukan Izin --}}
+{{-- Modal Form Request Leave --}}
 <div id="izin-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
-        <h2 class="text-lg font-bold mb-4">Ajukan Izin</h2>
-        <form action="{{ route('user.permissions.store') }}" method="POST" class="space-y-4">
+    <div class="bg-white rounded-lg w-full max-w-md p-4 relative">
+        <h2 class="text-lg font-medium mb-4">Request Leave</h2>
+        <form action="{{ route('user.permissions.store') }}" method="POST" class="space-y-3">
             @csrf
             <input type="hidden" name="schedule_id" value="{{ $schedule?->id }}">
 
             <div>
-                <label class="block text-sm font-medium mb-1">Tipe Izin</label>
-                <select name="type" class="w-full border-gray-300 rounded-lg">
-                    <option value="izin">Izin</option>
-                    <option value="sakit">Sakit</option>
-                    <option value="cuti">Cuti</option>
+                <label class="block text-sm font-medium mb-1">Type</label>
+                <select name="type" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    <option value="izin">Leave</option>
+                    <option value="sakit">Sick</option>
+                    <option value="cuti">Vacation</option>
                 </select>
             </div>
 
             <div>
-                <label class="block text-sm font-medium mb-1">Alasan</label>
-                <textarea name="reason" class="w-full border-gray-300 rounded-lg" rows="3" placeholder="Tuliskan alasan..."></textarea>
+                <label class="block text-sm font-medium mb-1">Reason</label>
+                <textarea name="reason" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows="3" placeholder="Enter reason..."></textarea>
             </div>
 
-            <div class="flex justify-end gap-2">
+            <div class="flex justify-end gap-2 pt-2">
                 <button type="button"
                         onclick="document.getElementById('izin-modal').classList.add('hidden')"
-                        class="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg">
-                    Batal
+                        class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm rounded-lg">
+                    Cancel
                 </button>
-                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
-                    Ajukan
+                <button type="submit" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg">
+                    Submit
                 </button>
             </div>
         </form>
 
-        {{-- Tombol Close di pojok kanan atas --}}
         <button type="button"
                 onclick="document.getElementById('izin-modal').classList.add('hidden')"
-                class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
-            ✖
+                class="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+            ✕
         </button>
     </div>
 </div>

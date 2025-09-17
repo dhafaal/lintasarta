@@ -40,7 +40,7 @@
             </div>
 
             <!-- Enhanced Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <div class="bg-gradient-to-br from-sky-500 to-sky-600 rounded-2xl p-6 text-white shadow-xl">
                     <div class="flex items-center justify-between">
                         <div>
@@ -59,6 +59,13 @@
                     subtitle="Kehadiran hari ini"
                     bgColor="bg-gradient-to-br from-green-100 to-green-200"
                     icon='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 text-green-600 lucide lucide-check-circle-2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>'
+                />
+                <x-stats-card
+                    title="Telat"
+                    :count="$totalTelat"
+                    subtitle="Terlambat hari ini"
+                    bgColor="bg-gradient-to-br from-orange-100 to-orange-200"
+                    icon='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 text-orange-600 lucide lucide-clock-alert"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><path d="M12 2v4"/><path d="M12 18v4"/></svg>'
                 />
                 <x-stats-card
                     title="Izin"
@@ -99,6 +106,7 @@
                                 <select name="status" onchange="this.form.submit()" class="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
                                     <option value="">Semua Status</option>
                                     <option value="hadir" {{ request('status') == 'hadir' ? 'selected' : '' }}>Hadir</option>
+                                    <option value="telat" {{ request('status') == 'telat' ? 'selected' : '' }}>Telat</option>
                                     <option value="izin" {{ request('status') == 'izin' ? 'selected' : '' }}>Izin</option>
                                     <option value="alpha" {{ request('status') == 'alpha' ? 'selected' : '' }}>Alpha</option>
                                 </select>
@@ -243,6 +251,19 @@
                                                     <polyline points="22 4 12 14.01 9 11.01"/>
                                                 </svg>
                                                 Hadir
+                                            </span>
+                                        @elseif(($attendance->status ?? 'alpha') === 'telat')
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock-alert mr-1">
+                                                    <circle cx="12" cy="12" r="10"/>
+                                                    <polyline points="12 6 12 12 16 14"/>
+                                                    <path d="M12 2v4"/>
+                                                    <path d="M12 18v4"/>
+                                                </svg>
+                                                Telat
+                                                @if($attendance && $attendance->late_minutes)
+                                                    <span class="ml-1 text-xs">({{ $attendance->late_minutes }} mnt)</span>
+                                                @endif
                                             </span>
                                         @elseif(($attendance->status ?? 'alpha') === 'izin')
                                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">

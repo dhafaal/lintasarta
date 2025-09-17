@@ -81,10 +81,24 @@
                 </button>
             </form>
 
-            {{-- Tabel Jadwal --}}
-            <div class="bg-white rounded-2xl border border-gray-200 shadow">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gray-100 flex items-center justify-between">
-                    <h2 class="text-lg font-bold text-gray-700">Tabel Jadwal</h2>
+            {{-- Enhanced Tabel Jadwal --}}
+            <div class="bg-white rounded-2xl border-2 border-sky-100 shadow-xl overflow-hidden">
+                <div class="px-8 py-6 border-b-2 border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600">
+                                <path d="M3 6h18"/>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                <line x1="10" x2="10" y1="11" y2="17"/>
+                                <line x1="14" x2="14" y1="11" y2="17"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">Tabel Jadwal Kerja</h2>
+                            <p class="text-sm text-gray-600">Detail jadwal dan jam kerja karyawan</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full border-collapse text-sm">
@@ -134,9 +148,43 @@
                                             $dayOfWeek = \Carbon\Carbon::createFromDate($year, $month, $d)->dayOfWeek;
                                             $isWeekend = $dayOfWeek === 0 || $dayOfWeek === 6;
                                         @endphp
-                                        <td
-                                            class="px-2 py-2 border text-center {{ $isWeekend ? 'bg-red-50 text-red-500' : '' }}">
-                                            {{ $row['shifts'][$d]['shift'] }}
+                                        @php
+                                            $attendanceStatus = $row['shifts'][$d]['primary_attendance'] ?? null;
+                                            $shift = $row['shifts'][$d]['shift'];
+                                            
+                                            // Determine cell background color based on attendance status
+                                            $cellBgClass = '';
+                                            $textClass = '';
+                                            if ($attendanceStatus === 'hadir') {
+                                                $cellBgClass = 'bg-green-50';
+                                                $textClass = 'text-green-800 font-semibold';
+                                            } elseif ($attendanceStatus === 'telat') {
+                                                $cellBgClass = 'bg-orange-50';
+                                                $textClass = 'text-orange-800 font-semibold';
+                                            } elseif ($attendanceStatus === 'izin') {
+                                                $cellBgClass = 'bg-yellow-50';
+                                                $textClass = 'text-yellow-800 font-semibold';
+                                            } elseif ($attendanceStatus === 'alpha') {
+                                                $cellBgClass = 'bg-red-50';
+                                                $textClass = 'text-red-800 font-semibold';
+                                            } else {
+                                                // Default colors for weekend or no attendance data
+                                                if ($isWeekend) {
+                                                    $cellBgClass = 'bg-red-50';
+                                                    $textClass = 'text-red-500';
+                                                } else {
+                                                    $cellBgClass = 'bg-gray-50';
+                                                    $textClass = 'text-gray-700';
+                                                }
+                                            }
+                                        @endphp
+                                        <td class="px-2 py-2 border text-center {{ $cellBgClass }}" 
+                                            title="Status: {{ ucfirst($attendanceStatus ?? 'Belum ada data') }}">
+                                            @if($shift)
+                                                <span class="{{ $textClass }}">{{ $shift }}</span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
                                         </td>
                                     @endfor
                                     <td class="sticky right-0 bg-white z-10 px-4 py-2 border text-center"
@@ -150,10 +198,39 @@
                                         @php
                                             $dayOfWeek = \Carbon\Carbon::createFromDate($year, $month, $d)->dayOfWeek;
                                             $isWeekend = $dayOfWeek === 0 || $dayOfWeek === 6;
+                                            $attendanceStatus = $row['shifts'][$d]['primary_attendance'] ?? null;
+                                            
+                                            // Use same background color logic as shift row
+                                            $cellBgClass = '';
+                                            $textClass = '';
+                                            if ($attendanceStatus === 'hadir') {
+                                                $cellBgClass = 'bg-green-50';
+                                                $textClass = 'text-green-700 font-medium';
+                                            } elseif ($attendanceStatus === 'telat') {
+                                                $cellBgClass = 'bg-orange-50';
+                                                $textClass = 'text-orange-700 font-medium';
+                                            } elseif ($attendanceStatus === 'izin') {
+                                                $cellBgClass = 'bg-yellow-50';
+                                                $textClass = 'text-yellow-700 font-medium';
+                                            } elseif ($attendanceStatus === 'alpha') {
+                                                $cellBgClass = 'bg-red-50';
+                                                $textClass = 'text-red-700 font-medium';
+                                            } else {
+                                                if ($isWeekend) {
+                                                    $cellBgClass = 'bg-red-50';
+                                                    $textClass = 'text-red-500';
+                                                } else {
+                                                    $cellBgClass = 'bg-gray-50';
+                                                    $textClass = 'text-gray-600';
+                                                }
+                                            }
                                         @endphp
-                                        <td
-                                            class="px-2 py-2 border text-center {{ $isWeekend ? 'bg-red-50 text-red-500' : '' }}">
-                                            {{ $row['shifts'][$d]['hours'] }}
+                                        <td class="px-2 py-2 border text-center {{ $cellBgClass }}">
+                                            @if($row['shifts'][$d]['hours'])
+                                                <span class="{{ $textClass }}">{{ $row['shifts'][$d]['hours'] }}</span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
                                         </td>
                                     @endfor
                                 </tr>
@@ -169,21 +246,48 @@
                 </div>
             </div>
 
-            {{-- Kalender --}}
-            <div class="bg-white rounded-2xl border border-gray-200 shadow">
-                <div class="px-8 py-4 border-b border-gray-200 bg-gray-100 flex items-center justify-between">
-                    <h2 class="text-lg font-bold text-gray-700">Kalender Jadwal</h2>
+            {{-- Enhanced Kalender --}}
+            <div class="bg-white rounded-2xl border-2 border-sky-100 shadow-xl overflow-hidden">
+                <div class="px-8 py-6 border-b-2 border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600">
+                                <path d="M8 2v4"/>
+                                <path d="M16 2v4"/>
+                                <rect width="18" height="18" x="3" y="4" rx="2"/>
+                                <path d="M3 10h18"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">Kalender Jadwal</h2>
+                            <p class="text-sm text-gray-600">Visualisasi kalender interaktif</p>
+                        </div>
+                    </div>
                 </div>
 
-                {{-- Legend --}}
-                <div class="flex flex-wrap gap-4 text-sm px-6 py-3">
-                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-[#22C7FD]"></span> Pagi</div>
-                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-[#FACC15]"></span> Siang</div>
-                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-[#A855F7]"></span> Malam</div>
-                    <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-[#6B7280]"></span> Lainnya</div>
+                <div class="px-8 py-4 bg-gray-50 border-b border-gray-200">
+                    <p class="text-sm font-medium text-gray-700 mb-3">Keterangan Shift:</p>
+                    <div class="flex flex-wrap gap-6 text-sm">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-4 h-4 rounded-full bg-blue-500 shadow-sm"></span>
+                            <span class="font-medium text-gray-700">Shift Pagi</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-4 h-4 rounded-full bg-yellow-500 shadow-sm"></span>
+                            <span class="font-medium text-gray-700">Shift Siang</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-4 h-4 rounded-full bg-purple-500 shadow-sm"></span>
+                            <span class="font-medium text-gray-700">Shift Malam</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-4 h-4 rounded-full bg-gray-500 shadow-sm"></span>
+                            <span class="font-medium text-gray-700">Shift Lainnya</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="p-6">
+                <div class="p-8">
                     <div id="calendar"></div>
                 </div>
             </div>

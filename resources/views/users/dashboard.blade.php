@@ -5,109 +5,125 @@
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
     <style>
-        /* FullCalendar custom style */
         .fc-event {
-            padding: 6px 8px !important;
-            border-radius: 8px !important;
-            font-size: 0.8rem !important;
-            line-height: 1.2rem !important;
+            padding: 4px 8px !important;
+            border-radius: 6px !important;
+            font-size: 0.75rem !important;
+            font-weight: 500 !important;
+            border: none !important;
         }
         .fc-toolbar-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1f2937;
+            font-size: 1.25rem !important;
+            font-weight: 600 !important;
+            color: #374151 !important;
         }
-        .fc-daygrid-event {
-            white-space: normal !important;
+        .fc-button {
+            border-radius: 6px !important;
+            font-weight: 500 !important;
         }
     </style>
 @endpush
 
 @section('content')
-    <div class="container mx-auto px-4 py-8">
-        
-        <!-- Header -->
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">
-            Selamat Datang, {{ auth()->user()->name }} 👋
-        </h1>
-        <p class="text-gray-600 mb-8">
-            Ini adalah dashboard user. Anda bisa melihat jadwal kerja Anda di bawah.
-        </p>
+<div class="p-6 space-y-4">
+    <!-- Welcome -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <h1 class="text-xl font-medium text-gray-900 mb-1">Welcome, {{ Auth::user()->name }}</h1>
+        <p class="text-sm text-gray-600">Manage your attendance and work schedule</p>
+    </div>
 
-        <!-- Ringkasan -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div
-                class="bg-gradient-to-r from-sky-500 to-sky-600 text-white p-6 rounded-xl shadow-lg hover:scale-105 transform transition">
-                <h3 class="text-lg font-semibold mb-2">Bulan Ini</h3>
-                <p class="text-2xl font-bold">{{ now()->format('F Y') }}</p>
-            </div>
-
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Hari Ini</h3>
-                <p class="text-2xl font-bold text-gray-700">{{ now()->format('d') }}</p>
-                <p class="text-gray-500 text-sm mt-1">{{ now()->format('l') }}</p>
-            </div>
-
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Minggu Ini</h3>
-                <p class="text-2xl font-bold text-gray-700">{{ now()->weekOfYear }}</p>
-            </div>
-
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Total Hari Bulan Ini</h3>
-                <p class="text-2xl font-bold text-gray-700">{{ now()->daysInMonth }}</p>
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">This Month</p>
+                    <p class="text-lg font-medium text-gray-900">{{ now()->format('M Y') }}</p>
+                </div>
+                <i data-lucide="calendar" class="w-5 h-5 text-gray-400"></i>
             </div>
         </div>
 
-        <!-- Legend Shift -->
-        <div class="flex flex-wrap gap-4 text-sm mb-6">
-            <div class="flex items-center gap-2">
-                <span class="w-4 h-4 rounded bg-sky-500"></span>
-                <span>Pagi</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="w-4 h-4 rounded bg-yellow-400"></span>
-                <span>Siang</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="w-4 h-4 rounded bg-purple-600"></span>
-                <span>Malam</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="w-4 h-4 rounded bg-gray-500"></span>
-                <span>Lainnya</span>
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Today</p>
+                    <p class="text-lg font-medium text-gray-900">{{ now()->format('d') }}</p>
+                </div>
+                <i data-lucide="calendar-days" class="w-5 h-5 text-gray-400"></i>
             </div>
         </div>
 
-        <!-- Kalender -->
-        <div class="bg-white rounded-xl shadow-lg p-4">
-            <!-- Filter -->
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-2">
-                    <select id="monthSelect"
-                        class="border border-gray-300 bg-white text-gray-700 px-3 py-2 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400">
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Week</p>
+                    <p class="text-lg font-medium text-gray-900">{{ now()->weekOfYear }}</p>
+                </div>
+                <i data-lucide="calendar-range" class="w-5 h-5 text-gray-400"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Days in Month</p>
+                    <p class="text-lg font-medium text-gray-900">{{ now()->daysInMonth }}</p>
+                </div>
+                <i data-lucide="hash" class="w-5 h-5 text-gray-400"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shift Legend -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <h3 class="text-sm font-medium text-gray-900 mb-3">Shift Legend</h3>
+        <div class="flex flex-wrap gap-3">
+            <div class="flex items-center space-x-2">
+                <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                <span class="text-sm text-gray-700">Morning</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                <span class="text-sm text-gray-700">Afternoon</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+                <span class="text-sm text-gray-700">Night</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="w-3 h-3 rounded-full bg-gray-500"></span>
+                <span class="text-sm text-gray-700">Other</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Section -->
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-medium text-gray-900">Work Schedule</h2>
+                <div class="flex items-center space-x-2">
+                    <select id="monthSelect" class="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                         @for ($m = 1; $m <= 12; $m++)
                             <option value="{{ $m }}" {{ $m == now()->month ? 'selected' : '' }}>
                                 {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
                             </option>
                         @endfor
                     </select>
-
-                    <select id="yearSelect"
-                        class="border border-gray-300 bg-white text-gray-700 px-3 py-2 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400">
+                    <select id="yearSelect" class="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                         @for ($y = now()->year - 3; $y <= now()->year + 3; $y++)
-                            <option value="{{ $y }}" {{ $y == now()->year ? 'selected' : '' }}>
-                                {{ $y }}
-                            </option>
+                            <option value="{{ $y }}" {{ $y == now()->year ? 'selected' : '' }}>{{ $y }}</option>
                         @endfor
                     </select>
                 </div>
             </div>
-
-            <!-- Calendar -->
+        </div>
+        <div class="p-4">
             <div id="calendar" class="w-full"></div>
         </div>
     </div>
+</div>
 @endsection
 
 @push('scripts')

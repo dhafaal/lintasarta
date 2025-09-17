@@ -42,16 +42,21 @@ class DashboardController extends Controller
                 $q->whereDate('schedule_date', $dateString);
             })->where('status', 'hadir')->count();
             
+            $telatCount = Attendance::whereHas('schedule', function($q) use ($dateString) {
+                $q->whereDate('schedule_date', $dateString);
+            })->where('status', 'telat')->count();
+            
             $izinCount = Attendance::whereHas('schedule', function($q) use ($dateString) {
                 $q->whereDate('schedule_date', $dateString);
             })->where('status', 'izin')->count();
             
-            // Alpha = schedules - (hadir + izin)
-            $alphaCount = max(0, $schedulesCount - ($hadirCount + $izinCount));
+            // Alpha = schedules - (hadir + telat + izin)
+            $alphaCount = max(0, $schedulesCount - ($hadirCount + $telatCount + $izinCount));
             
             $attendanceData[] = [
                 'date' => $dateString,
                 'hadir' => $hadirCount,
+                'telat' => $telatCount,
                 'izin' => $izinCount,
                 'alpha' => $alphaCount
             ];
@@ -63,10 +68,13 @@ class DashboardController extends Controller
         $todayHadir = Attendance::whereHas('schedule', function($q) use ($today) {
             $q->whereDate('schedule_date', $today);
         })->where('status', 'hadir')->count();
+        $todayTelat = Attendance::whereHas('schedule', function($q) use ($today) {
+            $q->whereDate('schedule_date', $today);
+        })->where('status', 'telat')->count();
         $todayIzin = Attendance::whereHas('schedule', function($q) use ($today) {
             $q->whereDate('schedule_date', $today);
         })->where('status', 'izin')->count();
-        $todayAlpha = max(0, $todaySchedules - ($todayHadir + $todayIzin));
+        $todayAlpha = max(0, $todaySchedules - ($todayHadir + $todayTelat + $todayIzin));
         
         return view('admin.dashboard', [
             'totalUsers'       => User::where('role', '!=', 'Admin')->count(),
@@ -76,6 +84,7 @@ class DashboardController extends Controller
             'chartDates'       => $dates,
             'todaySchedules'   => $todaySchedules,
             'todayHadir'       => $todayHadir,
+            'todayTelat'       => $todayTelat,
             'todayIzin'        => $todayIzin,
             'todayAlpha'       => $todayAlpha,
             'currentMonth'     => $monthDate->format('F Y'),

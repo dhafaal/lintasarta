@@ -111,27 +111,51 @@
 
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">Preset Shift Cepat</label>
-                            <div class="flex flex-wrap gap-2">
-                                <button type="button"
-                                    class="px-3 py-1.5 bg-sky-50 text-sky-600 text-sm font-medium rounded-lg hover:bg-sky-100 transition-colors duration-200"
-                                    onclick="applyQuickPreset('pagi')">
-                                    Isi Pagi
-                                </button>
-                                <button type="button"
-                                    class="px-3 py-1.5 bg-orange-50 text-orange-600 text-sm font-medium rounded-lg hover:bg-orange-100 transition-colors duration-200"
-                                    onclick="applyQuickPreset('siang')">
-                                    Isi Siang
-                                </button>
-                                <button type="button"
-                                    class="px-3 py-1.5 bg-purple-50 text-purple-600 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors duration-200"
-                                    onclick="applyQuickPreset('malam')">
-                                    Isi Malam
-                                </button>
-                                <button type="button"
-                                    class="px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors duration-200"
-                                    onclick="clearPreset()">
-                                    Kosongkan
-                                </button>
+                            <div class="space-y-2">
+                                <div class="text-xs text-gray-500 font-medium">Shift 1 (Dropdown Atas):</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-sky-50 text-sky-600 text-sm font-medium rounded-lg hover:bg-sky-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('pagi', 1)">
+                                        Shift 1: Pagi
+                                    </button>
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-orange-50 text-orange-600 text-sm font-medium rounded-lg hover:bg-orange-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('siang', 1)">
+                                        Shift 1: Siang
+                                    </button>
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-purple-50 text-purple-600 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('malam', 1)">
+                                        Shift 1: Malam
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-500 font-medium">Shift 2 (Dropdown Bawah):</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-sky-50 text-sky-600 text-sm font-medium rounded-lg hover:bg-sky-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('pagi', 2)">
+                                        Shift 2: Pagi
+                                    </button>
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-orange-50 text-orange-600 text-sm font-medium rounded-lg hover:bg-orange-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('siang', 2)">
+                                        Shift 2: Siang
+                                    </button>
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-purple-50 text-purple-600 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('malam', 2)">
+                                        Shift 2: Malam
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-500 font-medium">Kontrol:</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors duration-200"
+                                        onclick="clearPreset()">
+                                        Kosongkan Semua
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -194,14 +218,23 @@
                 while (day <= data.daysInMonth) {
                     html += `
                     <div class="p-2 bg-white border border-gray-100 rounded-lg flex flex-col items-center hover:shadow-sm transition-shadow duration-200">
-                        <span class="text-sm font-semibold text-gray-700">${day}</span>
-                        <select name="shifts[${day}]"
-                            class="mt-1 w-full px-2 py-1 border border-gray-200 rounded-md text-xs focus:ring-1 focus:ring-sky-200 focus:border-sky-500 bg-white transition-colors duration-150">
-                            <option value="">-- Pilih Shift --</option>
-                            @foreach ($shifts as $shift)
-                                <option value="{{ $shift->id }}">{{ $shift->name }}</option>
-                            @endforeach
-                        </select>
+                        <span class="text-sm font-semibold text-gray-700 mb-1">${day}</span>
+                        <div class="w-full space-y-1">
+                            <select name="shifts[${day}][]" data-day="${day}" data-shift-position="1" onchange="updateSecondDropdown(${day})"
+                                class="shift-dropdown-1 w-full px-2 py-1 border border-gray-200 rounded-md text-xs focus:ring-1 focus:ring-sky-200 focus:border-sky-500 bg-white transition-colors duration-150">
+                                <option value="">-- Shift 1 --</option>
+                                @foreach ($shifts as $shift)
+                                    <option value="{{ $shift->id }}" data-shift-name="{{ $shift->name }}">{{ $shift->name }}</option>
+                                @endforeach
+                            </select>
+                            <select name="shifts[${day}][]" data-day="${day}" data-shift-position="2" id="shift2-${day}"
+                                class="shift-dropdown-2 w-full px-2 py-1 border border-gray-200 rounded-md text-xs focus:ring-1 focus:ring-green-200 focus:border-green-500 bg-white transition-colors duration-150">
+                                <option value="">-- Shift 2 --</option>
+                                @foreach ($shifts as $shift)
+                                    <option value="{{ $shift->id }}" data-shift-name="{{ $shift->name }}">{{ $shift->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 `;
                     day++;
@@ -228,12 +261,23 @@
             malam: 3 // ganti sesuai id shift malam
         };
 
-        function applyQuickPreset(type) {
+        function applyQuickPreset(type, shiftPosition = 1) {
             const shiftId = SHIFT_IDS[type];
             if (!shiftId) return alert("ID shift untuk " + type + " belum diatur!");
 
-            document.querySelectorAll('#calendarDays select').forEach(select => {
+            // Apply to specific shift position (1 or 2)
+            const selector = shiftPosition === 1 
+                ? '.shift-dropdown-1'
+                : '.shift-dropdown-2';
+            
+            document.querySelectorAll(selector).forEach(select => {
                 select.value = shiftId;
+                
+                // If this is a first dropdown, update the corresponding second dropdown
+                if (shiftPosition === 1) {
+                    const day = select.getAttribute('data-day');
+                    updateSecondDropdown(day);
+                }
             });
         }
 
@@ -241,6 +285,54 @@
             document.querySelectorAll('#calendarDays select').forEach(select => {
                 select.value = "";
             });
+            // Reset all second dropdowns to show all options
+            document.querySelectorAll('.shift-dropdown-1').forEach(firstDropdown => {
+                const day = firstDropdown.getAttribute('data-day');
+                updateSecondDropdown(day);
+            });
+        }
+
+        // Function to update second dropdown based on first dropdown selection
+        function updateSecondDropdown(day) {
+            const firstDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="1"]`);
+            const secondDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="2"]`);
+            
+            if (!firstDropdown || !secondDropdown) return;
+            
+            const selectedShiftId = firstDropdown.value;
+            const currentSecondValue = secondDropdown.value;
+            
+            // Get all original options from the template
+            const allShiftOptions = [
+                @foreach ($shifts as $shift)
+                    { id: "{{ $shift->id }}", name: "{{ $shift->name }}" },
+                @endforeach
+            ];
+            
+            // Clear second dropdown
+            secondDropdown.innerHTML = '<option value="">-- Shift 2 --</option>';
+            
+            // Add options that are not selected in first dropdown
+            allShiftOptions.forEach(shift => {
+                if (shift.id !== selectedShiftId) {
+                    const option = document.createElement('option');
+                    option.value = shift.id;
+                    option.textContent = shift.name;
+                    option.setAttribute('data-shift-name', shift.name);
+                    
+                    // Restore previous selection if it's still valid
+                    if (shift.id === currentSecondValue) {
+                        option.selected = true;
+                    }
+                    
+                    secondDropdown.appendChild(option);
+                }
+            });
+            
+            // If the current second dropdown value is now invalid, clear it
+            if (selectedShiftId === currentSecondValue) {
+                secondDropdown.value = "";
+            }
         }
     </script>
 @endsection

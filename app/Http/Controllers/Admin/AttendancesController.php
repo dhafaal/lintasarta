@@ -52,8 +52,9 @@ class AttendancesController extends Controller
         // Hitung statistik berdasarkan data yang sudah difilter
         $totalSchedules = $schedulesToday->count();
         $totalHadir = $attendances->where('status', 'hadir')->count();
+        $totalTelat = $attendances->where('status', 'telat')->count();
         $totalIzin = $attendances->where('status', 'izin')->count();
-        $totalAlpha = max(0, $totalSchedules - ($totalHadir + $totalIzin));
+        $totalAlpha = max(0, $totalSchedules - ($totalHadir + $totalTelat + $totalIzin));
 
         return view('admin.attendances.index', compact(
             'today',
@@ -63,6 +64,7 @@ class AttendancesController extends Controller
             'permissions',
             'totalSchedules',
             'totalHadir',
+            'totalTelat',
             'totalIzin',
             'totalAlpha',
             'search',
@@ -169,5 +171,101 @@ class AttendancesController extends Controller
     {
         $attendance->delete();
         return back()->with('success', 'Attendance deleted');
+    }
+
+    /**
+     * Check if check-in time is valid (not too early, within tolerance for late)
+     */
+    public function validateCheckInTime($scheduleId, $checkInTime = null)
+    {
+        $checkInTime = $checkInTime ?: now();
+        $schedule = Schedules::with('shift')->find($scheduleId);
+        
+        if (!$schedule || !$schedule->shift) {
+            return ['valid' => false, 'message' => 'Schedule atau shift tidak ditemukan'];
+        }
+
+        // Gabungkan tanggal schedule dengan waktu shift
+        $scheduleDate = Carbon::parse($schedule->schedule_date);
+        $shiftStartTime = Carbon::parse($schedule->shift->start_time);
+        
+        // Buat datetime lengkap untuk shift start
+        $shiftStart = $scheduleDate->copy()->setTimeFrom($shiftStartTime);
+        
+        // Batas check-in paling awal (90 menit sebelum shift)
+        $earliestCheckIn = $shiftStart->copy()->subMinutes(90);
+        
+        // Batas toleransi terlambat (5 menit setelah shift dimulai)
+        $lateToleranceLimit = $shiftStart->copy()->addMinutes(5);
+        
+        $checkIn = Carbon::parse($checkInTime);
+        
+        // Cek apakah terlalu awal
+        if ($checkIn->lt($earliestCheckIn)) {
+            return [
+                'valid' => false, 
+                'message' => 'Belum bisa check-in. Waktu check-in paling awal adalah ' . $earliestCheckIn->format('H:i')
+            ];
+        }
+        
+        // Tentukan status berdasarkan waktu check-in
+        $status = 'hadir';
+        $isLate = false;
+        $lateMinutes = 0;
+        
+        if ($checkIn->gt($shiftStart)) {
+            $lateMinutes = $shiftStart->diffInMinutes($checkIn);
+            if ($lateMinutes <= 5) {
+                // Masih dalam toleransi 5 menit
+                $status = 'telat';
+                $isLate = true;
+            } else {
+                // Lebih dari 5 menit = alpha (tidak bisa check-in)
+                return [
+                    'valid' => false,
+                    'message' => 'Terlambat lebih dari 5 menit. Tidak dapat melakukan check-in.'
+                ];            }
+        }
+        
+        return [
+            'valid' => true,
+            'status' => $status,
+            'is_late' => $isLate,
+            'late_minutes' => $lateMinutes,
+            'message' => 'Check-in berhasil'
+        ];
+    }
+
+    /**
+     * Process check-in with late validation
+     */
+    public function processCheckIn(Request $request)
+    {
+        $request->validate([
+            'schedule_id' => 'required|exists:schedules,id',
+            'user_id' => 'required|exists:users,id'
+        ]);
+
+        $validation = $this->validateCheckInTime($request->schedule_id);
+        
+        if (!$validation['valid']) {
+            return back()->with('error', $validation['message']);
+        }
+
+        // Create or update attendance
+        $attendance = Attendance::updateOrCreate(
+            [
+                'user_id' => $request->user_id,
+                'schedule_id' => $request->schedule_id,
+            ],
+            [
+                'status' => $validation['status'],
+                'is_late' => $validation['is_late'],
+                'late_minutes' => $validation['late_minutes'],
+                'check_in_time' => now(),
+            ]
+        );
+
+        return back()->with('success', $validation['message']);
     }
 }
