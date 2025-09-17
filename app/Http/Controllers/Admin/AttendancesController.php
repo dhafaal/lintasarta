@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 class AttendancesController extends Controller
 {
     public function index(Request $request)
-    {
+{
         $today = $request->input('date', Carbon::today()->toDateString());
         $todayFormated = Carbon::parse($today)->locale('id')->translatedFormat('l, d F Y');
         $search = $request->input('search', '');
@@ -157,9 +157,6 @@ class AttendancesController extends Controller
         return view('admin.attendances.history', compact('attendances', 'permissions', 'schedules', 'date', 'search'));
     }
 
-
-
-    // optional: show() dan destroy() jika memang kamu pakai di routes
     public function show($userId)
     {
         // implementasi show per user bila perlu
@@ -224,7 +221,8 @@ class AttendancesController extends Controller
                 return [
                     'valid' => false,
                     'message' => 'Terlambat lebih dari 5 menit. Tidak dapat melakukan check-in.'
-                ];            }
+                ];           
+            }
         }
         
         return [

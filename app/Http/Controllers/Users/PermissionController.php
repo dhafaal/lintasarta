@@ -15,8 +15,21 @@ class PermissionController extends Controller
         $request->validate([
             'schedule_id' => 'required|exists:schedules,id',
             'type' => 'required|in:izin,sakit,cuti',
-            'reason' => 'nullable|string|max:255',
+            'reason' => 'required|string|min:10|max:255',
         ]);
+
+        $schedule = Schedules::findOrFail($request->schedule_id);
+        
+        // Check if user already has permission for this date
+        $existingPermission = Permissions::where('user_id', Auth::id())
+            ->whereHas('schedule', function($q) use ($schedule) {
+                $q->whereDate('schedule_date', $schedule->schedule_date);
+            })
+            ->first();
+
+        if ($existingPermission) {
+            return back()->with('error', 'You already have a permission request for this date.');
+        }
 
         Permissions::create([
             'user_id' => Auth::id(),
@@ -26,6 +39,6 @@ class PermissionController extends Controller
             'status' => 'pending'
         ]);
 
-        return back()->with('success', 'Izin berhasil diajukan dan menunggu persetujuan.');
+        return back()->with('success', 'Permission request submitted successfully and awaiting approval.');
     }
 }

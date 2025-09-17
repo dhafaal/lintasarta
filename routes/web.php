@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Admin\ScheduleController;

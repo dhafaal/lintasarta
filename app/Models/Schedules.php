@@ -17,7 +17,6 @@ class Schedules extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Relasi ke shift
     public function shift()
     {
         return $this->belongsTo(Shift::class);

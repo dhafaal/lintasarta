@@ -28,12 +28,19 @@ class AttendancesController extends Controller
 
         $attendance = $schedule?->attendances->where('user_id', $user->id)->first();
 
+        // Check if user has permission for today
+        $todayPermission = \App\Models\Permissions::where('user_id', $user->id)
+            ->whereHas('schedule', function($q) use ($today) {
+                $q->whereDate('schedule_date', $today);
+            })
+            ->first();
+
         $schedules = Schedules::with(['shift', 'permissions', 'attendances'])
             ->where('user_id', $user->id)
             ->orderBy('schedule_date')
             ->get();
 
-        return view('users.attendances.index', compact('schedule', 'attendance', 'schedules'));
+        return view('users.attendances.index', compact('schedule', 'attendance', 'schedules', 'todayPermission'));
     }
 
     public function checkin(Request $request)
@@ -43,6 +50,18 @@ class AttendancesController extends Controller
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
         ]);
+
+        // Check if user has permission for this date
+        $schedule = Schedules::findOrFail($request->schedule_id);
+        $existingPermission = \App\Models\Permissions::where('user_id', Auth::id())
+            ->whereHas('schedule', function($q) use ($schedule) {
+                $q->whereDate('schedule_date', $schedule->schedule_date);
+            })
+            ->first();
+
+        if ($existingPermission) {
+            return back()->with('error', 'You cannot check-in because you have a permission request for this date.');
+        }
 
         if (!$this->isWithinRadius($request->latitude, $request->longitude)) {
             return back()->with('error', 'Anda berada di luar radius 1 KM dari kantor.');
@@ -88,6 +107,18 @@ class AttendancesController extends Controller
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
         ]);
+
+        // Check if user has permission for this date
+        $schedule = Schedules::findOrFail($request->schedule_id);
+        $existingPermission = \App\Models\Permissions::where('user_id', Auth::id())
+            ->whereHas('schedule', function($q) use ($schedule) {
+                $q->whereDate('schedule_date', $schedule->schedule_date);
+            })
+            ->first();
+
+        if ($existingPermission) {
+            return back()->with('error', 'You cannot check-out because you have a permission request for this date.');
+        }
 
         if (!$this->isWithinRadius($request->latitude, $request->longitude)) {
             return back()->with('error', 'Anda berada di luar radius 1 KM dari kantor.');

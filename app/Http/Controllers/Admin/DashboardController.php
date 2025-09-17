@@ -65,15 +65,19 @@ class DashboardController extends Controller
         // Get today's attendance summary
         $today = Carbon::today();
         $todaySchedules = Schedules::whereDate('schedule_date', $today)->count();
+        
         $todayHadir = Attendance::whereHas('schedule', function($q) use ($today) {
             $q->whereDate('schedule_date', $today);
         })->where('status', 'hadir')->count();
+
         $todayTelat = Attendance::whereHas('schedule', function($q) use ($today) {
             $q->whereDate('schedule_date', $today);
         })->where('status', 'telat')->count();
+
         $todayIzin = Attendance::whereHas('schedule', function($q) use ($today) {
             $q->whereDate('schedule_date', $today);
         })->where('status', 'izin')->count();
+
         $todayAlpha = max(0, $todaySchedules - ($todayHadir + $todayTelat + $todayIzin));
         
         return view('admin.dashboard', [
