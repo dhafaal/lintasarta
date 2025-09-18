@@ -28,7 +28,7 @@ class CalendarController extends Controller
             ->get();
 
         $events = $schedules->map(function ($schedule) {
-            $shiftName = $schedule->shift->name ?? 'Shift';
+            $shiftName = $schedule->shift->shift_name ?? 'Shift';
             $startTime = Carbon::parse($schedule->shift->start_time)->format('H:i');
             $endTime   = Carbon::parse($schedule->shift->end_time)->format('H:i');
 

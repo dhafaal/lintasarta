@@ -131,9 +131,9 @@
                             <tr class="hover:bg-sky-50 transition-colors duration-200">
                                 <td class="px-8 py-6 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        @if ($schedule->shift && $schedule->shift->name == 'Pagi')
-                                            <div class="w-8 h-8 bg-gradient-to-br from-orange-100 to-yellow-100 rounded-lg flex items-center justify-center mr-3">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun text-orange-500">
+                                        @if ($schedule->shift && $schedule->shift->category == 'Pagi')
+                                            <div class="w-10 h-10 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-xl flex items-center justify-center mr-4 shadow-sm">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun text-yellow-600">
                                                     <circle cx="12" cy="12" r="4"/>
                                                     <path d="M12 2v2"/>
                                                     <path d="M12 20v2"/>
@@ -145,9 +145,9 @@
                                                     <path d="m19.07 4.93-1.41 1.41"/>
                                                 </svg>
                                             </div>
-                                        @elseif($schedule->shift && $schedule->shift->name == 'Siang')
-                                            <div class="w-8 h-8 bg-gradient-to-br from-sky-100 to-blue-100 rounded-lg flex items-center justify-center mr-3">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun text-sky-500">
+                                        @elseif($schedule->shift && $schedule->shift->category == 'Siang')
+                                            <div class="w-10 h-10 bg-gradient-to-br from-orange-100 to-red-100 rounded-xl flex items-center justify-center mr-4 shadow-sm">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun text-orange-600">
                                                     <circle cx="12" cy="12" r="4"/>
                                                     <path d="M12 2v2"/>
                                                     <path d="M12 20v2"/>
@@ -159,25 +159,33 @@
                                                     <path d="m19.07 4.93-1.41 1.41"/>
                                                 </svg>
                                             </div>
-                                        @elseif($schedule->shift && $schedule->shift->name == 'Malam')
-                                            <div class="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center mr-3">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon text-indigo-500">
+                                        @elseif($schedule->shift && $schedule->shift->category == 'Malam')
+                                            <div class="w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center mr-4 shadow-sm">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon text-indigo-600">
                                                     <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"/>
                                                 </svg>
                                             </div>
                                         @else
-                                            <div class="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center mr-3">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x text-gray-500">
-                                                    <path d="M18 6 6 18"/>
-                                                    <path d="m6 6 12 12"/>
+                                            <div class="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center mr-4 shadow-sm">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-help-circle text-gray-500">
+                                                    <circle cx="12" cy="12" r="10"/>
+                                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                                                    <path d="M12 17h.01"/>
                                                 </svg>
                                             </div>
                                         @endif
                                         <div>
-                                            <div class="text-base font-bold text-gray-900">{{ $schedule->shift->name ?? '-' }}</div>
+                                            <div class="text-base font-bold text-gray-900">{{ $schedule->shift->shift_name ?? '-' }}</div>
                                             <div class="text-sm text-gray-500">
                                                 @if ($schedule->shift)
-                                                    {{ \Carbon\Carbon::parse($schedule->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->shift->end_time)->format('H:i') }}
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                                        @if($schedule->shift->category == 'Pagi') bg-yellow-100 text-yellow-800
+                                                        @elseif($schedule->shift->category == 'Siang') bg-orange-100 text-orange-800
+                                                        @elseif($schedule->shift->category == 'Malam') bg-indigo-100 text-indigo-800
+                                                        @else bg-gray-100 text-gray-800 @endif">
+                                                        {{ $schedule->shift->category }}
+                                                    </span>
+                                                    <span class="ml-2">{{ \Carbon\Carbon::parse($schedule->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->shift->end_time)->format('H:i') }}</span>
                                                 @else
                                                     -
                                                 @endif
@@ -190,49 +198,99 @@
                                     <div class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l') }}</div>
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-sky-100 text-sky-800">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock mr-1">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <polyline points="12 6 12 12 16 14"/>
-                                        </svg>
-                                        @php
-                                            $start = \Carbon\Carbon::parse($schedule->shift->start_time);
-                                            $end = \Carbon\Carbon::parse($schedule->shift->end_time);
-                                            if ($end->lt($start)) {
-                                                $end->addDay();
-                                            }
-                                            $duration = $start->diffInHours($end);
-                                        @endphp
-                                        {{ $duration }} jam
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    @if($status === 'hadir')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle mr-1">
-                                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                                <polyline points="22 4 12 14.01 9 11.01"/>
-                                            </svg>
-                                            Hadir
-                                        </span>
-                                    @elseif($status === 'izin')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                    <div class="flex flex-col space-y-2">
+                                        <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-sky-100 text-sky-800">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock mr-1">
                                                 <circle cx="12" cy="12" r="10"/>
                                                 <polyline points="12 6 12 12 16 14"/>
                                             </svg>
-                                            Izin
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle mr-1">
-                                                <circle cx="12" cy="12" r="10"/>
-                                                <path d="M15 9l-6 6"/>
-                                                <path d="M9 9l6 6"/>
-                                            </svg>
-                                            Alpha
-                                        </span>
-                                    @endif
+                                            @php
+                                                $start = \Carbon\Carbon::parse($schedule->shift->start_time);
+                                                $end = \Carbon\Carbon::parse($schedule->shift->end_time);
+                                                if ($end->lt($start)) {
+                                                    $end->addDay();
+                                                }
+                                                $duration = $start->diffInHours($end);
+                                            @endphp
+                                            {{ $duration }} jam
+                                        </div>
+                                        @if($attendance && ($attendance->check_in_time || $attendance->check_out_time))
+                                            <div class="text-xs text-gray-500">
+                                                @if($attendance->check_in_time)
+                                                    <span class="inline-flex items-center">
+                                                        <svg class="w-3 h-3 mr-1 text-green-500" fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3"/>
+                                                        </svg>
+                                                        Masuk: {{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}
+                                                    </span>
+                                                @endif
+                                                @if($attendance->check_out_time)
+                                                    <span class="inline-flex items-center ml-2">
+                                                        <svg class="w-3 h-3 mr-1 text-red-500" fill="currentColor" viewBox="0 0 8 8">
+                                                            <circle cx="4" cy="4" r="3"/>
+                                                        </svg>
+                                                        Keluar: {{ \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6 whitespace-nowrap">
+                                    <div class="flex flex-col space-y-2">
+                                        @if($status === 'hadir')
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle mr-1">
+                                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                                </svg>
+                                                Hadir
+                                                @if($attendance && $attendance->is_late)
+                                                    <span class="ml-1 text-xs">({{ $attendance->late_minutes }} mnt)</span>
+                                                @endif
+                                            </span>
+                                        @elseif($status === 'telat')
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock-alert mr-1">
+                                                    <circle cx="12" cy="12" r="10"/>
+                                                    <polyline points="12 6 12 12 16 14"/>
+                                                    <path d="M12 2v4"/>
+                                                    <path d="M12 18v4"/>
+                                                </svg>
+                                                Telat
+                                                @if($attendance && $attendance->late_minutes)
+                                                    <span class="ml-1 text-xs">({{ $attendance->late_minutes }} mnt)</span>
+                                                @endif
+                                            </span>
+                                        @elseif($status === 'izin')
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-check mr-1">
+                                                    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/>
+                                                    <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                                                    <path d="m9 15 2 2 4-4"/>
+                                                </svg>
+                                                Izin
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle mr-1">
+                                                    <circle cx="12" cy="12" r="10"/>
+                                                    <path d="M15 9l-6 6"/>
+                                                    <path d="M9 9l6 6"/>
+                                                </svg>
+                                                Alpha
+                                            </span>
+                                        @endif
+                                        
+                                        @if($permission && $permission->reason)
+                                            <div class="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded max-w-xs truncate" title="{{ $permission->reason }}">
+                                                <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                                    <circle cx="4" cy="4" r="3"/>
+                                                </svg>
+                                                {{ $permission->reason }}
+                                            </div>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty

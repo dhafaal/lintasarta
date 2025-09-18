@@ -28,7 +28,7 @@ class ScheduleController extends Controller
 
         if ($request->filled('shift_filter')) {
             $query->whereHas('shift', function ($q) use ($request) {
-                $q->where('name', $request->shift_filter);
+                $q->where('category', $request->shift_filter);
             });
         }
 
@@ -88,7 +88,7 @@ class ScheduleController extends Controller
 
         if ($request->filled('shift_filter')) {
             $query->whereHas('shift', function ($q) use ($request) {
-                $q->where('name', $request->shift_filter);
+                $q->where('category', $request->shift_filter);
             });
         }
 
@@ -110,7 +110,7 @@ class ScheduleController extends Controller
     public function create(Request $request)
     {
         $users = User::orderBy('name')->get();
-        $shifts = Shift::orderBy('name')->get();
+        $shifts = Shift::orderBy('shift_name')->get();
         $month = (int) $request->query('month', now()->month);
         $year = (int) $request->query('year', now()->year);
         $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
@@ -306,7 +306,7 @@ class ScheduleController extends Controller
     public function edit(Schedules $schedule)
     {
         $users = User::orderBy('name')->get();
-        $shifts = Shift::orderBy('name')->get();
+        $shifts = Shift::orderBy('shift_name')->get();
 
         return view('admin.schedules.edit', compact('schedule', 'users', 'shifts'));
     }
@@ -360,12 +360,13 @@ class ScheduleController extends Controller
 
             return [
                 'id' => $schedule->id,
-                'title' => "{$schedule->user->name} - {$schedule->shift->name}",
+                'title' => "{$schedule->user->name} - {$schedule->shift->shift_name}",
                 'start' => $start,
                 'end' => $end->toDateTimeString(),
                 'allDay' => false,
                 'extendedProps' => [
-                    'shift' => $schedule->shift->name,
+                    'shift' => $schedule->shift->shift_name,
+                    'category' => $schedule->shift->category,
                     'start_time' => $schedule->shift->start_time,
                     'end_time' => $schedule->shift->end_time,
                     'user' => $schedule->user->name,
@@ -394,7 +395,7 @@ class ScheduleController extends Controller
             // Konversi supaya Minggu = 0
             $firstDayOfMonth = $firstDayOfMonth % 7;
 
-            $shifts = Shift::select('id', 'name')->orderBy('name')->get();
+            $shifts = Shift::select('id', 'shift_name')->orderBy('shift_name')->get();
 
             return response()->json([
                 'success' => true,
@@ -485,7 +486,7 @@ class ScheduleController extends Controller
                         $minutes = $start->diffInMinutes($end);
                         $totalMinutes += $minutes;
 
-                        $shiftLetters[] = strtoupper(substr($schedule->shift->name, 0, 1));
+                        $shiftLetters[] = strtoupper(substr($schedule->shift->shift_name, 0, 1));
                         $hoursList[] = round($minutes / 60, 1) . 'j';
                         
                         // Get attendance status for this schedule
@@ -576,7 +577,7 @@ class ScheduleController extends Controller
             ->map(function ($schedule) {
                 return [
                     'id' => $schedule->id,
-                    'shift_name' => $schedule->shift->name ?? '-',
+                    'shift_name' => $schedule->shift->shift_name ?? '-',
                     'formatted_date' => Carbon::parse($schedule->schedule_date)->format('d M Y'),
                     'time_range' => $schedule->shift ? 
                         Carbon::parse($schedule->shift->start_time)->format('H:i') . ' - ' . 
@@ -619,6 +620,54 @@ class ScheduleController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menukar jadwal: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get existing schedules for a user in specific month and year
+     */
+    public function getUserExistingSchedules(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer|min:2000',
+        ]);
+
+        try {
+            $userId = $request->user_id;
+            $month = $request->month;
+            $year = $request->year;
+
+            // Get all schedules for the user in the specified month and year
+            $schedules = Schedules::with('shift')
+                ->where('user_id', $userId)
+                ->whereYear('schedule_date', $year)
+                ->whereMonth('schedule_date', $month)
+                ->get();
+
+            // Group schedules by day of month
+            $schedulesByDay = [];
+            foreach ($schedules as $schedule) {
+                $day = Carbon::parse($schedule->schedule_date)->day;
+                if (!isset($schedulesByDay[$day])) {
+                    $schedulesByDay[$day] = [];
+                }
+                $schedulesByDay[$day][] = [
+                    'shift_id' => $schedule->shift_id,
+                    'shift_name' => $schedule->shift->shift_name ?? '',
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'schedules' => $schedulesByDay
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil jadwal: ' . $e->getMessage()
             ], 500);
         }
     }

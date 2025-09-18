@@ -116,20 +116,34 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                            {{ $schedule->shift->name ?? '-' }}
+                                            {{ $schedule->shift->shift_name ?? '-' }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-                                            @if ($status === 'hadir') bg-green-100 text-green-800
-                                            @elseif ($status === 'izin') bg-blue-100 text-blue-800
-                                            @elseif ($status === 'telat') bg-yellow-100 text-yellow-800
-                                            @elseif ($status === 'alpha') bg-red-100 text-red-800 @endif">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
-                                                <circle cx="4" cy="4" r="3"/>
-                                            </svg>
-                                            {{ ucfirst($status) }}
-                                        </span>
+                                        <div class="flex flex-col space-y-1">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                                                @if ($status === 'hadir') bg-green-100 text-green-800
+                                                @elseif ($status === 'izin') bg-blue-100 text-blue-800
+                                                @elseif ($status === 'telat') bg-yellow-100 text-yellow-800
+                                                @elseif ($status === 'alpha') bg-red-100 text-red-800 @endif">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                                    <circle cx="4" cy="4" r="3"/>
+                                                </svg>
+                                                {{ ucfirst($status) }}
+                                            </span>
+                                            @if($permission && $permission->status)
+                                                <span class="text-xs text-gray-500">
+                                                    Izin: 
+                                                    @if($permission->status === 'pending')
+                                                        <span class="text-amber-600">Menunggu</span>
+                                                    @elseif($permission->status === 'approved')
+                                                        <span class="text-green-600">Disetujui</span>
+                                                    @elseif($permission->status === 'rejected')
+                                                        <span class="text-red-600">Ditolak</span>
+                                                    @endif
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $attendance && $attendance->check_in_time ? \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') : '-' }}
@@ -138,9 +152,21 @@
                                         {{ $attendance && $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') : '-' }}
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-600">
-                                        <div class="max-w-xs truncate" title="{{ $permission ? $permission->reason : '-' }}">
-                                            {{ $permission ? $permission->reason : '-' }}
-                                        </div>
+                                        @if($permission)
+                                            <div class="max-w-xs">
+                                                <div class="font-medium text-gray-900 truncate" title="{{ $permission->reason }}">
+                                                    {{ $permission->reason }}
+                                                </div>
+                                                @if($permission->approved_at)
+                                                    <div class="text-xs text-gray-500 mt-1">
+                                                        {{ $permission->status === 'approved' ? 'Disetujui' : 'Ditolak' }} pada 
+                                                        {{ \Carbon\Carbon::parse($permission->approved_at)->format('d/m/Y H:i') }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

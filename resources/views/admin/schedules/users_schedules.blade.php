@@ -135,7 +135,7 @@
                                 <tr class="hover:bg-sky-50 transition-colors duration-200">
                                     <td class="px-8 py-6 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            @if ($schedule->shift && $schedule->shift->name == 'Pagi')
+                                            @if ($schedule->shift && $schedule->shift->category == 'Pagi')
                                                 <div
                                                     class="w-8 h-8 bg-gradient-to-br from-orange-100 to-yellow-100 rounded-lg flex items-center justify-center mr-3">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -153,7 +153,7 @@
                                                         <path d="m19.07 4.93-1.41 1.41" />
                                                     </svg>
                                                 </div>
-                                            @elseif($schedule->shift && $schedule->shift->name == 'Siang')
+                                            @elseif($schedule->shift && $schedule->shift->category == 'Siang')
                                                 <div
                                                     class="w-8 h-8 bg-gradient-to-br from-sky-100 to-blue-100 rounded-lg flex items-center justify-center mr-3">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -171,7 +171,7 @@
                                                         <path d="m19.07 4.93-1.41 1.41" />
                                                     </svg>
                                                 </div>
-                                            @elseif($schedule->shift && $schedule->shift->name == 'Malam')
+                                            @elseif($schedule->shift && $schedule->shift->category == 'Malam')
                                                 <div
                                                     class="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center mr-3">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -195,7 +195,7 @@
                                             @endif
                                             <div>
                                                 <div class="text-base font-bold text-gray-900">
-                                                    {{ $schedule->shift->name ?? '-' }}</div>
+                                                    {{ $schedule->shift->shift_name ?? '-' }}</div>
                                                 <div class="text-sm text-gray-500">
                                                     @if ($schedule->shift)
                                                         {{ \Carbon\Carbon::parse($schedule->shift->start_time)->format('H:i') }}
@@ -238,7 +238,7 @@
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-left">
                                         <div class="flex items-center justify-start space-x-3">
-                                            <button onclick="openSwapModal({{ $schedule->id }}, '{{ $schedule->user->name }}', '{{ $schedule->shift->name ?? '-' }}', '{{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}')"
+                                            <button onclick="openSwapModal({{ $schedule->id }}, '{{ $schedule->user->name }}', '{{ $schedule->shift->shift_name ?? '-' }}', '{{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}')"
                                                 class="inline-flex items-center px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor"

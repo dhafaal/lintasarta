@@ -15,6 +15,8 @@ class Permissions extends Model
         'type',
         'reason',
         'status',
+        'approved_by',
+        'approved_at',
     ];
 
     public function user()
@@ -26,4 +28,13 @@ class Permissions extends Model
     {
         return $this->belongsTo(Schedules::class);
     }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    protected $casts = [
+        'approved_at' => 'datetime',
+    ];
 }

@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('shifts', function (Blueprint $table) {
             $table->id();
-            $table->enum('name', ['Pagi', 'Siang', 'Malam']);
+            $table->string('shift_name'); // Nama shift yang spesifik (contoh: "Shift A", "Shift Security")
+            $table->enum('category', ['Pagi', 'Siang', 'Malam']); // Kategori waktu
             $table->time('start_time');
             $table->time('end_time');
             $table->timestamps();

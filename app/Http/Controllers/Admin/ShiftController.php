@@ -13,20 +13,23 @@ class ShiftController extends Controller
     {
         $query = Shift::query()->orderBy('start_time');
 
-        // Filter shift berdasarkan nama
+        // Filter shift berdasarkan kategori
         if ($request->filled('filter') && in_array($request->filter, ['Pagi', 'Siang', 'Malam'])) {
-            $query->where('name', $request->filter);
+            $query->where('category', $request->filter);
         }
 
-        // Search bebas
+        // Search bebas (cari di nama shift)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('name', 'like', "%{$search}%");
+            $query->where('shift_name', 'like', "%{$search}%");
         }
 
         $shifts = $query->get();
+        $Pagi = $shifts->where('category', 'Pagi')->count();
+        $Siang = $shifts->where('category', 'Siang')->count();
+        $Malam = $shifts->where('category', 'Malam')->count();
 
-        return view('admin.shifts.index', compact('shifts'));
+        return view('admin.shifts.index', compact('shifts', 'Pagi', 'Siang', 'Malam'));
     }
 
     public function create()
@@ -37,7 +40,8 @@ class ShiftController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'       => 'required|in:Pagi,Siang,Malam',
+            'shift_name' => 'required|string|max:255',
+            'category'   => 'required|in:Pagi,Siang,Malam',
             'start_time' => 'required|date_format:H:i',
             'end_time'   => 'required|date_format:H:i',
         ]);
@@ -50,7 +54,8 @@ class ShiftController extends Controller
         $end   = Carbon::createFromFormat('H:i', $request->end_time)->format('H:i:s');
 
         Shift::create([
-            'name'       => $request->name,
+            'shift_name' => $request->shift_name,
+            'category'   => $request->category,
             'start_time' => $start,
             'end_time'   => $end,
         ]);
@@ -66,7 +71,8 @@ class ShiftController extends Controller
     public function update(Request $request, Shift $shift)
     {
         $request->validate([
-            'name'       => 'required|in:Pagi,Siang,Malam',
+            'shift_name' => 'required|string|max:255',
+            'category'   => 'required|in:Pagi,Siang,Malam',
             'start_time' => 'required|date_format:H:i',
             'end_time'   => 'required|date_format:H:i',
         ]);
@@ -79,7 +85,8 @@ class ShiftController extends Controller
         $end   = Carbon::createFromFormat('H:i', $request->end_time)->format('H:i:s');
 
         $shift->update([
-            'name'       => $request->name,
+            'shift_name' => $request->shift_name,
+            'category'   => $request->category,
             'start_time' => $start,
             'end_time'   => $end,
         ]);

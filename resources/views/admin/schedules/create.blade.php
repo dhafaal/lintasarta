@@ -87,6 +87,7 @@
                             </select>
                         </div>
 
+
                         <!-- Calendar Grid -->
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700">
@@ -107,10 +108,20 @@
                                 </div>
                                 <p class="text-xs text-gray-500 mt-2" id="daysInfo"></p>
                             </div>
+                            <!-- Loading Indicator -->
+                            <div id="loadingIndicator" class="hidden">
+                                <div class="flex items-center justify-center py-4">
+                                    <svg class="w-6 h-6 animate-spin text-sky-500 mr-2" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span class="text-sky-600 text-sm">Memuat jadwal yang sudah ada...</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Preset Shift Cepat</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preset Shift Cepat</label>
                             <div class="space-y-2">
                                 <div class="text-xs text-gray-500 font-medium">Shift 1 (Dropdown Atas):</div>
                                 <div class="flex flex-wrap gap-2">
@@ -160,15 +171,25 @@
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="flex items-center gap-4 pt-8 border-t border-gray-200">
+                        <div class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-200 dark:border-gray-700">
                             <button type="submit"
-                                class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                                class="flex-1 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                                 id="submitBtn">
-                                <span id="submitText">Simpan Jadwal Bulanan</span>
+                                <span class="flex items-center justify-center gap-3" id="submitText">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4v10m6-10v10m-6-4h6"></path>
+                                    </svg>
+                                    Simpan Jadwal Bulanan
+                                </span>
                             </button>
                             <a href="{{ route('admin.schedules.index') }}"
-                                class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 px-8 rounded-xl border-2 border-gray-200 hover:border-gray-300 shadow-md">
-                                Kembali ke Daftar
+                                class="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold py-4 px-8 rounded-xl transition-all duration-200 text-center focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-600 border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500">
+                                <span class="flex items-center justify-center gap-3">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                    </svg>
+                                    Kembali ke Daftar
+                                </span>
                             </a>
                         </div>
                     </form>
@@ -180,9 +201,14 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const calendarDataUrl = "{{ route('admin.schedules.calendar-grid-data') }}";
+            const userExistingSchedulesUrl = "{{ route('admin.schedules.user-existing-schedules') }}";
             const monthSelect = document.getElementById("calendarMonth");
             const yearSelect = document.getElementById("calendarYear");
+            const userSelect = document.getElementById("user_id");
             const calendarContainer = document.getElementById("calendarDays");
+            
+            let currentCalendarData = null;
+            let currentExistingSchedules = {};
 
             async function loadCalendar() {
                 try {
@@ -196,11 +222,46 @@
                     const data = await res.json();
 
                     if (!data.success) throw new Error(data.message || 'Data tidak valid');
+                    currentCalendarData = data;
                     renderCalendar(data);
                 } catch (err) {
                     calendarContainer.innerHTML =
                         `<div class="col-span-7 text-center py-8 text-red-500">Gagal memuat data kalender</div>`;
                     console.error(err);
+                }
+            }
+
+            async function loadExistingSchedules() {
+                const userId = userSelect.value;
+                const month = monthSelect.value;
+                const year = yearSelect.value;
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                
+                if (!userId || !month || !year) {
+                    currentExistingSchedules = {};
+                    if (currentCalendarData) {
+                        renderCalendar(currentCalendarData);
+                    }
+                    return;
+                }
+
+                try {
+                    if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+                    const res = await fetch(`${userExistingSchedulesUrl}?user_id=${userId}&month=${month}&year=${year}`);
+                    if (!res.ok) throw new Error('Gagal fetch existing schedules');
+                    const data = await res.json();
+
+                    if (data.success) {
+                        currentExistingSchedules = data.schedules || {};
+                        if (currentCalendarData) {
+                            renderCalendar(currentCalendarData);
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error loading existing schedules:', err);
+                    currentExistingSchedules = {};
+                } finally {
+                    if (loadingIndicator) loadingIndicator.classList.add('hidden');
                 }
             }
 
@@ -216,6 +277,11 @@
                 }
 
                 while (day <= data.daysInMonth) {
+                    // Check if there are existing schedules for this day
+                    const existingSchedulesForDay = currentExistingSchedules[day] || [];
+                    const shift1Selected = existingSchedulesForDay[0] ? existingSchedulesForDay[0].shift_id : '';
+                    const shift2Selected = existingSchedulesForDay[1] ? existingSchedulesForDay[1].shift_id : '';
+                    
                     html += `
                     <div class="p-2 bg-white border border-gray-100 rounded-lg flex flex-col items-center hover:shadow-sm transition-shadow duration-200">
                         <span class="text-sm font-semibold text-gray-700 mb-1">${day}</span>
@@ -224,14 +290,14 @@
                                 class="shift-dropdown-1 w-full px-2 py-1 border border-gray-200 rounded-md text-xs focus:ring-1 focus:ring-sky-200 focus:border-sky-500 bg-white transition-colors duration-150">
                                 <option value="">-- Shift 1 --</option>
                                 @foreach ($shifts as $shift)
-                                    <option value="{{ $shift->id }}" data-shift-name="{{ $shift->name }}">{{ $shift->name }}</option>
+                                    <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift_name }}" ${shift1Selected == '{{ $shift->id }}' ? 'selected' : ''}>{{ $shift->shift_name }}</option>
                                 @endforeach
                             </select>
                             <select name="shifts[${day}][]" data-day="${day}" data-shift-position="2" id="shift2-${day}"
                                 class="shift-dropdown-2 w-full px-2 py-1 border border-gray-200 rounded-md text-xs focus:ring-1 focus:ring-green-200 focus:border-green-500 bg-white transition-colors duration-150">
                                 <option value="">-- Shift 2 --</option>
                                 @foreach ($shifts as $shift)
-                                    <option value="{{ $shift->id }}" data-shift-name="{{ $shift->name }}">{{ $shift->name }}</option>
+                                    <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift_name }}" ${shift2Selected == '{{ $shift->id }}' ? 'selected' : ''}>{{ $shift->shift_name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -249,9 +315,19 @@
                     `${data.monthName} ${data.year} memiliki ${data.daysInMonth} hari.`;
             }
 
-            monthSelect.addEventListener("change", loadCalendar);
-            yearSelect.addEventListener("change", loadCalendar);
+            monthSelect.addEventListener("change", function() {
+                loadCalendar();
+                loadExistingSchedules();
+            });
+            yearSelect.addEventListener("change", function() {
+                loadCalendar();
+                loadExistingSchedules();
+            });
+            if (userSelect) userSelect.addEventListener("change", loadExistingSchedules);
+            
+            // Initial loads
             loadCalendar();
+            loadExistingSchedules();
         });
 
         // Atur ID shift sesuai dengan ID shift yang ada di database
@@ -305,7 +381,7 @@
             // Get all original options from the template
             const allShiftOptions = [
                 @foreach ($shifts as $shift)
-                    { id: "{{ $shift->id }}", name: "{{ $shift->name }}" },
+                    { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
                 @endforeach
             ];
             
@@ -334,5 +410,20 @@
                 secondDropdown.value = "";
             }
         }
+
+        // Form submission loading states
+        document.getElementById('scheduleForm')?.addEventListener('submit', function() {
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            
+            submitBtn.disabled = true;
+            submitText.innerHTML = `
+                <svg class="w-5 h-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Menyimpan...
+            `;
+        });
     </script>
 @endsection

@@ -78,7 +78,7 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
                 $minutes = $start->diffInMinutes($end);
                 $totalMinutes += $minutes;
 
-                $shiftCode = strtoupper(substr($schedule->shift->name, 0, 1));
+                $shiftCode = strtoupper(substr($schedule->shift->shift_name, 0, 1));
                 $rowShift[$day] = $shiftCode;
                 $rowHours[$day] = floor($minutes / 60) . 'j';
             } else {

@@ -11,10 +11,9 @@
                 <div class="flex items-center space-x-4">
                     <div
                         class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round"
-                            class="lucide lucide-calendar-icon lucide-calendar text-sky-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-calendar-icon lucide-calendar text-sky-600">
                             <path d="M8 2v4" />
                             <path d="M16 2v4" />
                             <rect width="18" height="18" x="3" y="4" rx="2" />
@@ -85,14 +84,20 @@
             <div class="bg-white rounded-2xl border-2 border-sky-100 shadow-xl overflow-hidden">
                 <div class="px-8 py-6 border-b-2 border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600">
-                                <path d="M3 6h18"/>
-                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                                <line x1="10" x2="10" y1="11" y2="17"/>
-                                <line x1="14" x2="14" y1="11" y2="17"/>
-                            </svg>
+                        <div
+                            class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-calendar-range-icon lucide-calendar-range text-sky-600">
+                            <rect width="18" height="18" x="3" y="4" rx="2" />
+                            <path d="M16 2v4" />
+                            <path d="M3 10h18" />
+                            <path d="M8 2v4" />
+                            <path d="M17 14h-6" />
+                            <path d="M13 18H7" />
+                            <path d="M7 14h.01" />
+                            <path d="M17 18h.01" />
+                        </svg>
                         </div>
                         <div>
                             <h2 class="text-xl font-bold text-gray-800">Tabel Jadwal Kerja</h2>
@@ -139,8 +144,7 @@
                                         rowspan="2">
                                         {{ $index + 1 }}
                                     </td>
-                                    <td
-                                        class="sticky left-[50px] bg-white z-10 px-4 py-2 border text-left font-medium">
+                                    <td class="sticky left-[50px] bg-white z-10 px-4 py-2 border text-left font-medium">
                                         {{ $row['nama'] }}
                                     </td>
                                     @for ($d = 1; $d <= $daysInMonth; $d++)
@@ -151,7 +155,7 @@
                                         @php
                                             $attendanceStatus = $row['shifts'][$d]['primary_attendance'] ?? null;
                                             $shift = $row['shifts'][$d]['shift'];
-                                            
+
                                             // Determine cell background color based on attendance status
                                             $cellBgClass = '';
                                             $textClass = '';
@@ -178,17 +182,16 @@
                                                 }
                                             }
                                         @endphp
-                                        <td class="px-2 py-2 border text-center {{ $cellBgClass }}" 
+                                        <td class="px-2 py-2 border text-center {{ $cellBgClass }}"
                                             title="Status: {{ ucfirst($attendanceStatus ?? 'Belum ada data') }}">
-                                            @if($shift)
+                                            @if ($shift)
                                                 <span class="{{ $textClass }}">{{ $shift }}</span>
                                             @else
                                                 <span class="text-gray-400">-</span>
                                             @endif
                                         </td>
                                     @endfor
-                                    <td class="sticky right-0 bg-white z-10 px-4 py-2 border text-center"
-                                        rowspan="2">
+                                    <td class="sticky right-0 bg-white z-10 px-4 py-2 border text-center" rowspan="2">
                                         {{ $row['total_jam'] }}
                                     </td>
                                 </tr>
@@ -199,7 +202,7 @@
                                             $dayOfWeek = \Carbon\Carbon::createFromDate($year, $month, $d)->dayOfWeek;
                                             $isWeekend = $dayOfWeek === 0 || $dayOfWeek === 6;
                                             $attendanceStatus = $row['shifts'][$d]['primary_attendance'] ?? null;
-                                            
+
                                             // Use same background color logic as shift row
                                             $cellBgClass = '';
                                             $textClass = '';
@@ -226,7 +229,7 @@
                                             }
                                         @endphp
                                         <td class="px-2 py-2 border text-center {{ $cellBgClass }}">
-                                            @if($row['shifts'][$d]['hours'])
+                                            @if ($row['shifts'][$d]['hours'])
                                                 <span class="{{ $textClass }}">{{ $row['shifts'][$d]['hours'] }}</span>
                                             @else
                                                 <span class="text-gray-400">-</span>
@@ -250,49 +253,59 @@
             <div class="bg-white rounded-2xl border-2 border-sky-100 shadow-xl overflow-hidden">
                 <div class="px-8 py-6 border-b-2 border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600">
-                                <path d="M8 2v4"/>
-                                <path d="M16 2v4"/>
-                                <rect width="18" height="18" x="3" y="4" rx="2"/>
-                                <path d="M3 10h18"/>
+                        <div
+                            class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-calendar-days-icon lucide-calendar-days text-sky-600">
+                                <path d="M8 2v4" />
+                                <path d="M16 2v4" />
+                                <rect width="18" height="18" x="3" y="4" rx="2" />
+                                <path d="M3 10h18" />
+                                <path d="M8 14h.01" />
+                                <path d="M12 14h.01" />
+                                <path d="M16 14h.01" />
+                                <path d="M8 18h.01" />
+                                <path d="M12 18h.01" />
+                                <path d="M16 18h.01" />
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-xl font-bold text-gray-800">Kalender Jadwal</h2>
-                            <p class="text-sm text-gray-600">Visualisasi kalender interaktif</p>
-                        </div>
+                            <h2 class="text-xl
+                        font-bold text-gray-800">Kalender Jadwal</h2>
+                        <p class="text-sm text-gray-600">Visualisasi kalender interaktif</p>
                     </div>
-                </div>
-
-                <div class="px-8 py-4 bg-gray-50 border-b border-gray-200">
-                    <p class="text-sm font-medium text-gray-700 mb-3">Keterangan Shift:</p>
-                    <div class="flex flex-wrap gap-6 text-sm">
-                        <div class="flex items-center space-x-2">
-                            <span class="w-4 h-4 rounded-full bg-blue-500 shadow-sm"></span>
-                            <span class="font-medium text-gray-700">Shift Pagi</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="w-4 h-4 rounded-full bg-yellow-500 shadow-sm"></span>
-                            <span class="font-medium text-gray-700">Shift Siang</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="w-4 h-4 rounded-full bg-purple-500 shadow-sm"></span>
-                            <span class="font-medium text-gray-700">Shift Malam</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="w-4 h-4 rounded-full bg-gray-500 shadow-sm"></span>
-                            <span class="font-medium text-gray-700">Shift Lainnya</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-8">
-                    <div id="calendar"></div>
                 </div>
             </div>
 
+            <div class="px-8 py-4 bg-gray-50 border-b border-gray-200">
+                <p class="text-sm font-medium text-gray-700 mb-3">Keterangan Shift:</p>
+                <div class="flex flex-wrap gap-6 text-sm">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-4 h-4 rounded-full bg-blue-500 shadow-sm"></span>
+                        <span class="font-medium text-gray-700">Shift Pagi</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-4 h-4 rounded-full bg-yellow-500 shadow-sm"></span>
+                        <span class="font-medium text-gray-700">Shift Siang</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-4 h-4 rounded-full bg-purple-500 shadow-sm"></span>
+                        <span class="font-medium text-gray-700">Shift Malam</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-4 h-4 rounded-full bg-gray-500 shadow-sm"></span>
+                        <span class="font-medium text-gray-700">Shift Lainnya</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8">
+                <div id="calendar"></div>
+            </div>
         </div>
+
+    </div>
     </div>
 @endsection
 

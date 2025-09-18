@@ -77,12 +77,18 @@ class AttendancesController extends Controller
      */
     public function approvePermission(Permissions $permission)
     {
+        // Validasi permission masih pending
+        if ($permission->status !== 'pending') {
+            return back()->with('error', 'Izin ini sudah diproses sebelumnya.');
+        }
+
         $permission->update([
             'status' => 'approved',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
         ]);
 
+        // Pastikan attendance mencerminkan izin dan bersih dari waktu check-in/out
         Attendance::updateOrCreate(
             [
                 'user_id' => $permission->user_id,
@@ -90,10 +96,18 @@ class AttendancesController extends Controller
             ],
             [
                 'status' => 'izin',
+                'is_late' => false,
+                'late_minutes' => 0,
+                'check_in_time' => null,
+                'check_out_time' => null,
+                'latitude' => null,
+                'longitude' => null,
+                'latitude_checkout' => null,
+                'longitude_checkout' => null,
             ]
         );
 
-        return back()->with('success', 'Permission approved');
+        return back()->with('success', 'Izin telah disetujui dan status kehadiran diperbarui.');
     }
 
     /**
@@ -102,6 +116,11 @@ class AttendancesController extends Controller
      */
     public function rejectPermission(Permissions $permission)
     {
+        // Validasi permission masih pending
+        if ($permission->status !== 'pending') {
+            return back()->with('error', 'Izin ini sudah diproses sebelumnya.');
+        }
+
         $permission->update([
             'status' => 'rejected',
             'approved_by' => Auth::id(),
@@ -113,13 +132,26 @@ class AttendancesController extends Controller
             ->first();
 
         if ($attendance) {
-            // jika belum checkin, set menjadi alpha (atau hapus sesuai preferensi)
-            if (!$attendance->check_in_time) {
-                $attendance->update(['status' => 'alpha']);
+            // Jika sebelumnya status izin dan belum check-in, kembalikan ke alpha
+            if ($attendance->status === 'izin' && !$attendance->check_in_time) {
+                $attendance->update([
+                    'status' => 'alpha',
+                    'is_late' => false,
+                    'late_minutes' => 0,
+                ]);
             }
+        } else {
+            // Jika belum ada attendance record, buat dengan status alpha
+            Attendance::create([
+                'user_id' => $permission->user_id,
+                'schedule_id' => $permission->schedule_id,
+                'status' => 'alpha',
+                'is_late' => false,
+                'late_minutes' => 0,
+            ]);
         }
 
-        return back()->with('success', 'Permission rejected');
+        return back()->with('success', 'Izin telah ditolak dan status kehadiran diperbarui.');
     }
 
     public function history(Request $request)
@@ -243,6 +275,16 @@ class AttendancesController extends Controller
             'schedule_id' => 'required|exists:schedules,id',
             'user_id' => 'required|exists:users,id'
         ]);
+
+        // Block check-in if there is an existing permission (pending or approved)
+        $hasPermission = \App\Models\Permissions::where('user_id', $request->user_id)
+            ->where('schedule_id', $request->schedule_id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->exists();
+
+        if ($hasPermission) {
+            return back()->with('error', 'Tidak dapat check-in karena ada pengajuan izin untuk jadwal ini.');
+        }
 
         $validation = $this->validateCheckInTime($request->schedule_id);
         

@@ -51,19 +51,19 @@
                     </div>
                 </div>
 
-                <x-stats-card title="Shift Pagi" :count="$shifts->where('name', 'Pagi')->count()" subtitle="Pagi"
+                <x-stats-card title="Shift Pagi" :count="$Pagi" subtitle="Pagi"
                     bgColor="bg-radial from-yellow-200 to-yellow-50"
                     icon='<svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>' />
 
-                <x-stats-card title="Shift Siang" :count="$shifts->where('name', 'Siang')->count()" subtitle="Siang"
+                <x-stats-card title="Shift Siang" :count="$Siang" subtitle="Siang"
                     bgColor="bg-radial from-orange-200 to-orange-50"
                     icon='<svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>' />
 
-                <x-stats-card title="Shift Malam" :count="$shifts->where('name', 'Malam')->count()" subtitle="Malam"
+                <x-stats-card title="Shift Malam" :count="$Malam" subtitle="Malam"
                     bgColor="bg-radial from-indigo-200 to-indigo-50"
                     icon='<svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
@@ -134,6 +134,15 @@
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tag text-sky-600 w-4 h-4 mr-2">
+                                            <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/>
+                                            <path d="M7 7h.01"/>
+                                        </svg>
+                                        Kategori
+                                    </div>
+                                </th>
+                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <div class="flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round"
@@ -192,7 +201,7 @@
                                     <td class="px-8 py-6 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="flex items-center justify-center mr-4 transition-colors">
-                                                @if ($shift->name == 'Pagi')
+                                                @if ($shift->category == 'Pagi')
                                                 <div class="flex items-center justify-center bg-radial from-yellow-200 to-yellow-50 w-10 h-10 rounded-xl">
                                                     <svg class="w-5 h-5 text-yellow-600" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +211,7 @@
                                                         </path>
                                                     </svg>
                                                 </div>
-                                                @elseif($shift->name == 'Siang')
+                                                @elseif($shift->category == 'Siang')
                                                 <div class="flex items-center justify-center bg-radial from-orange-200 to-orange-50 w-10 h-10 rounded-xl">
                                                     <svg class="w-5 h-5 text-orange-600" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
@@ -225,11 +234,20 @@
                                                 @endif
                                             </div>
                                             <div>
-                                                <div class="text-base font-bold text-gray-900">{{ $shift->name }}</div>
-                                                <div class="text-sm text-gray-500">Shift {{ strtolower($shift->name) }}
+                                                <div class="text-base font-bold text-gray-900">{{ $shift->shift_name }}</div>
+                                                <div class="text-sm text-gray-500">{{ $shift->category }}
                                                 </div>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td class="px-8 py-6 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                            @if($shift->category == 'Pagi') bg-yellow-100 text-yellow-800
+                                            @elseif($shift->category == 'Siang') bg-orange-100 text-orange-800
+                                            @elseif($shift->category == 'Malam') bg-indigo-100 text-indigo-800
+                                            @else bg-gray-100 text-gray-800 @endif">
+                                            {{ $shift->category }}
+                                        </span>
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap">
                                         <div class="text-base font-semibold text-gray-900">{{ $shift->start_time }}</div>
@@ -273,7 +291,7 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
-                                                    onclick="return confirm('Yakin ingin menghapus shift {{ $shift->name }}? Tindakan ini tidak dapat dibatalkan.')"
+                                                    onclick="return confirm('Yakin ingin menghapus shift {{ $shift->shift_name }}? Tindakan ini tidak dapat dibatalkan.')"
                                                     class="inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
                                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">

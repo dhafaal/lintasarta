@@ -28,7 +28,7 @@ class PermissionController extends Controller
             ->first();
 
         if ($existingPermission) {
-            return back()->with('error', 'You already have a permission request for this date.');
+            return back()->with('error', 'Anda sudah memiliki pengajuan izin untuk tanggal ini.');
         }
 
         Permissions::create([
@@ -39,6 +39,6 @@ class PermissionController extends Controller
             'status' => 'pending'
         ]);
 
-        return back()->with('success', 'Permission request submitted successfully and awaiting approval.');
+        return back()->with('success', 'Pengajuan izin berhasil dikirim dan menunggu persetujuan.');
     }
 }

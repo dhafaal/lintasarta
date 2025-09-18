@@ -205,15 +205,15 @@
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap">
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
-                                            @if($schedule->shift && $schedule->shift->name == 'Pagi') bg-yellow-100 text-yellow-800
-                                            @elseif($schedule->shift && $schedule->shift->name == 'Siang') bg-orange-100 text-orange-800
-                                            @elseif($schedule->shift && $schedule->shift->name == 'Malam') bg-indigo-100 text-indigo-800
+                                            @if($schedule->shift && $schedule->shift->category == 'Pagi') bg-yellow-100 text-yellow-800
+                                            @elseif($schedule->shift && $schedule->shift->category == 'Siang') bg-orange-100 text-orange-800
+                                            @elseif($schedule->shift && $schedule->shift->category == 'Malam') bg-indigo-100 text-indigo-800
                                             @else bg-gray-100 text-gray-800 @endif">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock mr-1">
                                                 <circle cx="12" cy="12" r="10"/>
                                                 <polyline points="12 6 12 12 16 14"/>
                                             </svg>
-                                            {{ $schedule->shift->name ?? '-' }}
+                                            {{ $schedule->shift->shift_name ?? '-' }}
                                         </span>
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-base font-semibold text-gray-700">
@@ -284,31 +284,72 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap text-base font-semibold text-gray-700">{{ $permission->reason ?? '-' }}</td>
+                                    <td class="px-8 py-6 text-sm text-gray-900">
+                                        <div class="max-w-xs">
+                                            @if($permission)
+                                                <div class="text-gray-900 font-medium">{{ $permission->reason }}</div>
+                                                <div class="text-xs text-gray-500 mt-1">
+                                                    Status: 
+                                                    @if($permission->status === 'pending')
+                                                        <span class="text-amber-600 font-medium">Menunggu Persetujuan</span>
+                                                    @elseif($permission->status === 'approved')
+                                                        <span class="text-green-600 font-medium">Disetujui</span>
+                                                    @elseif($permission->status === 'rejected')
+                                                        <span class="text-red-600 font-medium">Ditolak</span>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        </div>
+                                    </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-left">
-                                        <div class="flex items-center justify-start space-x-3">
+                                        <div class="flex items-center justify-start space-x-2">
                                             @if($permission && $permission->status == 'pending')
-                                                <form action="{{ route('admin.attendances.permission.approve', $permission) }}" method="post" class="inline">
+                                                <form action="{{ route('admin.attendances.permission.approve', $permission) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menyetujui izin ini?')">
                                                     @csrf
-                                                    <button class="inline-flex items-center px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
+                                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200 hover:scale-105">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
                                                             <polyline points="20 6 9 17 4 12"/>
                                                         </svg>
-                                                        Approve
+                                                        Setujui
                                                     </button>
                                                 </form>
-                                                <form action="{{ route('admin.attendances.permission.reject', $permission) }}" method="post" class="inline">
+                                                <form action="{{ route('admin.attendances.permission.reject', $permission) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menolak izin ini?')">
                                                     @csrf
-                                                    <button class="inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
+                                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200 hover:scale-105">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
                                                             <path d="M18 6 6 18"/>
                                                             <path d="m6 6 12 12"/>
                                                         </svg>
-                                                        Reject
+                                                        Tolak
                                                     </button>
                                                 </form>
+                                            @elseif($permission)
+                                                <div class="text-center">
+                                                    @if($permission->status === 'approved')
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3"/>
+                                                            </svg>
+                                                            Disetujui
+                                                        </span>
+                                                    @elseif($permission->status === 'rejected')
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3"/>
+                                                            </svg>
+                                                            Ditolak
+                                                        </span>
+                                                    @endif
+                                                    @if($permission->approved_by)
+                                                        <div class="text-xs text-gray-500 mt-1">
+                                                            oleh {{ $permission->approver->name ?? 'Admin' }}
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             @else
-                                                <span class="text-gray-500 text-sm">{{ ucfirst($permission->status ?? '-') }}</span>
+                                                <span class="text-gray-400 text-sm">-</span>
                                             @endif
                                         </div>
                                     </td>

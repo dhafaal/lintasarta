@@ -10,7 +10,8 @@ class Shift extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',        // contoh: "Pagi", "Siang", "Malam"
+        'shift_name',  // contoh: "Shift A", "Shift Security", "Shift Cleaning"
+        'category',    // contoh: "Pagi", "Siang", "Malam"
         'start_time',
         'end_time',
     ];

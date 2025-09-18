@@ -17,6 +17,10 @@ return new class extends Migration {
             $table->integer('late_minutes')->nullable();
             $table->timestamp('check_in_time')->nullable();
             $table->timestamp('check_out_time')->nullable();
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
+            $table->decimal('latitude_checkout', 10, 8)->nullable();
+            $table->decimal('longitude_checkout', 11, 8)->nullable();
             $table->timestamps();
         });
     }

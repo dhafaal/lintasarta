@@ -69,7 +69,7 @@
                             </div>
                             <div>
                                 <p class="text-sm text-sky-600 font-medium">Shift</p>
-                                <p class="text-lg font-semibold text-sky-900">{{ $schedule->shift->name }}</p>
+                                <p class="text-lg font-semibold text-sky-900">{{ $schedule->shift->shift_name }}</p>
                             </div>
                         </div>
                     </div>
@@ -137,7 +137,7 @@
                 </div>
             @endif
 
-            {{-- Permission Status --}}
+            {{-- Status Izin Hari Ini --}}
             @if($todayPermission)
                 <div class="mb-6 p-6 bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-2xl">
                     <div class="flex items-center space-x-4">
@@ -145,13 +145,13 @@
                             <i data-lucide="file-check" class="w-5 h-5 text-white"></i>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold text-amber-900">Permission Request Submitted</h3>
+                            <h3 class="text-lg font-semibold text-amber-900">Pengajuan Izin Terkirim</h3>
                             <p class="text-sm text-amber-700">Status: <span class="font-medium">{{ ucfirst($todayPermission->status) }}</span></p>
-                            <p class="text-sm text-amber-600 mt-1">{{ $todayPermission->reason }}</p>
+                            <p class="text-sm text-amber-600 mt-1">Alasan: {{ $todayPermission->reason }}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        @endif
+            @endif
 
             {{-- Action Buttons --}}
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
@@ -193,7 +193,7 @@
                                     onclick="document.getElementById('izin-modal').classList.remove('hidden')"
                                     class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
                                 <i data-lucide="file-text" class="w-4 h-4"></i>
-                                <span>Request Permission</span>
+                                <span>Ajukan Izin</span>
                             </button>
                         @endif
 
@@ -201,23 +201,23 @@
                         <a href="{{ route('user.attendances.history') }}"
                            class="w-full bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
                             <i data-lucide="history" class="w-4 h-4"></i>
-                            <span>History</span>
+                            <span>Lihat Riwayat</span>
                         </a>
                     </div>
                 @else
-                    {{-- Disabled state message --}}
+                    {{-- Pesan saat aksi dinonaktifkan --}}
                     <div class="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-6 text-center">
                         <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i data-lucide="x-circle" class="w-6 h-6 text-gray-600"></i>
                         </div>
-                        <h4 class="text-lg font-semibold text-gray-900 mb-2">Actions Disabled</h4>
-                        <p class="text-gray-600">Check-in and check-out are disabled because you have submitted a permission request for today.</p>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-2">Aksi Dinonaktifkan</h4>
+                        <p class="text-gray-600">Check-in dan check-out dinonaktifkan karena Anda telah mengajukan izin untuk hari ini.</p>
                         
                         <div class="mt-4">
                             <a href="{{ route('user.attendances.history') }}"
                                class="inline-flex items-center space-x-2 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200">
                                 <i data-lucide="history" class="w-4 h-4"></i>
-                                <span>View History</span>
+                                <span>Lihat Riwayat</span>
                             </a>
                         </div>
                     </div>
@@ -253,8 +253,8 @@
                     <i data-lucide="file-text" class="w-5 h-5 text-white"></i>
                 </div>
                 <div>
-                    <h2 class="text-xl font-semibold text-gray-900">Request Permission</h2>
-                    <p class="text-sm text-sky-600">Submit your leave request</p>
+                    <h2 class="text-xl font-semibold text-gray-900">Pengajuan Izin</h2>
+                    <p class="text-sm text-sky-600">Ajukan permohonan izin Anda</p>
                 </div>
             </div>
             <button type="button"
@@ -279,24 +279,24 @@
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($schedule->schedule_date)->format('l, d F Y') }}</p>
-                        <p class="text-xs text-gray-500">{{ $schedule->shift->name ?? 'No Shift' }} • {{ $schedule->shift->start_time ?? '' }} - {{ $schedule->shift->end_time ?? '' }}</p>
+                        <p class="text-xs text-gray-500">{{ $schedule->shift->shift_name ?? 'No Shift' }} • {{ $schedule->shift->start_time ?? '' }} - {{ $schedule->shift->end_time ?? '' }}</p>
                     </div>
                 </div>
             </div>
             @endif
 
-            <!-- Reason Input -->
+            <!-- Alasan Izin -->
             <div class="space-y-2">
                 <label class="block text-sm font-semibold text-gray-900">
-                    Reason for Permission
+                    Alasan Izin
                     <span class="text-red-500">*</span>
                 </label>
                 <textarea name="reason" 
                           class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors resize-none" 
                           rows="4" 
-                          placeholder="Please provide a detailed reason for your permission request..."
+                          placeholder="Tuliskan alasan izin Anda secara jelas..."
                           required></textarea>
-                <p class="text-xs text-gray-500">Minimum 10 characters required</p>
+                <p class="text-xs text-gray-500">Minimal 10 karakter</p>
             </div>
 
             <!-- Action Buttons -->
@@ -304,7 +304,7 @@
                 <button type="button"
                         onclick="document.getElementById('izin-modal').classList.add('hidden')"
                         class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300">
-                    Cancel
+                    Batal
                 </button>
                 <button type="submit" 
                         class="px-6 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 shadow-sm">
@@ -312,7 +312,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 6L9 17l-5-5"/>
                         </svg>
-                        <span>Submit Request</span>
+                        <span>Kirim Permohonan</span>
                     </span>
                 </button>
             </div>

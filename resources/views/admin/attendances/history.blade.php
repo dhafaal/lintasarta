@@ -119,7 +119,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                         <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
-                                        {{ $schedule->shift->name ?? '-' }}
+                                        {{ $schedule->shift->shift_name ?? '-' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
