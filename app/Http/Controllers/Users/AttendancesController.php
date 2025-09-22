@@ -308,18 +308,7 @@ class AttendancesController extends Controller
         // Buat datetime lengkap untuk shift start
         $shiftStart = $scheduleDate->copy()->setTimeFrom($shiftStartTime);
 
-        // Batas check-in paling awal (90 menit sebelum shift)
-        $earliestCheckIn = $shiftStart->copy()->subMinutes(90);
-
         $checkIn = Carbon::parse($checkInTime);
-
-        // Cek apakah terlalu awal
-        if ($checkIn->lt($earliestCheckIn)) {
-            return [
-                'valid' => false,
-                'message' => 'Belum bisa check-in. Waktu check-in paling awal adalah ' . $earliestCheckIn->format('H:i')
-            ];
-        }
 
         // Tentukan status berdasarkan waktu check-in
         $status = 'hadir';
@@ -328,7 +317,7 @@ class AttendancesController extends Controller
 
         if ($checkIn->gt($shiftStart)) {
             // Hitung berapa menit telat
-            $lateMinutes = $shiftStart->diffInMinutes($checkIn);
+            $lateMinutes = (int) $shiftStart->diffInMinutes($checkIn);
             $status = 'telat';
             $isLate = true;
         }
