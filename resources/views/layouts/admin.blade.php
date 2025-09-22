@@ -91,8 +91,15 @@
         }
 
         @keyframes clockPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); }
-            50% { box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+            }
         }
 
         /* Button Enhancements */
@@ -201,8 +208,7 @@
                         </div>
                     </a>
 
-                    <button @click="toggleSidebar()" 
-                        :class="sidebarCollapsed ? 'mx-auto' : ''"
+                    <button @click="toggleSidebar()" :class="sidebarCollapsed ? 'mx-auto' : ''"
                         class="sidebar-toggle p-2.5 rounded-xl hover:bg-sky-100 text-gray-600 menu-item-transition focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 group"
                         aria-label="Toggle sidebar">
                         <i :data-lucide="sidebarCollapsed ? 'panel-right-open' : 'panel-left-close'"
@@ -437,125 +443,166 @@
                         <h1 class="text-2xl font-semibold text-gray-700 tracking-tight">@yield('title')</h1>
                         <p class="text-base text-gray-500 mt-1">Manage your application</p>
                     </div>
-                    
+
                     <div class="flex items-center space-x-6">
                         <!-- Live Clock -->
-                        <div class="hidden md:flex items-center space-x-3 px-4 py-3 live-clock rounded-2xl transition-all duration-300 hover:scale-105">
+                        <div
+                            class="hidden md:flex items-center space-x-3 px-4 py-3 live-clock rounded-2xl transition-all duration-300 hover:scale-105">
                             <div class="relative">
                                 <i data-lucide="clock" class="w-5 h-5 text-sky-600"></i>
-                                <div class="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <div class="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse">
+                                </div>
                             </div>
                             <div class="text-center">
                                 <div class="text-sm font-bold text-sky-700" id="live-time">--:--:--</div>
                                 <div class="text-xs text-sky-600" id="live-date">-- --- ----</div>
                             </div>
                         </div>
-                        
+
                         <!-- User Profile Dropdown -->
                         <div class="relative" x-data="{ open: false }">
-                            <button 
-                                @click="open = !open" 
+                            <button @click="open = !open"
                                 class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-sky-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 group"
-                                :class="{ 'bg-sky-50 ring-2 ring-sky-200': open }"
-                                :aria-expanded="open"
-                            >
-                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-300">
+                                :class="{ 'bg-sky-50 ring-2 ring-sky-200': open }" :aria-expanded="open">
+                                <div
+                                    class="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-300">
                                     <i data-lucide="user" class="w-5 h-5 text-white"></i>
                                 </div>
                                 <div class="hidden sm:block text-left">
-                                    <p class="text-sm font-semibold text-gray-700 group-hover:text-sky-700 transition-colors">{{ auth()->user()->name }}</p>
+                                    <p
+                                        class="text-sm font-semibold text-gray-700 group-hover:text-sky-700 transition-colors">
+                                        {{ auth()->user()->name }}</p>
                                     <p class="text-xs text-sky-600 font-medium">Administrator</p>
                                 </div>
-                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 transition-all duration-300 group-hover:text-sky-600" :class="{ 'rotate-180': open }"></i>
+                                <i data-lucide="chevron-down"
+                                    class="w-4 h-4 text-gray-500 transition-all duration-300 group-hover:text-sky-600"
+                                    :class="{ 'rotate-180': open }"></i>
                             </button>
-                            
+
                             <!-- Modern Admin Dropdown menu -->
-                            <div x-show="open" @click.away="open = false" 
-                                 class="absolute right-0 mt-3 w-80 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-sky-100 overflow-hidden z-50"
-                                 x-transition:enter="transition ease-out duration-300"
-                                 x-transition:enter-start="transform opacity-0 scale-90 translate-y-2"
-                                 x-transition:enter-end="transform opacity-100 scale-100 translate-y-0"
-                                 x-transition:leave="transition ease-in duration-200"
-                                 x-transition:leave-start="transform opacity-100 scale-100 translate-y-0"
-                                 x-transition:leave-end="transform opacity-0 scale-90 translate-y-2">
-                                
+                            <div x-show="open" @click.away="open = false"
+                                class="absolute right-0 mt-3 w-80 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-sky-100 overflow-hidden z-50"
+                                x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="transform opacity-0 scale-90 translate-y-2"
+                                x-transition:enter-end="transform opacity-100 scale-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-200"
+                                x-transition:leave-start="transform opacity-100 scale-100 translate-y-0"
+                                x-transition:leave-end="transform opacity-0 scale-90 translate-y-2">
+
                                 <!-- Header with gradient -->
                                 <div class="bg-gradient-to-r from-sky-500 to-sky-600 px-6 py-4">
                                     <div class="flex items-center space-x-4">
-                                        <div class="w-16 h-16 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                                        <div
+                                            class="w-16 h-16 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
                                             <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
                                         </div>
                                         <div class="flex-1">
                                             <h3 class="text-lg font-bold text-white">{{ auth()->user()->name }}</h3>
-                                            <p class="text-sky-100 text-sm font-medium">{{ auth()->user()->email }}</p>
+                                            <p class="text-sky-100 text-sm font-medium">{{ auth()->user()->email }}
+                                            </p>
                                             <div class="flex items-center mt-1">
-                                                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+                                                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2">
+                                                </div>
                                                 <span class="text-xs text-sky-100">Administrator</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Menu Items -->
                                 <div class="p-4 space-y-2">
                                     <!-- Dashboard Link -->
-                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-sky-50 transition-all duration-200 group">
-                                        <div class="w-10 h-10 rounded-xl bg-sky-100 flex items-center justify-center group-hover:bg-sky-200 transition-colors">
+                                    <a href="{{ route('admin.dashboard') }}"
+                                        class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-sky-50 transition-all duration-200 group">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-sky-100 flex items-center justify-center group-hover:bg-sky-200 transition-colors">
                                             <i data-lucide="layout-dashboard" class="w-5 h-5 text-sky-600"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-sky-700">Dashboard</p>
+                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-sky-700">
+                                                Dashboard</p>
                                             <p class="text-xs text-gray-500">Admin overview</p>
                                         </div>
-                                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 group-hover:text-sky-600"></i>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-gray-400 group-hover:text-sky-600"></i>
                                     </a>
-                                    
+
                                     <!-- Users Management Link -->
-                                    <a href="{{ route('admin.users.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-purple-50 transition-all duration-200 group">
-                                        <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                                    <a href="{{ route('admin.users.index') }}"
+                                        class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-purple-50 transition-all duration-200 group">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
                                             <i data-lucide="users" class="w-5 h-5 text-purple-600"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-purple-700">Users</p>
+                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-purple-700">
+                                                Users</p>
                                             <p class="text-xs text-gray-500">Manage employees</p>
                                         </div>
-                                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 group-hover:text-purple-600"></i>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-gray-400 group-hover:text-purple-600"></i>
                                     </a>
-                                    
+
                                     <!-- Schedules Link -->
-                                    <a href="{{ route('admin.schedules.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-emerald-50 transition-all duration-200 group">
-                                        <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                                    <a href="{{ route('admin.schedules.index') }}"
+                                        class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-emerald-50 transition-all duration-200 group">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
                                             <i data-lucide="calendar" class="w-5 h-5 text-emerald-600"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-emerald-700">Schedules</p>
+                                            <p
+                                                class="text-sm font-semibold text-gray-700 group-hover:text-emerald-700">
+                                                Schedules</p>
                                             <p class="text-xs text-gray-500">Manage work schedules</p>
                                         </div>
-                                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 group-hover:text-emerald-600"></i>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-gray-400 group-hover:text-emerald-600"></i>
                                     </a>
-                                    
+
                                     <!-- Attendance Link -->
-                                    <a href="{{ route('admin.attendances.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-amber-50 transition-all duration-200 group">
-                                        <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                                    <a href="{{ route('admin.attendances.index') }}"
+                                        class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-amber-50 transition-all duration-200 group">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
                                             <i data-lucide="user-check" class="w-5 h-5 text-amber-600"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-amber-700">Attendance</p>
+                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-amber-700">
+                                                Attendance</p>
                                             <p class="text-xs text-gray-500">View attendance records</p>
                                         </div>
-                                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 group-hover:text-amber-600"></i>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-gray-400 group-hover:text-amber-600"></i>
+                                    </a>
+                                    <!-- Activity Logs Link -->
+                                    <a href="{{ route('admin.activity-logs.index') }}"
+                                        class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-indigo-50 transition-all duration-200 group">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                                            <i data-lucide="activity" class="w-5 h-5 text-indigo-600"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-indigo-700">
+                                                Activity Logs</p>
+                                            <p class="text-xs text-gray-500">View system activity logs</p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-gray-400 group-hover:text-indigo-600"></i>
                                     </a>
                                 </div>
-                                
+
                                 <!-- Divider -->
                                 <div class="border-t border-sky-100 mx-4"></div>
-                                
+
                                 <!-- Logout Section -->
                                 <div class="p-4">
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="flex items-center space-x-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-2xl transition-all duration-200 focus:outline-none focus:bg-red-50 group">
-                                            <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                                        <button type="submit"
+                                            class="flex items-center space-x-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-2xl transition-all duration-200 focus:outline-none focus:bg-red-50 group">
+                                            <div
+                                                class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
                                                 <i data-lucide="log-out" class="w-5 h-5 text-red-600"></i>
                                             </div>
                                             <div class="flex-1 text-left">
@@ -586,7 +633,7 @@
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
-            
+
             // Initialize live clock
             initializeLiveClock();
         });
@@ -604,7 +651,7 @@
         function initializeLiveClock() {
             function updateClock() {
                 const now = new Date();
-                
+
                 // Indonesian time options
                 const timeOptions = {
                     timeZone: 'Asia/Jakarta',
@@ -613,7 +660,7 @@
                     second: '2-digit',
                     hour12: false
                 };
-                
+
                 const dateOptions = {
                     timeZone: 'Asia/Jakarta',
                     weekday: 'short',
@@ -621,15 +668,15 @@
                     month: 'short',
                     year: 'numeric'
                 };
-                
+
                 // Format time and date in Indonesian locale
                 const timeString = now.toLocaleTimeString('id-ID', timeOptions);
                 const dateString = now.toLocaleDateString('id-ID', dateOptions);
-                
+
                 // Update DOM elements
                 const timeElement = document.getElementById('live-time');
                 const dateElement = document.getElementById('live-date');
-                
+
                 if (timeElement) {
                     timeElement.textContent = timeString;
                     // Add subtle animation on second change
@@ -638,12 +685,12 @@
                         timeElement.style.transform = 'scale(1)';
                     }, 150);
                 }
-                
+
                 if (dateElement) {
                     dateElement.textContent = dateString;
                 }
             }
-            
+
             // Update immediately and then every second
             updateClock();
             setInterval(updateClock, 1000);
@@ -655,7 +702,7 @@
             if (e.key === 'Escape') {
                 document.activeElement.blur();
             }
-            
+
             // Alt + S to toggle sidebar
             if (e.altKey && e.key === 's') {
                 e.preventDefault();
@@ -668,7 +715,7 @@
 
         // Add smooth scrolling for better UX
         document.documentElement.style.scrollBehavior = 'smooth';
-        
+
         // Add loading state management
         window.addEventListener('beforeunload', function() {
             document.body.style.opacity = '0.7';

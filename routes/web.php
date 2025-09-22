@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\Admin\PermissionController as AdminPermissionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AttendancesController as AdminAttendanceController;
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Users\AttendancesController as UsersAttendanceController;
 use App\Http\Controllers\Users\PermissionController as UsersPermissionController;
 use App\Http\Controllers\Users\CalendarController;
@@ -73,6 +74,14 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         Route::prefix('permissions')->name('permissions.')->group(function () {
             Route::post('/{permission}/approve', [AdminPermissionController::class, 'approve'])->name('approve');
         });
+
+        // Activity Logs
+        Route::prefix('activity-logs')->name('activity-logs.')->group(function () {
+            Route::get('/', [ActivityLogController::class, 'index'])->name('index');
+            Route::get('/{type}/{id}', [ActivityLogController::class, 'show'])->name('show');
+            Route::delete('/{type}/{id}', [ActivityLogController::class, 'destroy'])->name('destroy');
+            Route::post('/clear', [ActivityLogController::class, 'clear'])->name('clear');
+        });
     });
 
 // ======= OPERATOR =======
@@ -126,3 +135,4 @@ Route::get('forgot-password', [AuthController::class, 'showForgotPassword'])->na
 Route::post('forgot-password/send-otp', [AuthController::class, 'sendOtp'])->name('password.send.otp');
 Route::post('forgot-password/verify-otp', [AuthController::class, 'verifyOtp'])->name('password.verify.otp');
 Route::post('forgot-password/reset', [AuthController::class, 'resetPassword'])->name('password.reset');
+

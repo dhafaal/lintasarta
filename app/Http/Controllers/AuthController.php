@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\AuthActivityLog;
 
 class AuthController extends Controller
 {
@@ -44,6 +45,15 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
+            // Log successful login
+            AuthActivityLog::log(
+                'login',
+                'success',
+                $request->email,
+                $user->id,
+                "Login berhasil sebagai {$user->role}"
+            );
+
             return match ($user->role) {
                 'Admin'    => redirect()->route('admin.dashboard'),
                 'Operator' => redirect()->route('operator.dashboard'),
@@ -55,6 +65,15 @@ class AuthController extends Controller
         }
 
         RateLimiter::hit($this->throttleKey($request), $seconds = 60);
+
+        // Log failed login attempt
+        AuthActivityLog::log(
+            'failed_login',
+            'failed',
+            $request->email,
+            null,
+            "Login gagal untuk email: {$request->email}"
+        );
 
         throw ValidationException::withMessages([
             'email' => __('Email atau password salah.'),
@@ -81,6 +100,19 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        
+        // Log logout before actually logging out
+        if ($user) {
+            AuthActivityLog::log(
+                'logout',
+                'success',
+                $user->email,
+                $user->id,
+                "Logout berhasil"
+            );
+        }
+        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -161,6 +193,18 @@ class AuthController extends Controller
         ]);
 
         DB::table('password_otps')->where('email', $request->email)->delete();
+
+        // Log password reset
+        $user = User::where('email', $request->email)->first();
+        if ($user) {
+            AuthActivityLog::log(
+                'password_reset',
+                'success',
+                $request->email,
+                $user->id,
+                "Password berhasil direset"
+            );
+        }
 
         return redirect()->route('login')->with('status', 'Password berhasil direset. Silakan login dengan password baru.');
     }

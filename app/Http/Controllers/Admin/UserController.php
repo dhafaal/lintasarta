@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Shift;
 use App\Models\User;
+use App\Models\AdminUsersLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -96,12 +97,29 @@ class UserController extends Controller
             'role'     => 'required|in:admin,operator,user'
         ]);
 
-        User::create([
+        $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
             'role'     => $request->role,
         ]);
+
+        // Log admin user activity
+        AdminUsersLog::log(
+            'create',
+            $user->id,
+            $user->name,
+            $user->email,
+            $user->role,
+            null,
+            [
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role
+            ],
+            false,
+            "Membuat user baru: {$user->name} ({$user->role})"
+        );
 
         return redirect()->route('admin.users.index')->with('success', 'User created.');
     }
@@ -121,16 +139,43 @@ class UserController extends Controller
             'role' => 'required|in:admin,operator,user',
         ]);
 
+        // Store old values for logging
+        $oldValues = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role
+        ];
+
         // Update data user
         $user->name = $request->name;
         $user->email = $request->email;
         $user->role = $request->role;
 
+        $newValues = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role
+        ];
+
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
+            $newValues['password_changed'] = true;
         }
 
         $user->save();
+
+        // Log admin user activity
+        AdminUsersLog::log(
+            'update',
+            $user->id,
+            $user->name,
+            $user->email,
+            $user->role,
+            $oldValues,
+            $newValues,
+            $request->filled('password'),
+            "Mengubah data user: {$user->name}"
+        );
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui!');
     }
@@ -138,7 +183,28 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        $userName = $user->name;
+        $userData = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role
+        ];
+        
         $user->delete();
+
+        // Log admin user activity
+        AdminUsersLog::log(
+            'delete',
+            null,
+            $userName,
+            $userData['email'],
+            $userData['role'],
+            $userData,
+            null,
+            false,
+            "Menghapus user: {$userName}"
+        );
+        
         return redirect()->route('admin.users.index')->with('success', 'User deleted.');
     }
 
