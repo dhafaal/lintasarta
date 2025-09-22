@@ -129,7 +129,7 @@
                     <form method="GET" action="{{ route('admin.dashboard') }}" class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                         <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                             <label for="selected_month" class="text-xs sm:text-sm font-medium text-gray-700">Month:</label>
-                            <select name="selected_month" 
+                            <select name="selected_month"
                                     id="selected_month"
                                     class="w-full sm:w-auto px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                                     onchange="this.form.submit()">
@@ -149,7 +149,7 @@
                         </div>
                         <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                             <label for="selected_year" class="text-xs sm:text-sm font-medium text-gray-700">Year:</label>
-                            <select name="selected_year" 
+                            <select name="selected_year"
                                     id="selected_year"
                                     class="w-full sm:w-auto px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                                     onchange="this.form.submit()">
@@ -276,17 +276,17 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('attendanceChart').getContext('2d');
-    
+
     // Data from controller
     const attendanceData = @json($attendanceData);
     const chartDates = @json($chartDates);
-    
+
     // Extract data for chart
     const hadirData = attendanceData.map(item => item.hadir);
     const telatData = attendanceData.map(item => item.telat);
     const izinData = attendanceData.map(item => item.izin);
     const alphaData = attendanceData.map(item => item.alpha);
-    
+
     new Chart(ctx, {
         type: 'bar',
         data: {
