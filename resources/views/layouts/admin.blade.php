@@ -12,7 +12,7 @@
     <style>
         /* Enhanced Sidebar Transitions */
         .sidebar-transition {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .menu-item-transition {
@@ -21,6 +21,20 @@
 
         .icon-transition {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Mobile Responsive Improvements */
+        @media (max-width: 768px) {
+            .sidebar-transition {
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+        }
+
+        /* Smooth scroll for mobile */
+        @media (max-width: 768px) {
+            .overflow-y-auto {
+                -webkit-overflow-scrolling: touch;
+            }
         }
 
         /* Enhanced Menu Item Hover Effects */
@@ -153,6 +167,31 @@
             left: 0;
             right: 0;
         }
+        /* Prevent tooltip/popover from creating horizontal scrollbars
+           and make collapsed sidebar tooltips wrap safely on small screens */
+        html, body {
+            overflow-x: hidden;
+        }
+
+        .tooltip {
+            max-width: calc(100vw - 6rem);
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        /* Tooltip helper to position to the right and prevent off-screen placement */
+        .tooltip-right {
+            left: calc(100% + 0.5rem) !important;
+            right: auto !important;
+            z-index: 9999;
+        }
+
+        /* Ensure sidebar doesn't create unexpected layout shifts when collapsed */
+        aside.sidebar-transition {
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            will-change: transform;
+        }
     </style>
 </head>
 
@@ -162,21 +201,57 @@
         usersExpanded: false,
         schedulesExpanded: false,
         shiftsExpanded: false,
+        mobileMenuOpen: false,
+        isMobile: false,
         init() {
-            this.sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true' || window.innerWidth < 640;
+            this.checkMobile();
+            // Don't auto-collapse on desktop, only on mobile
+            this.sidebarCollapsed = this.isMobile ? true : (localStorage.getItem('sidebarCollapsed') === 'true');
+            this.mobileMenuOpen = false; // Always start with mobile menu closed
             this.usersExpanded = localStorage.getItem('usersExpanded') === 'true';
             this.schedulesExpanded = localStorage.getItem('schedulesExpanded') === 'true';
             this.shiftsExpanded = localStorage.getItem('shiftsExpanded') === 'true';
-    
-            setTimeout(() => {
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons();
-                }
-            }, 100);
+            
+            // Auto-collapse on mobile with debounce
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    const wasMobile = this.isMobile;
+                    this.checkMobile();
+                    
+                    // If switching from desktop to mobile
+                    if (!wasMobile && this.isMobile) {
+                        this.sidebarCollapsed = true;
+                        this.mobileMenuOpen = false;
+                    }
+                    // If switching from mobile to desktop
+                    else if (wasMobile && !this.isMobile) {
+                        this.sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                        this.mobileMenuOpen = false;
+                    }
+                }, 150);
+            });
+        },
+        checkMobile() {
+            this.isMobile = window.innerWidth < 768;
+            // Force close mobile menu when checking mobile state
+            if (this.isMobile) {
+                this.mobileMenuOpen = false;
+            }
         },
         toggleSidebar() {
-            this.sidebarCollapsed = !this.sidebarCollapsed;
-            localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+            if (this.isMobile) {
+                this.mobileMenuOpen = !this.mobileMenuOpen;
+            } else {
+                this.sidebarCollapsed = !this.sidebarCollapsed;
+                localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+            }
+        },
+        closeMobileMenu() {
+            if (this.isMobile) {
+                this.mobileMenuOpen = false;
+            }
         },
         toggleUsers() {
             this.usersExpanded = !this.usersExpanded;
@@ -190,17 +265,37 @@
             this.shiftsExpanded = !this.shiftsExpanded;
             localStorage.setItem('shiftsExpanded', this.shiftsExpanded);
         }
-    }" x-init="init()">
+    }" x-init="init()"
+    @click.away="closeMobileMenu()"
+    @keydown.escape="closeMobileMenu()"
+    >
+
+        <!-- Mobile Overlay -->
+        <div x-show="isMobile && mobileMenuOpen" 
+             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 md:hidden"
+             @click="closeMobileMenu()"></div>
 
         <!-- Sidebar -->
-        <aside :class="sidebarCollapsed ? 'w-16' : 'w-64'"
-            class="bg-white/90 backdrop-blur-lg border-r border-sky-200 sidebar-transition fixed top-0 left-0 h-screen z-10 flex flex-col">
+        <aside 
+            :class="{
+                'w-20': sidebarCollapsed && !isMobile,
+                'w-64': (!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen),
+                'translate-x-0': (isMobile && mobileMenuOpen) || !isMobile,
+                '-translate-x-full': isMobile && !mobileMenuOpen
+            }"
+            class="bg-white/95 backdrop-blur-lg border-r border-sky-200 sidebar-transition fixed top-0 left-0 h-screen z-30 flex flex-col shadow-xl md:shadow-none">
 
             <!-- Sidebar Header -->
-            <div :class="sidebarCollapsed ? 'p-3' : 'p-4 sm:p-6'" class="border-b border-sky-200 flex-shrink-0">
-                <div class="flex items-center" :class="sidebarCollapsed ? 'justify-center' : 'justify-between mb-2'">
+            <div :class="sidebarCollapsed && !isMobile ? 'p-4' : 'p-4 sm:p-6'" class="border-b border-sky-200 flex-shrink-0">
+                <div class="flex items-center" :class="(sidebarCollapsed && !isMobile) ? 'justify-center' : 'justify-between mb-2'">
                     <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-3"
-                        x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-300"
+                        x-show="!sidebarCollapsed || isMobile" x-transition:enter="transition ease-out duration-300"
                         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
                         <div>
                             <h1 class="text-2xl font-semibold text-gray-700 tracking-tight">Admin Panel</h1>
@@ -208,11 +303,21 @@
                         </div>
                     </a>
 
-                    <button @click="toggleSidebar()" :class="sidebarCollapsed ? 'mx-auto' : ''"
+                    <button @click="toggleSidebar()" 
+                        :class="(sidebarCollapsed && !isMobile) ? 'mx-auto' : ''"
+                        x-show="!isMobile"
                         class="sidebar-toggle p-2.5 rounded-xl hover:bg-sky-100 text-gray-600 menu-item-transition focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 group"
                         aria-label="Toggle sidebar">
                         <i :data-lucide="sidebarCollapsed ? 'panel-right-open' : 'panel-left-close'"
                             class="w-5 h-5 icon-transition group-hover:scale-110"></i>
+                    </button>
+                    
+                    <!-- Mobile Close Button -->
+                    <button @click="closeMobileMenu()" 
+                        x-show="isMobile"
+                        class="p-2.5 rounded-xl hover:bg-sky-100 text-gray-600 menu-item-transition focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 group md:hidden"
+                        aria-label="Close menu">
+                        <i data-lucide="x" class="w-5 h-5 icon-transition group-hover:scale-110"></i>
                     </button>
                 </div>
             </div>
@@ -222,19 +327,20 @@
 
                 <!-- Dashboard -->
                 <a href="{{ route('admin.dashboard') }}"
-                    :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                    @click="closeMobileMenu()"
+                    :class="sidebarCollapsed && !isMobile ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
                     class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
         {{ request()->routeIs('admin.dashboard') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                    :aria-label="sidebarCollapsed ? 'Dashboard' : ''">
+                    :aria-label="sidebarCollapsed && !isMobile ? 'Dashboard' : ''">
                     <i data-lucide="layout-dashboard"
                         class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.dashboard') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                        :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
-                    <span x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-200"
+                        :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
+                    <span x-show="!sidebarCollapsed || isMobile" x-transition:enter="transition ease-out duration-200"
                         x-transition:enter-start="opacity-0 translate-x-2"
                         x-transition:enter-end="opacity-100 translate-x-0">Dashboard</span>
 
-                    <div x-show="sidebarCollapsed"
-                        class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                    <div x-show="sidebarCollapsed && !isMobile"
+                        class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
                         Dashboard
                         <div
                             class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
@@ -245,21 +351,21 @@
                 <!-- Users -->
                 <div class="space-y-1 relative">
                     <button
-                        @click="sidebarCollapsed ? window.location.href = '{{ route('admin.users.index') }}' : toggleUsers()"
-                        :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                        @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.users.index') }}' : toggleUsers()"
+                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
                         class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
                 {{ request()->routeIs('admin.users.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                        :aria-label="sidebarCollapsed ? 'Users' : ''">
+                        :aria-label="(sidebarCollapsed && !isMobile) ? 'Users' : ''">
                         <i data-lucide="users"
                             class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.users.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed" class="flex-1 text-left" x-transition>Users</span>
-                        <i x-show="!sidebarCollapsed" data-lucide="chevron-right"
+                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed || isMobile" class="flex-1 text-left" x-transition>Users</span>
+                        <i x-show="(!sidebarCollapsed || isMobile)" data-lucide="chevron-right"
                             :class="usersExpanded ? 'rotate-90' : 'rotate-0'"
                             class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
 
                         <div x-show="sidebarCollapsed"
-                            class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Users Management
                             <div
                                 class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
@@ -267,20 +373,24 @@
                         </div>
                     </button>
 
-                    <div x-show="usersExpanded && !sidebarCollapsed"
+                    <div x-show="usersExpanded && ((!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen))"
                         x-transition:enter="transition ease-out duration-200"
                         x-transition:enter-start="opacity-0 -translate-y-2"
                         x-transition:enter-end="opacity-100 translate-y-0"
-                        class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-2" class="ml-8 space-y-1">
                         <a href="{{ route('admin.users.index') }}"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.users.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="list" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Manage Users</span>
+                            @click="closeMobileMenu()"
+                            class="flex items-center px-3 py-2 text-sm text-gray-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors {{ request()->routeIs('admin.users.index') ? 'text-sky-700 bg-sky-50' : '' }}">
+                            <i data-lucide="list" class="w-4 h-4 mr-2"></i>
+                            All Users
                         </a>
                         <a href="{{ route('admin.users.create') }}"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.users.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="user-plus" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Create Users</span>
+                            @click="closeMobileMenu()"
+                            class="flex items-center px-3 py-2 text-sm text-gray-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors {{ request()->routeIs('admin.users.create') ? 'text-sky-700 bg-sky-50' : '' }}">
+                            <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i>
+                            Add User
                         </a>
                     </div>
                 </div>
@@ -288,21 +398,21 @@
                 <!-- Schedules -->
                 <div class="space-y-1 relative">
                     <button
-                        @click="sidebarCollapsed ? window.location.href = '{{ route('admin.schedules.index') }}' : toggleSchedules()"
-                        :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                        @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.schedules.index') }}' : toggleSchedules()"
+                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
                         class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
                 {{ request()->routeIs('admin.schedules.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
                         :aria-label="sidebarCollapsed ? 'Schedules' : ''">
                         <i data-lucide="calendar"
                             class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.schedules.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed" class="flex-1 text-left" x-transition>Schedules</span>
-                        <i x-show="!sidebarCollapsed" data-lucide="chevron-right"
+                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed || isMobile" class="flex-1 text-left" x-transition>Schedules</span>
+                        <i x-show="(!sidebarCollapsed || isMobile)" data-lucide="chevron-right"
                             :class="schedulesExpanded ? 'rotate-90' : 'rotate-0'"
                             class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
 
                         <div x-show="sidebarCollapsed"
-                            class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Schedule Management
                             <div
                                 class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
@@ -310,18 +420,23 @@
                         </div>
                     </button>
 
-                    <div x-show="schedulesExpanded && !sidebarCollapsed"
+                    <div x-show="schedulesExpanded && ((!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen))"
                         x-transition:enter="transition ease-out duration-200"
                         x-transition:enter-start="opacity-0 -translate-y-2"
                         x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-2"
                         class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
                         <a href="{{ route('admin.schedules.index') }}"
+                            @click="closeMobileMenu()"
                             class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.schedules.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
                             <i data-lucide="calendar-days"
                                 class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
                             <span>Manage Schedules</span>
                         </a>
                         <a href="{{ route('admin.schedules.create') }}"
+                            @click="closeMobileMenu()"
                             class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.schedules.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
                             <i data-lucide="calendar-plus"
                                 class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
@@ -333,21 +448,21 @@
                 <!-- Shifts -->
                 <div class="space-y-1 relative">
                     <button
-                        @click="sidebarCollapsed ? window.location.href = '{{ route('admin.shifts.index') }}' : toggleShifts()"
-                        :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                        @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.shifts.index') }}' : toggleShifts()"
+                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
                         class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
                 {{ request()->routeIs('admin.shifts.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
                         :aria-label="sidebarCollapsed ? 'Shifts' : ''">
                         <i data-lucide="clock"
                             class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.shifts.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed" class="flex-1 text-left" x-transition>Shifts</span>
-                        <i x-show="!sidebarCollapsed" data-lucide="chevron-right"
+                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed || isMobile" class="flex-1 text-left" x-transition>Shifts</span>
+                        <i x-show="(!sidebarCollapsed || isMobile)" data-lucide="chevron-right"
                             :class="shiftsExpanded ? 'rotate-90' : 'rotate-0'"
                             class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
 
                         <div x-show="sidebarCollapsed"
-                            class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Shift Management
                             <div
                                 class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
@@ -355,17 +470,22 @@
                         </div>
                     </button>
 
-                    <div x-show="shiftsExpanded && !sidebarCollapsed"
+                    <div x-show="shiftsExpanded && ((!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen))"
                         x-transition:enter="transition ease-out duration-200"
                         x-transition:enter-start="opacity-0 -translate-y-2"
                         x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-2"
                         class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
                         <a href="{{ route('admin.shifts.index') }}"
+                            @click="closeMobileMenu()"
                             class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.shifts.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
                             <i data-lucide="clock-4" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
                             <span>Manage Shifts</span>
                         </a>
                         <a href="{{ route('admin.shifts.create') }}"
+                            @click="closeMobileMenu()"
                             class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.shifts.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
                             <i data-lucide="plus-circle"
                                 class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
@@ -380,7 +500,8 @@
                 <!-- Attendance -->
                 <div class="space-y-1 relative">
                     <a href="{{ route('admin.attendances.index') }}"
-                        :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                        @click="closeMobileMenu()"
+                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
                         class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
             {{ request()->routeIs('admin.attendances.*')
                 ? 'bg-sky-100 text-sky-700 border border-sky-200'
@@ -388,11 +509,11 @@
                         :aria-label="sidebarCollapsed ? 'Attendance' : ''">
                         <i data-lucide="user-check"
                             class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.attendances.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed" x-transition>Attendances</span>
+                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed || isMobile" x-transition>Attendances</span>
 
                         <div x-show="sidebarCollapsed"
-                            class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Attendance Records
                             <div
                                 class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
@@ -402,17 +523,18 @@
 
                     <!-- Calendar -->
                     <a href="{{ route('admin.calendar.view') }}"
-                        :class="sidebarCollapsed ? 'justify-center px-3 py-4 relative group' : 'px-4 py-3'"
+                        @click="closeMobileMenu()"
+                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
                         class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
        {{ request()->routeIs('admin.calendar.view') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
                         :aria-label="sidebarCollapsed ? 'Calendar' : ''">
                         <i data-lucide="calendar-range"
                             class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.calendar.view') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="sidebarCollapsed ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed" x-transition>Calendar</span>
+                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed || isMobile" x-transition>Calendar</span>
 
                         <div x-show="sidebarCollapsed"
-                            class="tooltip absolute left-full top-1/2 transform -translate-y-1/2 ml-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Calendar View
                             <div
                                 class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
@@ -423,25 +545,53 @@
 
             <!-- Sidebar Footer -->
             <div class="sidebar-footer p-4 border-t border-sky-200 border-opacity-30 flex-shrink-0">
-                <div x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-300"
+                <!-- Expanded Footer (Desktop & Mobile) -->
+                <div x-show="(!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen)"
+                    x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                     class="flex items-center justify-center space-x-2 text-sm text-gray-500 bg-sky-50 rounded-xl p-3">
                     <i data-lucide="code" class="w-4 h-4"></i>
                     <span class="font-medium">Built with Laravel</span>
+                </div>
+                
+                <!-- Collapsed Footer (Desktop Only) -->
+                <div x-show="sidebarCollapsed && !isMobile"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                    class="flex items-center justify-center p-2">
+                    <div class="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center group hover:bg-sky-200 transition-colors relative">
+                        <i data-lucide="code" class="w-4 h-4 text-sky-600"></i>
+                        <div class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+                            Built with Laravel
+                            <div class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </aside>
 
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col min-h-screen sidebar-transition"
-            :class="sidebarCollapsed ? 'ml-16' : 'ml-64'">
+            :class="{
+                'ml-20': sidebarCollapsed && !isMobile,
+                'ml-64': !sidebarCollapsed && !isMobile,
+                'ml-0': isMobile
+            }">
 
             <!-- Header -->
             <header class="bg-white/90 backdrop-blur-lg border-b border-sky-200 flex-shrink-0 sticky top-0 z-20">
                 <div class="px-4 sm:px-6 py-4 flex justify-between items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl font-semibold text-gray-700 tracking-tight">@yield('title')</h1>
-                        <p class="text-base text-gray-500 mt-1">Manage your application</p>
+                    <div class="flex items-center space-x-4">
+                        <!-- Mobile Menu Toggle -->
+                        <button x-show="isMobile" @click="toggleSidebar()"
+                            class="p-2 rounded-lg hover:bg-sky-100 text-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 md:hidden">
+                            <i data-lucide="menu" class="w-6 h-6"></i>
+                        </button>
+                        
+                        <div>
+                            <h1 class="text-2xl font-semibold text-gray-700 tracking-tight">@yield('title')</h1>
+                            <p class="text-base text-gray-500 mt-1">Manage your application</p>
+                        </div>
                     </div>
 
                     <div class="flex items-center space-x-6">
@@ -716,6 +866,11 @@
             // ESC key to close dropdowns and remove focus
             if (e.key === 'Escape') {
                 document.activeElement.blur();
+                // Close mobile menu if open
+                const mobileMenuToggle = document.querySelector('[x-data]');
+                if (mobileMenuToggle && window.innerWidth < 768) {
+                    mobileMenuToggle.__x.$data.mobileMenuOpen = false;
+                }
             }
 
             // Alt + S to toggle sidebar
@@ -724,6 +879,15 @@
                 const sidebarToggle = document.querySelector('.sidebar-toggle');
                 if (sidebarToggle) {
                     sidebarToggle.click();
+                }
+            }
+
+            // Alt + M to toggle mobile menu
+            if (e.altKey && e.key === 'm' && window.innerWidth < 768) {
+                e.preventDefault();
+                const mobileToggle = document.querySelector('[x-show="isMobile"]');
+                if (mobileToggle) {
+                    mobileToggle.click();
                 }
             }
         });

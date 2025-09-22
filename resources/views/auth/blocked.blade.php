@@ -8,10 +8,10 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body class="bg-red-50 min-h-screen flex items-center justify-center">
-    <div class="max-w-md w-full mx-4">
+    <div class="max-w-auto w-auto mx-auto">
         <div class="bg-white rounded-lg shadow-lg p-8 text-center">
             <!-- Meme Image -->
-            <div class="w-32 h-32 mx-auto mb-6">
+            <div class="w-128 h-85 mx-auto mb-6">
                 <img src="{{ asset('kairiemote.jpg') }}" alt="Blocked Meme" class="w-full h-full object-cover rounded-lg shadow-md">
             </div>
             
