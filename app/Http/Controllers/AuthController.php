@@ -13,6 +13,9 @@ use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\AuthActivityLog;
+use App\Models\LoginAttempt;
+use App\Models\BlockedIP;
+use App\Models\UserSession;
 
 class AuthController extends Controller
 {
@@ -34,10 +37,47 @@ class AuthController extends Controller
             'password' => 'required|min:8',
         ]);
 
+        $ipAddress = $request->ip();
+        $userAgent = $request->userAgent();
+        $email = $request->email;
+
+        // Check if IP is blocked
+        if (BlockedIP::isBlocked($ipAddress)) {
+            $blockInfo = BlockedIP::getBlockInfo($ipAddress);
+            AuthActivityLog::log(
+                'blocked_login_attempt',
+                'blocked',
+                $email,
+                null,
+                "Login attempt from blocked IP: {$ipAddress}"
+            );
+            
+            return back()->withErrors([
+                'email' => 'Your IP address is temporarily blocked due to suspicious activity. Please try again later.'
+            ]);
+        }
+
+        // Check if email is locked out
+        if (LoginAttempt::isEmailLockedOut($email)) {
+            $timeRemaining = LoginAttempt::getLockoutTimeRemaining($email);
+            AuthActivityLog::log(
+                'locked_out_login_attempt',
+                'blocked',
+                $email,
+                null,
+                "Login attempt for locked out email: {$email}"
+            );
+            
+            return back()->withErrors([
+                'email' => "Account temporarily locked due to too many failed attempts. Please try again in {$timeRemaining} minutes."
+            ]);
+        }
+
+        // Check rate limiting
         $this->ensureIsNotRateLimited($request);
 
         $credentials = $request->only('email', 'password');
-        $remember    = $request->filled('remember');
+        $remember = $request->filled('remember');
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
@@ -45,13 +85,41 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
+            // Record successful login attempt
+            LoginAttempt::record($email, $ipAddress, $userAgent, true);
+            
+            // Clear previous failed attempts for this email
+            LoginAttempt::clearSuccessfulAttempts($email);
+
+            // Create or update user session
+            $deviceFingerprint = UserSession::generateDeviceFingerprint($userAgent, $ipAddress);
+            $userSession = UserSession::createOrUpdate(
+                $user->id,
+                $request->session()->getId(),
+                $ipAddress,
+                $userAgent,
+                $deviceFingerprint
+            );
+
+            // Check for suspicious activity
+            $suspiciousActivities = UserSession::checkSuspiciousActivity($user->id);
+            if (!empty($suspiciousActivities)) {
+                AuthActivityLog::log(
+                    'suspicious_login',
+                    'warning',
+                    $email,
+                    $user->id,
+                    "Suspicious login detected: " . implode(', ', $suspiciousActivities)
+                );
+            }
+
             // Log successful login
             AuthActivityLog::log(
                 'login',
                 'success',
                 $request->email,
                 $user->id,
-                "Login berhasil sebagai {$user->role}"
+                "Login berhasil sebagai {$user->role}" . (!$userSession->is_trusted_device ? ' (New Device)' : '')
             );
 
             return match ($user->role) {
@@ -64,6 +132,13 @@ class AuthController extends Controller
             };
         }
 
+        // Record failed login attempt
+        LoginAttempt::record($email, $ipAddress, $userAgent, false, 'Invalid credentials');
+        
+        // Check if we should auto-block this IP
+        $ipFailedAttempts = LoginAttempt::getFailedAttemptsForIP($ipAddress, 60);
+        BlockedIP::autoBlockIP($ipAddress, $ipFailedAttempts);
+
         RateLimiter::hit($this->throttleKey($request), $seconds = 60);
 
         // Log failed login attempt
@@ -72,7 +147,7 @@ class AuthController extends Controller
             'failed',
             $request->email,
             null,
-            "Login gagal untuk email: {$request->email}"
+            "Login gagal untuk email: {$request->email} dari IP: {$ipAddress}"
         );
 
         throw ValidationException::withMessages([

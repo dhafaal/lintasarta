@@ -590,6 +590,21 @@
                                         <i data-lucide="chevron-right"
                                             class="w-4 h-4 text-gray-400 group-hover:text-indigo-600"></i>
                                     </a>
+                                    <!-- Security Management Link -->
+                                    <a href="{{ route('admin.security.index') }}"
+                                        class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-red-50 transition-all duration-200 group">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                                            <i data-lucide="shield-alert" class="w-5 h-5 text-red-600"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-red-700">
+                                                Security</p>
+                                            <p class="text-xs text-gray-500">Manage system security</p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-gray-400 group-hover:text-red-600"></i>
+                                    </a>
                                 </div>
 
                                 <!-- Divider -->

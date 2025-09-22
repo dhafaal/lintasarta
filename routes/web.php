@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\PermissionController as AdminPermissionController
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AttendancesController as AdminAttendanceController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Users\AttendancesController as UsersAttendanceController;
 use App\Http\Controllers\Users\PermissionController as UsersPermissionController;
 use App\Http\Controllers\Users\CalendarController;
@@ -73,6 +74,8 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         // Permissions (Admin)
         Route::prefix('permissions')->name('permissions.')->group(function () {
             Route::post('/{permission}/approve', [AdminPermissionController::class, 'approve'])->name('approve');
+
+
         });
 
         // Activity Logs
@@ -81,6 +84,16 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
             Route::get('/{type}/{id}', [ActivityLogController::class, 'show'])->name('show');
             Route::delete('/{type}/{id}', [ActivityLogController::class, 'destroy'])->name('destroy');
             Route::post('/clear', [ActivityLogController::class, 'clear'])->name('clear');
+        });
+
+        // Security Management
+        Route::prefix('security')->name('security.')->group(function () {
+            Route::get('/', [SecurityController::class, 'index'])->name('index');
+            Route::post('/block-ip', [SecurityController::class, 'blockIP'])->name('block-ip');
+            Route::post('/unblock-ip', [SecurityController::class, 'unblockIP'])->name('unblock-ip');
+            Route::post('/terminate-session', [SecurityController::class, 'terminateSession'])->name('terminate-session');
+            Route::post('/terminate-all-sessions', [SecurityController::class, 'terminateAllUserSessions'])->name('terminate-all-sessions');
+            Route::post('/clear-failed-attempts', [SecurityController::class, 'clearFailedAttempts'])->name('clear-failed-attempts');
         });
     });
 
