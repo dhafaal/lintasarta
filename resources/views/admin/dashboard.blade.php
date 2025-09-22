@@ -44,15 +44,15 @@
             <i data-lucide="clipboard-check" class="w-5 h-5 text-sky-600 mr-2"></i>
             Today's Attendance
         </h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             <!-- Total Schedules -->
             <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <p class="text-xs sm:text-sm font-medium text-gray-600">Total Schedules</p>
                         <p class="text-xl sm:text-2xl font-bold text-gray-900">{{ $todaySchedules }}</p>
                     </div>
-                    <div class="p-2 sm:p-3 bg-gray-100 rounded-lg self-end sm:self-auto">
+                    <div class="p-2 sm:p-3 bg-gray-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
                         <i data-lucide="calendar" class="w-5 h-5 sm:w-6 sm:h-6 text-gray-600"></i>
                     </div>
                 </div>
@@ -61,11 +61,11 @@
             <!-- Hadir -->
             <div class="bg-white rounded-xl border border-green-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <p class="text-xs sm:text-sm font-medium text-green-600">Hadir</p>
                         <p class="text-xl sm:text-2xl font-bold text-green-700">{{ $todayHadir }}</p>
                     </div>
-                    <div class="p-2 sm:p-3 bg-green-100 rounded-lg self-end sm:self-auto">
+                    <div class="p-2 sm:p-3 bg-green-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
                         <i data-lucide="check-circle" class="w-5 h-5 sm:w-6 sm:h-6 text-green-600"></i>
                     </div>
                 </div>
@@ -74,11 +74,11 @@
             <!-- Telat -->
             <div class="bg-white rounded-xl border border-orange-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <p class="text-xs sm:text-sm font-medium text-orange-600">Telat</p>
                         <p class="text-xl sm:text-2xl font-bold text-orange-700">{{ $todayTelat }}</p>
                     </div>
-                    <div class="p-2 sm:p-3 bg-orange-100 rounded-lg self-end sm:self-auto">
+                    <div class="p-2 sm:p-3 bg-orange-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
                         <i data-lucide="clock-alert" class="w-5 h-5 sm:w-6 sm:h-6 text-orange-600"></i>
                     </div>
                 </div>
@@ -87,11 +87,11 @@
             <!-- Izin -->
             <div class="bg-white rounded-xl border border-yellow-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <p class="text-xs sm:text-sm font-medium text-yellow-600">Izin</p>
                         <p class="text-xl sm:text-2xl font-bold text-yellow-700">{{ $todayIzin }}</p>
                     </div>
-                    <div class="p-2 sm:p-3 bg-yellow-100 rounded-lg self-end sm:self-auto">
+                    <div class="p-2 sm:p-3 bg-yellow-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
                         <i data-lucide="clock" class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"></i>
                     </div>
                 </div>
@@ -100,11 +100,11 @@
             <!-- Alpha -->
             <div class="bg-white rounded-xl border border-red-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <p class="text-xs sm:text-sm font-medium text-red-600">Alpha</p>
                         <p class="text-xl sm:text-2xl font-bold text-red-700">{{ $todayAlpha }}</p>
                     </div>
-                    <div class="p-2 sm:p-3 bg-red-100 rounded-lg self-end sm:self-auto">
+                    <div class="p-2 sm:p-3 bg-red-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
                         <i data-lucide="x-circle" class="w-5 h-5 sm:w-6 sm:h-6 text-red-600"></i>
                     </div>
                 </div>
@@ -161,8 +161,8 @@
                     </form>
                 </div>
             </div>
-            <div class="h-64 sm:h-80 overflow-x-auto">
-                <canvas id="attendanceChart"></canvas>
+            <div class="h-64 sm:h-80"> 
+                <canvas id="attendanceChart" style="width:100%; height:100%; display:block;"></canvas>
             </div>
         </div>
     </div>
@@ -435,4 +435,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<style>
+    /* Prevent chart and grids from causing horizontal overflow */
+    #attendanceChart { max-width: 100% !important; }
+    .min-w-0 { min-width: 0; }
+
+    /* Ensure action links & cards allow text truncation */
+    .min-w-0 .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Mobile tweak: slightly increase chart height for readability */
+    @media (max-width: 640px) {
+        .h-64 { height: 28rem !important; }
+    }
+</style>
 @endsection
