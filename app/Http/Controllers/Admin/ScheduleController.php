@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\Schedules;
 use App\Models\Shift;
 use App\Models\User;
+use App\Models\AdminSchedulesLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -157,11 +158,28 @@ class ScheduleController extends Controller
             ->exists();
 
         if (!$exists) {
-            Schedules::create([
+            $schedule = Schedules::create([
                 'user_id'       => $request->single_user_id,
                 'schedule_date' => $request->single_schedule_date,
                 'shift_id'      => $request->single_shift_id,
             ]);
+
+            $user = User::find($request->single_user_id);
+            $shift = Shift::find($request->single_shift_id);
+
+            // Log admin schedule activity
+            AdminSchedulesLog::log(
+                'create',
+                $schedule->id,
+                $user->id,
+                $user->name,
+                $shift->id,
+                $shift->shift_name,
+                $request->single_schedule_date,
+                null,
+                $schedule->toArray(),
+                "Membuat jadwal untuk {$user->name} pada {$request->single_schedule_date}"
+            );
         }
 
         return redirect()->route('admin.schedules.index')
@@ -185,7 +203,10 @@ class ScheduleController extends Controller
         $year = $request->year;
         $shifts = $request->shifts ?? [];
 
-        DB::transaction(function () use ($shifts, $userId, $month, $year) {
+        $user = User::find($userId);
+        $createdSchedules = [];
+        
+        DB::transaction(function () use ($shifts, $userId, $month, $year, $user, &$createdSchedules) {
             $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 
             for ($day = 1; $day <= $daysInMonth; $day++) {
@@ -200,6 +221,27 @@ class ScheduleController extends Controller
                 }
 
                 // Remove existing schedules for this user and date first
+                $existingSchedules = Schedules::where('user_id', $userId)
+                    ->whereDate('schedule_date', $date)
+                    ->get();
+                    
+                // Log deletion of existing schedules
+                foreach ($existingSchedules as $existingSchedule) {
+                    $shift = $existingSchedule->shift;
+                    AdminSchedulesLog::log(
+                        'delete',
+                        $existingSchedule->id,
+                        $user->id,
+                        $user->name,
+                        $shift->id ?? null,
+                        $shift->shift_name ?? 'Unknown',
+                        $date,
+                        $existingSchedule->toArray(),
+                        null,
+                        "Menghapus jadwal lama untuk {$user->name} pada {$date} (bulk monthly update)"
+                    );
+                }
+                
                 Schedules::where('user_id', $userId)
                     ->whereDate('schedule_date', $date)
                     ->delete();
@@ -207,18 +249,39 @@ class ScheduleController extends Controller
                 // Create new schedules for each shift
                 foreach ($dayShifts as $shiftId) {
                     if (!empty($shiftId)) {
-                        Schedules::create([
+                        $schedule = Schedules::create([
                             'user_id'       => $userId,
                             'schedule_date' => $date,
                             'shift_id'      => $shiftId,
                         ]);
+                        
+                        $createdSchedules[] = $schedule;
                     }
                 }
             }
         });
+        
+        // Log creation of new schedules
+        foreach ($createdSchedules as $schedule) {
+            $shift = Shift::find($schedule->shift_id);
+            AdminSchedulesLog::log(
+                'create',
+                $schedule->id,
+                $user->id,
+                $user->name,
+                $shift->id,
+                $shift->shift_name,
+                $schedule->schedule_date,
+                null,
+                $schedule->toArray(),
+                "Membuat jadwal bulanan untuk {$user->name} pada {$schedule->schedule_date}"
+            );
+        }
 
+        $totalCreated = count($createdSchedules);
+        
         return redirect()->route('admin.schedules.index')
-            ->with('success', 'Jadwal bulanan berhasil diperbarui.');
+            ->with('success', "Jadwal bulanan berhasil diperbarui. {$totalCreated} jadwal dibuat untuk {$user->name}.");
     }
 
     /**
@@ -234,8 +297,12 @@ class ScheduleController extends Controller
             'shift_id' => 'required|exists:shifts,id',
         ]);
 
-        DB::transaction(function () use ($request) {
+        $createdSchedules = [];
+        $shift = Shift::find($request->shift_id);
+        
+        DB::transaction(function () use ($request, $shift, &$createdSchedules) {
             foreach ($request->users as $userId) {
+                $user = User::find($userId);
                 foreach ($request->dates as $date) {
                     $exists = Schedules::where('user_id', $userId)
                         ->whereDate('schedule_date', $date)
@@ -243,21 +310,44 @@ class ScheduleController extends Controller
                         ->exists();
 
                     if (!$exists) {
-                        Schedules::create([
+                        $schedule = Schedules::create([
                             'user_id'       => $userId,
                             'schedule_date' => $date,
                             'shift_id'      => $request->shift_id,
                         ]);
+                        
+                        $createdSchedules[] = [
+                            'schedule' => $schedule,
+                            'user' => $user,
+                            'shift' => $shift
+                        ];
                     }
                 }
             }
         });
+        
+        // Log creation of schedules
+        foreach ($createdSchedules as $item) {
+            AdminSchedulesLog::log(
+                'create',
+                $item['schedule']->id,
+                $item['user']->id,
+                $item['user']->name,
+                $item['shift']->id,
+                $item['shift']->shift_name,
+                $item['schedule']->schedule_date,
+                null,
+                $item['schedule']->toArray(),
+                "Membuat jadwal massal untuk {$item['user']->name} pada {$item['schedule']->schedule_date}"
+            );
+        }
 
         $userCount = count($request->users);
         $dateCount = count($request->dates);
+        $createdCount = count($createdSchedules);
 
         return redirect()->route('admin.schedules.index')
-            ->with('success', "Berhasil membuat {$userCount} user dengan {$dateCount} tanggal jadwal.");
+            ->with('success', "Berhasil membuat {$createdCount} jadwal untuk {$userCount} user dengan {$dateCount} tanggal.");
     }
 
     /**
@@ -276,8 +366,11 @@ class ScheduleController extends Controller
         $startDate = Carbon::parse($request->start_date);
         $endDate = Carbon::parse($request->end_date);
         $selectedDays = $request->selected_days ?? [];
+        $user = User::find($request->user_id);
+        $shift = Shift::find($request->shift_id);
+        $createdSchedules = [];
 
-        DB::transaction(function () use ($request, $startDate, $endDate, $selectedDays) {
+        DB::transaction(function () use ($request, $startDate, $endDate, $selectedDays, $user, $shift, &$createdSchedules) {
             $currentDate = $startDate->copy();
 
             while ($currentDate->lte($endDate)) {
@@ -288,19 +381,39 @@ class ScheduleController extends Controller
                         ->exists();
 
                     if (!$exists) {
-                        Schedules::create([
+                        $schedule = Schedules::create([
                             'user_id'       => $request->user_id,
                             'schedule_date' => $currentDate->format('Y-m-d'),
                             'shift_id'      => $request->shift_id,
                         ]);
+                        
+                        $createdSchedules[] = $schedule;
                     }
                 }
                 $currentDate->addDay();
             }
         });
+        
+        // Log creation of schedules
+        foreach ($createdSchedules as $schedule) {
+            AdminSchedulesLog::log(
+                'create',
+                $schedule->id,
+                $user->id,
+                $user->name,
+                $shift->id,
+                $shift->shift_name,
+                $schedule->schedule_date,
+                null,
+                $schedule->toArray(),
+                "Membuat jadwal periode untuk {$user->name} pada {$schedule->schedule_date}"
+            );
+        }
 
+        $createdCount = count($createdSchedules);
+        
         return redirect()->route('admin.schedules.index')
-            ->with('success', 'Jadwal berhasil dibuat untuk periode yang dipilih.');
+            ->with('success', "Jadwal berhasil dibuat untuk periode yang dipilih. {$createdCount} jadwal dibuat untuk {$user->name}.");
     }
 
     public function edit(Schedules $schedule)
@@ -319,7 +432,25 @@ class ScheduleController extends Controller
             'schedule_date' => 'required|date',
         ]);
 
+        $oldValues = $schedule->toArray();
         $schedule->update($request->only(['user_id', 'shift_id', 'schedule_date']));
+
+        $user = User::find($request->user_id);
+        $shift = Shift::find($request->shift_id);
+
+        // Log admin schedule activity
+        AdminSchedulesLog::log(
+            'update',
+            $schedule->id,
+            $user->id,
+            $user->name,
+            $shift->id,
+            $shift->shift_name,
+            $request->schedule_date,
+            $oldValues,
+            $schedule->fresh()->toArray(),
+            "Mengubah jadwal untuk {$user->name} pada {$request->schedule_date}"
+        );
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Schedule berhasil diupdate.');
@@ -327,7 +458,26 @@ class ScheduleController extends Controller
 
     public function destroy(Schedules $schedule)
     {
+        $scheduleData = $schedule->toArray();
+        $user = $schedule->user;
+        $shift = $schedule->shift;
+        $scheduleName = "Jadwal {$user->name} - {$shift->shift_name}";
+        
         $schedule->delete();
+
+        // Log admin schedule activity
+        AdminSchedulesLog::log(
+            'delete',
+            null,
+            $user->id,
+            $user->name,
+            $shift->id,
+            $shift->shift_name,
+            $schedule->schedule_date,
+            $scheduleData,
+            null,
+            "Menghapus jadwal untuk {$user->name} pada {$schedule->schedule_date}"
+        );
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Schedule berhasil dihapus.');
@@ -599,10 +749,16 @@ class ScheduleController extends Controller
         ]);
 
         try {
-            DB::transaction(function () use ($request) {
-                $schedule1 = Schedules::findOrFail($request->schedule_id);
-                $schedule2 = Schedules::findOrFail($request->target_schedule_id);
-
+            $schedule1 = Schedules::with(['user', 'shift'])->findOrFail($request->schedule_id);
+            $schedule2 = Schedules::with(['user', 'shift'])->findOrFail($request->target_schedule_id);
+            
+            // Store original values for logging
+            $originalUser1 = $schedule1->user;
+            $originalUser2 = $schedule2->user;
+            $oldValues1 = $schedule1->toArray();
+            $oldValues2 = $schedule2->toArray();
+            
+            DB::transaction(function () use ($request, $schedule1, $schedule2, $originalUser1, $originalUser2, $oldValues1, $oldValues2) {
                 // Store original values
                 $originalUserId1 = $schedule1->user_id;
                 $originalUserId2 = $schedule2->user_id;
@@ -610,6 +766,33 @@ class ScheduleController extends Controller
                 // Swap user_id values
                 $schedule1->update(['user_id' => $originalUserId2]);
                 $schedule2->update(['user_id' => $originalUserId1]);
+                
+                // Log the swap for both schedules
+                AdminSchedulesLog::log(
+                    'update',
+                    $schedule1->id,
+                    $originalUser2->id,
+                    $originalUser2->name,
+                    $schedule1->shift->id,
+                    $schedule1->shift->shift_name,
+                    $schedule1->schedule_date,
+                    $oldValues1,
+                    $schedule1->fresh()->toArray(),
+                    "Menukar jadwal: {$originalUser1->name} → {$originalUser2->name} pada {$schedule1->schedule_date}"
+                );
+                
+                AdminSchedulesLog::log(
+                    'update',
+                    $schedule2->id,
+                    $originalUser1->id,
+                    $originalUser1->name,
+                    $schedule2->shift->id,
+                    $schedule2->shift->shift_name,
+                    $schedule2->schedule_date,
+                    $oldValues2,
+                    $schedule2->fresh()->toArray(),
+                    "Menukar jadwal: {$originalUser2->name} → {$originalUser1->name} pada {$schedule2->schedule_date}"
+                );
             });
 
             return response()->json([

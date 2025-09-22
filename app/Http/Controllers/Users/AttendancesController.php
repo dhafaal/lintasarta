@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Users;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Schedules;
+use App\Models\UserActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -98,6 +99,23 @@ class AttendancesController extends Controller
             'longitude' => $request->longitude
         ]);
 
+        // Log user activity
+        UserActivityLog::log(
+            'checkin',
+            'attendances',
+            $attendance->id,
+            "Check In - {$schedule->shift->shift_name}",
+            [
+                'schedule_id' => $schedule->id,
+                'status' => $validation['status'],
+                'is_late' => $validation['is_late'],
+                'late_minutes' => $validation['late_minutes'],
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude
+            ],
+            $validation['is_late'] ? "Check in terlambat {$validation['late_minutes']} menit" : "Check in tepat waktu"
+        );
+
         return back()->with('success', $validation['message']);
     }
 
@@ -169,6 +187,21 @@ class AttendancesController extends Controller
             'longitude_checkout' => $request->longitude
         ]);
 
+        // Log user activity
+        UserActivityLog::log(
+            'checkout',
+            'attendances',
+            $attendance->id,
+            "Check Out - {$schedule->shift->shift_name}",
+            [
+                'schedule_id' => $schedule->id,
+                'check_out_time' => $now->toDateTimeString(),
+                'latitude_checkout' => $request->latitude,
+                'longitude_checkout' => $request->longitude
+            ],
+            "Check out berhasil pada {$now->format('H:i')}"
+        );
+
         return back()->with('success', 'Check-out berhasil.');
     }
 
@@ -213,6 +246,19 @@ class AttendancesController extends Controller
         }
 
         $attendance->update(['status' => 'alpha']);
+
+        // Log user activity
+        UserActivityLog::log(
+            'absent',
+            'attendances',
+            $attendance->id,
+            "Alpha - {$schedule->shift->shift_name}",
+            [
+                'schedule_id' => $schedule->id,
+                'status' => 'alpha'
+            ],
+            "Menandai diri sebagai Alpha pada {$schedule->schedule_date}"
+        );
 
         return back()->with('success', 'Anda ditandai Alpha.');
     }
@@ -308,18 +354,7 @@ class AttendancesController extends Controller
         // Buat datetime lengkap untuk shift start
         $shiftStart = $scheduleDate->copy()->setTimeFrom($shiftStartTime);
 
-        // Batas check-in paling awal (90 menit sebelum shift)
-        $earliestCheckIn = $shiftStart->copy()->subMinutes(90);
-
         $checkIn = Carbon::parse($checkInTime);
-
-        // Cek apakah terlalu awal
-        if ($checkIn->lt($earliestCheckIn)) {
-            return [
-                'valid' => false,
-                'message' => 'Belum bisa check-in. Waktu check-in paling awal adalah ' . $earliestCheckIn->format('H:i')
-            ];
-        }
 
         // Tentukan status berdasarkan waktu check-in
         $status = 'hadir';
@@ -328,7 +363,7 @@ class AttendancesController extends Controller
 
         if ($checkIn->gt($shiftStart)) {
             // Hitung berapa menit telat
-            $lateMinutes = $shiftStart->diffInMinutes($checkIn);
+            $lateMinutes = (int) $shiftStart->diffInMinutes($checkIn);
             $status = 'telat';
             $isLate = true;
         }

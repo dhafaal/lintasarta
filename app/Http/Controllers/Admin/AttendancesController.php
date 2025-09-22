@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Permissions;
 use App\Models\Schedules;
+use App\Models\AdminPermissionsLog;
+use App\Models\UserActivityLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -82,6 +84,11 @@ class AttendancesController extends Controller
             return back()->with('error', 'Izin ini sudah diproses sebelumnya.');
         }
 
+        $oldStatus = $permission->status;
+        $userName = $permission->user ? $permission->user->name : 'Unknown';
+        $permissionType = $permission->type;
+        $permissionDate = $permission->schedule ? $permission->schedule->schedule_date : null;
+        
         $permission->update([
             'status' => 'approved',
             'approved_by' => Auth::id(),
@@ -107,6 +114,21 @@ class AttendancesController extends Controller
             ]
         );
 
+        // Log admin permission activity
+        AdminPermissionsLog::log(
+            'approve',
+            $permission->id,
+            $permission->user_id,
+            $userName,
+            $permissionType,
+            $permission->reason,
+            $permissionDate,
+            $oldStatus,
+            'approved',
+            ['approved_by' => Auth::id(), 'approved_at' => now(), 'attendance_updated' => true],
+            "Menyetujui izin {$permissionType} dari {$userName} dan memperbarui kehadiran"
+        );
+
         return back()->with('success', 'Izin telah disetujui dan status kehadiran diperbarui.');
     }
 
@@ -121,6 +143,11 @@ class AttendancesController extends Controller
             return back()->with('error', 'Izin ini sudah diproses sebelumnya.');
         }
 
+        $oldStatus = $permission->status;
+        $userName = $permission->user ? $permission->user->name : 'Unknown';
+        $permissionType = $permission->type;
+        $permissionDate = $permission->schedule ? $permission->schedule->schedule_date : null;
+        
         $permission->update([
             'status' => 'rejected',
             'approved_by' => Auth::id(),
@@ -131,6 +158,7 @@ class AttendancesController extends Controller
             ->where('schedule_id', $permission->schedule_id)
             ->first();
 
+        $attendanceAction = 'updated';
         if ($attendance) {
             // Jika sebelumnya status izin dan belum check-in, kembalikan ke alpha
             if ($attendance->status === 'izin' && !$attendance->check_in_time) {
@@ -149,7 +177,23 @@ class AttendancesController extends Controller
                 'is_late' => false,
                 'late_minutes' => 0,
             ]);
+            $attendanceAction = 'created';
         }
+
+        // Log admin permission activity
+        AdminPermissionsLog::log(
+            'reject',
+            $permission->id,
+            $permission->user_id,
+            $userName,
+            $permissionType,
+            $permission->reason,
+            $permissionDate,
+            $oldStatus,
+            'rejected',
+            ['approved_by' => Auth::id(), 'approved_at' => now(), 'attendance_action' => $attendanceAction],
+            "Menolak izin {$permissionType} dari {$userName} dan memperbarui kehadiran ke alpha"
+        );
 
         return back()->with('success', 'Izin telah ditolak dan status kehadiran diperbarui.');
     }
@@ -198,7 +242,28 @@ class AttendancesController extends Controller
 
     public function destroy(Attendance $attendance)
     {
+        $attendanceData = $attendance->toArray();
+        $user = $attendance->user;
+        $schedule = $attendance->schedule;
+        $shift = $schedule->shift ? $schedule->shift : null;
+        
         $attendance->delete();
+
+        // Log admin activity for deleting attendance
+        UserActivityLog::log(
+            'delete_attendance',
+            'attendances',
+            null,
+            "Kehadiran {$user->name} - " . ($shift ? $shift->shift_name : 'Unknown'),
+            [
+                'deleted_by_admin' => Auth::id(),
+                'original_status' => $attendanceData['status'],
+                'schedule_date' => $schedule->schedule_date,
+                'deleted_data' => $attendanceData
+            ],
+            "Admin menghapus data kehadiran {$user->name} pada {$schedule->schedule_date}"
+        );
+        
         return back()->with('success', 'Attendance deleted');
     }
 

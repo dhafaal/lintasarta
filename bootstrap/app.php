@@ -11,7 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'block.suspicious.ips' => \App\Http\Middleware\BlockSuspiciousIPs::class,
+        ]);
+        
+        // Apply IP blocking middleware globally to web routes
+        $middleware->web(append: [
+            \App\Http\Middleware\BlockSuspiciousIPs::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Shift;
+use App\Models\AdminShiftsLog;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -53,12 +54,23 @@ class ShiftController extends Controller
         $start = Carbon::createFromFormat('H:i', $request->start_time)->format('H:i:s');
         $end   = Carbon::createFromFormat('H:i', $request->end_time)->format('H:i:s');
 
-        Shift::create([
+        $shift = Shift::create([
             'shift_name' => $request->shift_name,
             'category'   => $request->category,
             'start_time' => $start,
             'end_time'   => $end,
         ]);
+
+        // Log admin shift activity
+        AdminShiftsLog::log(
+            'create',
+            $shift->id,
+            $shift->shift_name,
+            $shift->category,
+            null,
+            $shift->toArray(),
+            "Membuat shift baru: {$shift->shift_name} ({$shift->category})"
+        );
 
         return redirect()->route('admin.shifts.index')->with('success', 'Shift berhasil ditambahkan.');
     }
@@ -84,6 +96,8 @@ class ShiftController extends Controller
         $start = Carbon::createFromFormat('H:i', $request->start_time)->format('H:i:s');
         $end   = Carbon::createFromFormat('H:i', $request->end_time)->format('H:i:s');
 
+        $oldValues = $shift->toArray();
+        
         $shift->update([
             'shift_name' => $request->shift_name,
             'category'   => $request->category,
@@ -91,12 +105,37 @@ class ShiftController extends Controller
             'end_time'   => $end,
         ]);
 
+        // Log admin shift activity
+        AdminShiftsLog::log(
+            'update',
+            $shift->id,
+            $shift->shift_name,
+            $shift->category,
+            $oldValues,
+            $shift->fresh()->toArray(),
+            "Mengubah shift: {$shift->shift_name}"
+        );
+
         return redirect()->route('admin.shifts.index')->with('success', 'Shift berhasil diupdate.');
     }
 
     public function destroy(Shift $shift)
     {
+        $shiftName = $shift->shift_name;
+        $shiftData = $shift->toArray();
+        
         $shift->delete();
+
+        // Log admin shift activity
+        AdminShiftsLog::log(
+            'delete',
+            null,
+            $shiftName,
+            $shiftData['category'] ?? null,
+            $shiftData,
+            null,
+            "Menghapus shift: {$shiftName}"
+        );
 
         return redirect()->route('admin.shifts.index')
             ->with('success', 'Shift berhasil dihapus.');
