@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Users\AttendancesController as UsersAttendanceController;
 use App\Http\Controllers\Users\PermissionController as UsersPermissionController;
 use App\Http\Controllers\Users\CalendarController;
+use App\Http\Controllers\DashboardRedirectController;
 
 // ======= ADMIN =======
 Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
@@ -133,15 +134,24 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':User'])
     });
 
 // ======= AUTH =======
-Route::get('/', fn() => redirect()->route('login'));
-Route::get('login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('login', [AuthController::class, 'login']);
-Route::post('logout', function () {
-    Auth::logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-    return redirect()->route('login');
-})->name('logout');
+// Home route - redirect to appropriate dashboard if authenticated, otherwise to login
+Route::get('/', [DashboardRedirectController::class, 'redirectToDashboard'])->name('home');
+
+Route::middleware(['guest'])->group(function () {
+    Route::get('login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [AuthController::class, 'login']);
+});
+Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+
+// Session Management Routes
+Route::middleware(['auth'])->prefix('auth')->name('auth.')->group(function () {
+    Route::get('/sessions', [AuthController::class, 'getActiveSessions'])->name('sessions');
+    Route::delete('/sessions/{id}', [AuthController::class, 'terminateSession'])->name('sessions.terminate');
+    Route::post('/logout-all', [AuthController::class, 'logoutAllSessions'])->name('logout-all');
+    Route::get('/sessions-page', function () {
+        return view('auth.sessions');
+    })->name('sessions.page');
+});
 
 // Forgot Password
 Route::get('forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');

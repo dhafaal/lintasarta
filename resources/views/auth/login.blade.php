@@ -101,13 +101,30 @@
 
             <!-- Remember Me + Forgot Password -->
             <div class="flex items-center justify-between text-sm">
-                <label class="flex items-center gap-2 text-gray-700">
-                    <input type="checkbox" name="remember"
-                        class="rounded border-sky-300 text-sky-500 focus:ring-sky-400"
+                <label class="flex items-center gap-2 text-gray-700 group cursor-pointer">
+                    <input type="checkbox" name="remember" id="remember"
+                        class="rounded border-sky-300 text-sky-500 focus:ring-sky-400 transition-colors"
                         {{ old('remember') ? 'checked' : '' }}>
-                    Remember me
+                    <span class="select-none group-hover:text-sky-600 transition-colors">Remember me for 30 days</span>
+                    <div class="relative">
+                        <svg class="w-4 h-4 text-gray-400 hover:text-sky-500 cursor-help transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" onclick="toggleRememberInfo()">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <div id="rememberInfo" class="hidden absolute bottom-6 left-0 bg-gray-800 text-white text-xs rounded-lg p-3 w-64 z-10 shadow-lg">
+                            <div class="mb-2 font-semibold">Secure Remember Me</div>
+                            <ul class="space-y-1 text-gray-300">
+                                <li>• Uses encrypted tokens</li>
+                                <li>• Device fingerprinting</li>
+                                <li>• Automatic expiry in 30 days</li>
+                                <li>• Revoked on logout</li>
+                            </ul>
+                            <div class="absolute -bottom-1 left-4 w-2 h-2 bg-gray-800 transform rotate-45"></div>
+                        </div>
+                    </div>
                 </label>
-                <a href="{{ route('password.request') }}" class="text-sky-500 hover:underline font-medium transition">
+                <a href="{{ route('password.request') }}" class="text-sky-500 hover:text-sky-600 hover:underline font-medium transition-colors">
                     Forgot your password?
                 </a>
             </div>
@@ -181,6 +198,47 @@
                 setTimeout(() => eyeOpen.classList.remove('opacity-0', 'scale-90'), 10);
             }
         });
+
+        // Remember me info toggle
+        function toggleRememberInfo() {
+            const info = document.getElementById('rememberInfo');
+            info.classList.toggle('hidden');
+        }
+
+        // Close remember info when clicking outside
+        document.addEventListener('click', function(e) {
+            const info = document.getElementById('rememberInfo');
+            const trigger = e.target.closest('svg');
+            if (!trigger && !info.contains(e.target)) {
+                info.classList.add('hidden');
+            }
+        });
+
+        // Enhanced security features
+        function detectDeviceFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('Device fingerprint', 2, 2);
+            
+            return {
+                screen: `${screen.width}x${screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                language: navigator.language,
+                platform: navigator.platform,
+                canvas: canvas.toDataURL(),
+                userAgent: navigator.userAgent.substring(0, 100) // Truncate for security
+            };
+        }
+
+        // Add device fingerprint to form
+        const deviceInfo = detectDeviceFingerprint();
+        const fingerprintInput = document.createElement('input');
+        fingerprintInput.type = 'hidden';
+        fingerprintInput.name = 'device_fingerprint';
+        fingerprintInput.value = btoa(JSON.stringify(deviceInfo));
+        loginForm.appendChild(fingerprintInput);
 
         // Custom validation
         loginForm.addEventListener('submit', function(e) {

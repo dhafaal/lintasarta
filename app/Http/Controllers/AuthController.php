@@ -16,6 +16,7 @@ use App\Models\AuthActivityLog;
 use App\Models\LoginAttempt;
 use App\Models\BlockedIP;
 use App\Models\UserSession;
+use App\Models\RememberToken;
 
 class AuthController extends Controller
 {
@@ -79,7 +80,7 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $remember = $request->filled('remember');
 
-        if (Auth::attempt($credentials, $remember)) {
+        if (Auth::attempt($credentials, false)) { // Don't use Laravel's built-in remember
             $request->session()->regenerate();
             RateLimiter::clear($this->throttleKey($request));
 
@@ -101,6 +102,11 @@ class AuthController extends Controller
                 $deviceFingerprint
             );
 
+            // Handle remember me with custom secure token
+            if ($remember) {
+                $this->handleRememberMe($user->id, $ipAddress, $userAgent);
+            }
+
             // Check for suspicious activity
             $suspiciousActivities = UserSession::checkSuspiciousActivity($user->id);
             if (!empty($suspiciousActivities)) {
@@ -119,8 +125,16 @@ class AuthController extends Controller
                 'success',
                 $request->email,
                 $user->id,
-                "Login berhasil sebagai {$user->role}" . (!$userSession->is_trusted_device ? ' (New Device)' : '')
+                "Login berhasil sebagai {$user->role}" . (!$userSession->is_trusted_device ? ' (New Device)' : '') . ($remember ? ' (Remember Me)' : '')
             );
+
+            // Redirect ke intended URL atau dashboard sesuai role
+            $intendedUrl = session('url.intended');
+            
+            if ($intendedUrl && $this->isValidIntendedUrl($intendedUrl, $user->role)) {
+                session()->forget('url.intended');
+                return redirect($intendedUrl);
+            }
 
             return match ($user->role) {
                 'Admin'    => redirect()->route('admin.dashboard'),
@@ -176,23 +190,38 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $user = Auth::user();
-        
-        // Log logout before actually logging out
+        $sessionId = $request->session()->getId();
+        $ipAddress = $request->ip();
+        $userAgent = $request->userAgent();
+
         if ($user) {
+            // Remove user session from database
+            UserSession::where('session_id', $sessionId)
+                ->where('user_id', $user->id)
+                ->delete();
+
+            // Revoke remember token if exists
+            if ($request->hasCookie('remember_token')) {
+                $deviceFingerprint = RememberToken::generateDeviceFingerprint($userAgent, $ipAddress);
+                RememberToken::revokeAllForDevice($deviceFingerprint);
+                cookie()->queue(cookie()->forget('remember_token'));
+            }
+
+            // Log logout activity
             AuthActivityLog::log(
                 'logout',
                 'success',
                 $user->email,
                 $user->id,
-                "Logout berhasil"
+                "Logout berhasil dari IP: {$ipAddress}"
             );
         }
-        
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('status', 'Anda berhasil logout.');
+        return redirect()->route('login')->with('status', 'Anda telah berhasil logout.');
     }
 
     // ------------------------
@@ -282,5 +311,196 @@ class AuthController extends Controller
         }
 
         return redirect()->route('login')->with('status', 'Password berhasil direset. Silakan login dengan password baru.');
+    }
+
+    /**
+     * Handle remember me token creation
+     */
+    private function handleRememberMe(int $userId, string $ipAddress, string $userAgent): void
+    {
+        // Clean up old tokens for this user
+        RememberToken::where('user_id', $userId)
+            ->where('last_used_at', '<', Carbon::now()->subDays(30))
+            ->delete();
+
+        // Generate new secure token
+        $tokenData = RememberToken::generateToken($userId, $ipAddress, $userAgent);
+        
+        // Set secure cookie (30 days)
+        cookie()->queue(cookie(
+            'remember_token',
+            $tokenData['token'],
+            60 * 24 * 30, // 30 days in minutes
+            '/', // path
+            null, // domain
+            true, // secure (HTTPS only)
+            true, // httpOnly
+            false, // raw
+            'Strict' // sameSite
+        ));
+
+        AuthActivityLog::log(
+            'remember_token_created',
+            'success',
+            null,
+            $userId,
+            'Remember me token created for device: ' . substr(hash('sha256', $userAgent), 0, 8)
+        );
+    }
+
+    public function logoutAllSessions(Request $request)
+    {
+        $user = Auth::user();
+        
+        if ($user) {
+            // Remove all user sessions
+            UserSession::where('user_id', $user->id)->delete();
+            
+            // Revoke all remember tokens
+            RememberToken::revokeAllForUser($user->id);
+            
+            // Log security action
+            AuthActivityLog::log(
+                'logout_all_sessions',
+                'success',
+                $user->email,
+                $user->id,
+                "All sessions terminated by user request"
+            );
+        }
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        cookie()->queue(cookie()->forget('remember_token'));
+
+        return redirect()->route('login')->with('status', 'Semua sesi telah dihentikan. Silakan login kembali.');
+    }
+
+    /**
+     * Get user's active sessions
+     */
+    public function getActiveSessions(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $sessions = UserSession::where('user_id', $user->id)
+            ->where('last_activity', '>', Carbon::now()->subMinutes(config('session.lifetime', 120)))
+            ->orderBy('last_activity', 'desc')
+            ->get()
+            ->map(function ($session) use ($request) {
+                return [
+                    'id' => $session->id,
+                    'ip_address' => $session->ip_address,
+                    'user_agent' => $session->user_agent,
+                    'is_current' => $session->session_id === $request->session()->getId(),
+                    'is_trusted' => $session->is_trusted_device,
+                    'last_activity' => $session->last_activity->diffForHumans(),
+                    'location' => $this->getLocationFromIP($session->ip_address),
+                ];
+            });
+
+        return response()->json(['sessions' => $sessions]);
+    }
+
+    /**
+     * Terminate specific session
+     */
+    public function terminateSession(Request $request, $sessionId)
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $session = UserSession::where('user_id', $user->id)
+            ->where('id', $sessionId)
+            ->first();
+
+        if (!$session) {
+            return response()->json(['error' => 'Session not found'], 404);
+        }
+
+        // Don't allow terminating current session
+        if ($session->session_id === $request->session()->getId()) {
+            return response()->json(['error' => 'Cannot terminate current session'], 400);
+        }
+
+        $session->delete();
+
+        AuthActivityLog::log(
+            'session_terminated',
+            'success',
+            $user->email,
+            $user->id,
+            "Session terminated: {$session->ip_address}"
+        );
+
+        return response()->json(['message' => 'Session terminated successfully']);
+    }
+
+    /**
+     * Get approximate location from IP (basic implementation)
+     */
+    private function getLocationFromIP(string $ipAddress): string
+    {
+        // This is a basic implementation
+        // In production, you might want to use a proper IP geolocation service
+        if ($ipAddress === '127.0.0.1' || $ipAddress === '::1') {
+            return 'Local Machine';
+        }
+        
+        // You can integrate with services like MaxMind, IPinfo, etc.
+        return 'Unknown Location';
+    }
+
+    /**
+     * Validate if intended URL is accessible for user role
+     */
+    private function isValidIntendedUrl(string $url, string $userRole): bool
+    {
+        // Parse URL to get path
+        $path = parse_url($url, PHP_URL_PATH);
+        
+        // Define role-based access patterns
+        $rolePatterns = [
+            'Admin' => [
+                '/admin/',
+                '/operator/', // Admin can access operator pages
+                '/user/',     // Admin can access user pages
+            ],
+            'Operator' => [
+                '/operator/',
+                '/user/',     // Operator can access user pages
+            ],
+            'User' => [
+                '/user/',
+            ],
+        ];
+
+        // Check if path matches allowed patterns for user role
+        $allowedPatterns = $rolePatterns[$userRole] ?? [];
+        
+        foreach ($allowedPatterns as $pattern) {
+            if (strpos($path, $pattern) === 0) {
+                return true;
+            }
+        }
+
+        // Don't redirect to login or auth pages
+        $authPages = ['/login', '/register', '/password', '/auth/'];
+        foreach ($authPages as $authPage) {
+            if (strpos($path, $authPage) === 0) {
+                return false;
+            }
+        }
+
+        return false;
     }
 }
