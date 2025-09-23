@@ -9,6 +9,7 @@ use App\Models\UserSession;
 use App\Models\AuthActivityLog;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class SecurityController extends Controller
 {
@@ -83,7 +84,7 @@ class SecurityController extends Controller
             'manual_ip_block',
             'success',
             null,
-            auth()->id(),
+            Auth::id(),
             "Admin manually blocked IP {$request->ip_address}. Reason: {$request->reason}"
         );
 
@@ -104,7 +105,7 @@ class SecurityController extends Controller
                 'manual_ip_unblock',
                 'success',
                 null,
-                auth()->id(),
+                Auth::id(),
                 "Admin manually unblocked IP {$request->ip_address}"
             );
 
@@ -131,7 +132,7 @@ class SecurityController extends Controller
                 'admin_session_termination',
                 'success',
                 null,
-                auth()->id(),
+                Auth::id(),
                 "Admin terminated session for user: {$userName}"
             );
 
@@ -155,7 +156,7 @@ class SecurityController extends Controller
             'admin_mass_session_termination',
             'success',
             null,
-            auth()->id(),
+            Auth::id(),
             "Admin terminated all sessions for user: {$user->name} ({$terminatedCount} sessions)"
         );
 
@@ -177,7 +178,7 @@ class SecurityController extends Controller
             'admin_clear_failed_attempts',
             'success',
             $request->email,
-            auth()->id(),
+            Auth::id(),
             "Admin cleared {$deletedCount} failed login attempts for {$request->email}"
         );
 
