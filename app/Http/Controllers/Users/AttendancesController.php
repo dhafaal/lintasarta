@@ -208,11 +208,18 @@ class AttendancesController extends Controller
 
     private function isWithinRadius($lat, $lng)
     {
+        $location = \App\Models\Location::first();
+
+        if (!$location) {
+            // Handle jika belum ada lokasi
+            return false; // Atau throw exception
+        }
+
         $earthRadius = 6371000; // meter
         $latFrom = deg2rad($lat);
         $lonFrom = deg2rad($lng);
-        $latTo = deg2rad($this->officeLat);
-        $lonTo = deg2rad($this->officeLng);
+        $latTo = deg2rad($location->latitude);
+        $lonTo = deg2rad($location->longitude);
 
         $latDelta = $latTo - $latFrom;
         $lonDelta = $lonTo - $lonFrom;
@@ -222,9 +229,9 @@ class AttendancesController extends Controller
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
         $distance = $earthRadius * $c;
-        session()->flash('debug_distance', round($distance, 2) . ' meter'); // ✅ debug jarak
+        session()->flash('debug_distance', round($distance, 2) . ' meter');
 
-        return $distance <= $this->officeRadius;
+        return $distance <= $location->radius;
     }
 
     public function absent(Request $request)

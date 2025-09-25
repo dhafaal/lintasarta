@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Admin\LocationsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ShiftController;
@@ -22,6 +23,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
 
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::resource('locations', LocationsController::class);   
 
         // Users
         Route::resource('users', UserController::class);
@@ -75,8 +77,6 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         // Permissions (Admin)
         Route::prefix('permissions')->name('permissions.')->group(function () {
             Route::post('/{permission}/approve', [AdminPermissionController::class, 'approve'])->name('approve');
-
-
         });
 
         // Activity Logs
