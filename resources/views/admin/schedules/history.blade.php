@@ -93,6 +93,12 @@
                             </th>
                             <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 <div class="flex items-center">
+                                    <i data-lucide="map-pin" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                    Lokasi
+                                </div>
+                            </th>
+                            <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <div class="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar text-sky-600 mr-2">
                                         <path d="M8 2v4"/>
                                         <path d="M16 2v4"/>
@@ -192,6 +198,21 @@
                                             </div>
                                         </div>
                                     </div>
+                                </td>
+                                <td class="px-8 py-6 whitespace-nowrap">
+                                    @if($attendance && $attendance->location)
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center mr-3">
+                                                <i data-lucide="map-pin" class="w-4 h-4 text-sky-600"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-semibold text-gray-900">{{ $attendance->location->name }}</div>
+                                                <div class="text-xs text-gray-500">Radius: {{ $attendance->location->radius }}m</div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="text-gray-400 text-sm">-</span>
+                                    @endif
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap">
                                     <div class="text-base font-semibold text-gray-900">{{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}</div>

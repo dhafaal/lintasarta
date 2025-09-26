@@ -17,9 +17,23 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-700 tracking-tight">Edit Jadwal Bulanan</h1>
+                        <h1 class="text-3xl font-bold text-gray-700 tracking-tight">
+                            @if(isset($isBulkEdit) && $isBulkEdit)
+                                Edit Jadwal Bulanan
+                            @else
+                                Edit Jadwal Bulanan
+                            @endif
+                        </h1>
                         <p class="text-gray-500 mt-1">
-                            Edit jadwal bulanan untuk {{ $schedule->user->name }} dengan mengubah informasi di bawah ini
+                            @if(isset($isBulkEdit) && $isBulkEdit)
+                                @if(isset($selectedUser))
+                                    Edit jadwal bulanan untuk {{ $selectedUser->name }} dengan mengubah informasi di bawah ini
+                                @else
+                                    Edit jadwal bulanan dengan mengubah informasi di bawah ini
+                                @endif
+                            @else
+                                Edit jadwal bulanan untuk {{ $schedule->user->name }} dengan mengubah informasi di bawah ini
+                            @endif
                         </p>
                     </div>
                 </div>
@@ -34,7 +48,7 @@
                 </div>
 
                 <div class="p-8">
-                    <form action="{{ route('admin.schedules.update', $schedule) }}" method="POST" class="space-y-8" id="scheduleForm">
+                    <form action="{{ isset($isBulkEdit) && $isBulkEdit ? route('admin.schedules.update', 'bulk') : route('admin.schedules.update', $schedule) }}" method="POST" class="space-y-8" id="scheduleForm">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="form_type" value="bulk_monthly">
@@ -51,7 +65,7 @@
                                         required>
                                         <option value="" disabled>Pilih bulan</option>
                                         @php
-                                            $currentMonth = \Carbon\Carbon::parse($schedule->schedule_date)->month;
+                                            $currentMonth = isset($isBulkEdit) && $isBulkEdit ? now()->month : \Carbon\Carbon::parse($schedule->schedule_date)->month;
                                         @endphp
                                         @for ($m = 1; $m <= 12; $m++)
                                             <option value="{{ $m }}" {{ $currentMonth == $m ? 'selected' : '' }}>
@@ -66,7 +80,7 @@
                                         required>
                                         <option value="" disabled>Pilih tahun</option>
                                         @php
-                                            $currentYear = \Carbon\Carbon::parse($schedule->schedule_date)->year;
+                                            $currentYear = isset($isBulkEdit) && $isBulkEdit ? now()->year : \Carbon\Carbon::parse($schedule->schedule_date)->year;
                                         @endphp
                                         @for ($y = now()->year - 2; $y <= now()->year + 5; $y++)
                                             <option value="{{ $y }}" {{ $currentYear == $y ? 'selected' : '' }}>
@@ -75,6 +89,10 @@
                                     </select>
                                 </div>
                             </div>
+                            <p class="text-sm text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Mengubah bulan/tahun akan memuat ulang kalender dan menampilkan jadwal yang sudah ada
+                            </p>
                         </div>
 
                         <!-- User Information (Read-only) -->
@@ -88,11 +106,28 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                     </svg>
                                 </div>
-                                <div class="block w-full pl-12 pr-4 py-4 border-2 border-sky-200 rounded-xl bg-sky-50 text-gray-900 font-medium">
-                                    {{ $schedule->user->name }}
-                                </div>
-                                <input type="hidden" name="user_id" value="{{ $schedule->user_id }}">
-                                <input type="hidden" id="user_id" value="{{ $schedule->user_id }}">
+                                @if(isset($isBulkEdit) && $isBulkEdit)
+                                    @if(isset($selectedUser))
+                                        <div class="block w-full pl-12 pr-4 py-4 border-2 border-sky-200 rounded-xl bg-sky-50 text-gray-900 font-medium">
+                                            {{ $selectedUser->name }}
+                                        </div>
+                                        <input type="hidden" name="user_id" value="{{ $selectedUser->id }}">
+                                        <input type="hidden" id="user_id" value="{{ $selectedUser->id }}">
+                                    @else
+                                        <select name="user_id" id="user_id" class="block w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 bg-gray-50 focus:bg-white" required>
+                                            <option value="">Pilih Karyawan</option>
+                                            @foreach($users as $user)
+                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
+                                @else
+                                    <div class="block w-full pl-12 pr-4 py-4 border-2 border-sky-200 rounded-xl bg-sky-50 text-gray-900 font-medium">
+                                        {{ $schedule->user->name }}
+                                    </div>
+                                    <input type="hidden" name="user_id" value="{{ $schedule->user_id }}">
+                                    <input type="hidden" id="user_id" value="{{ $schedule->user_id }}">
+                                @endif
                             </div>
                             <p class="text-sm text-gray-500">Karyawan tidak dapat diubah saat mengedit jadwal</p>
                         </div>
@@ -202,6 +237,16 @@
                                 </span>
                             </a>
                         </div>
+                        
+                        <!-- Validation Alert -->
+                        <div id="validationAlert" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-red-700 text-sm" id="validationMessage"></span>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -234,10 +279,12 @@
                     if (!data.success) throw new Error(data.message || 'Data tidak valid');
                     currentCalendarData = data;
                     renderCalendar(data);
+                    return data; // Return data untuk promise
                 } catch (err) {
                     calendarContainer.innerHTML =
                         `<div class="col-span-7 text-center py-8 text-red-500">Gagal memuat data kalender</div>`;
                     console.error(err);
+                    throw err; // Re-throw error untuk promise rejection
                 }
             }
 
@@ -336,14 +383,19 @@
             if (userSelect) userSelect.addEventListener("change", loadExistingSchedules);
             
             // Initial loads - untuk edit, langsung load dengan user yang sudah dipilih
-            loadCalendar();
-            
-            // Untuk mode edit, pastikan existing schedules dimuat setelah kalender siap
-            setTimeout(() => {
+            loadCalendar().then(() => {
+                // Untuk mode edit, pastikan existing schedules dimuat setelah kalender siap
                 if (userSelect && userSelect.value) {
                     loadExistingSchedules();
                 }
-            }, 500);
+            }).catch(() => {
+                // Fallback jika loadCalendar tidak return promise
+                setTimeout(() => {
+                    if (userSelect && userSelect.value) {
+                        loadExistingSchedules();
+                    }
+                }, 500);
+            });
         });
 
         // Atur ID shift sesuai dengan ID shift yang ada di database
@@ -384,8 +436,8 @@
             });
         }
 
-        // Function to update second dropdown based on first dropdown selection
-        function updateSecondDropdown(day) {
+        // Function to update second dropdown based on first dropdown selection with shift sequence logic
+        async function updateSecondDropdown(day) {
             const firstDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="1"]`);
             const secondDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="2"]`);
             
@@ -394,44 +446,117 @@
             const selectedShiftId = firstDropdown.value;
             const currentSecondValue = secondDropdown.value;
             
-            // Get all original options from the template
-            const allShiftOptions = [
-                @foreach ($shifts as $shift)
-                    { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
-                @endforeach
-            ];
-            
             // Clear second dropdown
             secondDropdown.innerHTML = '<option value="">-- Shift 2 --</option>';
             
-            // Add options that are not selected in first dropdown
-            allShiftOptions.forEach(shift => {
-                if (shift.id !== selectedShiftId) {
-                    const option = document.createElement('option');
-                    option.value = shift.id;
-                    option.textContent = shift.name;
-                    option.setAttribute('data-shift-name', shift.name);
-                    
-                    // Restore previous selection if it's still valid
-                    if (shift.id === currentSecondValue) {
-                        option.selected = true;
-                    }
-                    
-                    secondDropdown.appendChild(option);
+            if (!selectedShiftId) {
+                secondDropdown.disabled = false;
+                return;
+            }
+
+            try {
+                // Call API to get available shifts based on first shift
+                const response = await fetch('{{ route("admin.schedules.get-available-shifts") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        first_shift_id: selectedShiftId
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.shifts && data.shifts.length > 0) {
+                    // Add available shifts to second dropdown
+                    data.shifts.forEach(shift => {
+                        const option = document.createElement('option');
+                        option.value = shift.id;
+                        option.textContent = shift.shift_name;
+                        option.setAttribute('data-shift-name', shift.shift_name);
+                        
+                        // Restore previous selection if it's still valid
+                        if (shift.id == currentSecondValue) {
+                            option.selected = true;
+                        }
+                        
+                        secondDropdown.appendChild(option);
+                    });
+                    secondDropdown.disabled = false;
+                } else {
+                    // No available shifts (e.g., Malam shift selected)
+                    secondDropdown.innerHTML = '<option value="">-- Tidak tersedia --</option>';
+                    secondDropdown.disabled = true;
                 }
-            });
-            
-            // If the current second dropdown value is now invalid, clear it
-            if (selectedShiftId === currentSecondValue) {
-                secondDropdown.value = "";
+            } catch (error) {
+                console.error('Error fetching available shifts:', error);
+                // Fallback to old logic if API fails
+                const allShiftOptions = [
+                    @foreach ($shifts as $shift)
+                        { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
+                    @endforeach
+                ];
+                
+                allShiftOptions.forEach(shift => {
+                    if (shift.id !== selectedShiftId) {
+                        const option = document.createElement('option');
+                        option.value = shift.id;
+                        option.textContent = shift.name;
+                        option.setAttribute('data-shift-name', shift.name);
+                        
+                        // Restore previous selection if it's still valid
+                        if (shift.id === currentSecondValue) {
+                            option.selected = true;
+                        }
+                        
+                        secondDropdown.appendChild(option);
+                    }
+                });
+                secondDropdown.disabled = false;
             }
         }
 
-        // Form submission loading states
-        document.getElementById('scheduleForm')?.addEventListener('submit', function() {
+        // Form submission validation and loading states
+        document.getElementById('scheduleForm')?.addEventListener('submit', function(e) {
             const submitBtn = document.getElementById('submitBtn');
             const submitText = document.getElementById('submitText');
+            const validationAlert = document.getElementById('validationAlert');
+            const validationMessage = document.getElementById('validationMessage');
             
+            // Hide previous validation messages
+            validationAlert.classList.add('hidden');
+            
+            // Basic validation
+            const month = document.getElementById('calendarMonth').value;
+            const year = document.getElementById('calendarYear').value;
+            
+            if (!month || !year) {
+                e.preventDefault();
+                validationMessage.textContent = 'Mohon pilih bulan dan tahun terlebih dahulu.';
+                validationAlert.classList.remove('hidden');
+                return false;
+            }
+            
+            // Check if at least one shift is selected
+            const allSelects = document.querySelectorAll('#calendarDays select');
+            let hasSchedule = false;
+            
+            allSelects.forEach(select => {
+                if (select.value && select.value !== '') {
+                    hasSchedule = true;
+                }
+            });
+            
+            if (!hasSchedule) {
+                e.preventDefault();
+                validationMessage.textContent = 'Mohon pilih minimal satu shift untuk jadwal.';
+                validationAlert.classList.remove('hidden');
+                return false;
+            }
+            
+            // Show loading state
             submitBtn.disabled = true;
             submitText.innerHTML = `
                 <svg class="w-5 h-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">

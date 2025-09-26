@@ -46,10 +46,16 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
             ->name('schedules.user-schedules-for-swap');
         Route::post('schedules/swap', [ScheduleController::class, 'swapSchedules'])
             ->name('schedules.swap');
+        Route::post('schedules/bulk-delete', [ScheduleController::class, 'bulkDelete'])
+            ->name('schedules.bulk-delete');
         
         // Get existing schedules for user
         Route::get('schedules/user-existing-schedules', [ScheduleController::class, 'getUserExistingSchedules'])
             ->name('schedules.user-existing-schedules');
+        
+        // Get available shifts for second shift based on first shift
+        Route::post('schedules/get-available-shifts', [ScheduleController::class, 'getAvailableShifts'])
+            ->name('schedules.get-available-shifts');
 
         // Kalender untuk admin
         Route::prefix('calendar')->name('calendar.')->group(function () {

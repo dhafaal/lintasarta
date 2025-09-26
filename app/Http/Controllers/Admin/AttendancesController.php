@@ -36,7 +36,7 @@ class AttendancesController extends Controller
         $scheduleIds = $schedulesToday->pluck('id');
 
         // Query builder untuk attendances dengan filter status
-        $attendancesQuery = Attendance::with(['user', 'schedule.shift'])
+        $attendancesQuery = Attendance::with(['user', 'schedule.shift', 'location'])
             ->whereIn('schedule_id', $scheduleIds);
 
         // Filter berdasarkan status jika dipilih
@@ -221,7 +221,7 @@ class AttendancesController extends Controller
 
         // Ambil absensi berdasarkan schedule_id yang sudah difilter
         $scheduleIds = $schedules->pluck('id');
-        $attendances = \App\Models\Attendance::with(['schedule.shift'])
+        $attendances = \App\Models\Attendance::with(['schedule.shift', 'location'])
             ->whereIn('schedule_id', $scheduleIds)
             ->get();
 

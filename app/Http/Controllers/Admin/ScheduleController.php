@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Exports\ScheduleReportExport;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ScheduleController extends Controller
@@ -117,6 +118,52 @@ class ScheduleController extends Controller
         $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 
         return view('admin.schedules.create', compact('users', 'shifts', 'daysInMonth', 'month', 'year'));
+    }
+
+    /**
+     * Get available shifts for second shift based on first shift selection
+     */
+    public function getAvailableShifts(Request $request)
+    {
+        $firstShiftId = $request->input('first_shift_id');
+        
+        if (!$firstShiftId) {
+            return response()->json(['shifts' => []]);
+        }
+
+        $firstShift = Shift::find($firstShiftId);
+        
+        if (!$firstShift) {
+            return response()->json(['shifts' => []]);
+        }
+
+        $availableShifts = [];
+
+        // Logic: Pagi -> Siang, Siang -> Malam, Malam -> tidak ada
+        switch ($firstShift->category) {
+            case 'Pagi':
+                $availableShifts = Shift::where('category', 'Siang')->get();
+                break;
+            case 'Siang':
+                $availableShifts = Shift::where('category', 'Malam')->get();
+                break;
+            case 'Malam':
+                // Tidak ada shift kedua untuk shift malam
+                $availableShifts = [];
+                break;
+        }
+
+        return response()->json([
+            'shifts' => $availableShifts->map(function($shift) {
+                return [
+                    'id' => $shift->id,
+                    'shift_name' => $shift->shift_name,
+                    'category' => $shift->category,
+                    'start_time' => $shift->start_time,
+                    'end_time' => $shift->end_time
+                ];
+            })
+        ]);
     }
 
     /**
@@ -416,16 +463,36 @@ class ScheduleController extends Controller
             ->with('success', "Jadwal berhasil dibuat untuk periode yang dipilih. {$createdCount} jadwal dibuat untuk {$user->name}.");
     }
 
-    public function edit(Schedules $schedule)
+    public function edit($schedule)
     {
         $users = User::orderBy('name')->get();
         $shifts = Shift::orderBy('shift_name')->get();
 
+        // Handle bulk edit case
+        if ($schedule === 'bulk') {
+            $selectedUserId = request('user_id');
+            $selectedUser = $selectedUserId ? User::find($selectedUserId) : null;
+            
+            return view('admin.schedules.edit', compact('users', 'shifts', 'selectedUser'))
+                ->with('schedule', null)
+                ->with('isBulkEdit', true);
+        }
+
+        // Handle single schedule edit
+        $schedule = Schedules::findOrFail($schedule);
         return view('admin.schedules.edit', compact('schedule', 'users', 'shifts'));
     }
 
     public function update(Request $request, Schedules $schedule)
     {
+        // Check if this is a bulk monthly update or single schedule update
+        $formType = $request->input('form_type');
+        
+        if ($formType === 'bulk_monthly') {
+            return $this->updateMonthly($request, $schedule);
+        }
+        
+        // Handle single schedule update (original functionality)
         $request->validate([
             'user_id'       => 'required|exists:users,id',
             'shift_id'      => 'required|exists:shifts,id',
@@ -454,6 +521,104 @@ class ScheduleController extends Controller
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Schedule berhasil diupdate.');
+    }
+
+    /**
+     * Update monthly schedules for a user (used in edit mode)
+     */
+    private function updateMonthly(Request $request, Schedules $schedule)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'month'   => 'required|integer|min:1|max:12',
+            'year'    => 'required|integer|min:2000',
+            'shifts'  => 'array',
+        ]);
+
+        $userId = $request->user_id;
+        $month = $request->month;
+        $year = $request->year;
+        $shifts = $request->shifts ?? [];
+
+        $user = User::find($userId);
+        $updatedSchedules = [];
+        
+        DB::transaction(function () use ($shifts, $userId, $month, $year, $user, &$updatedSchedules) {
+            $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
+
+            for ($day = 1; $day <= $daysInMonth; $day++) {
+                $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
+                
+                // Handle multiple shifts per day
+                $dayShifts = $shifts[$day] ?? [];
+                
+                // If dayShifts is not an array, convert it to array for backward compatibility
+                if (!is_array($dayShifts)) {
+                    $dayShifts = [$dayShifts];
+                }
+
+                // Remove existing schedules for this user and date first
+                $existingSchedules = Schedules::where('user_id', $userId)
+                    ->whereDate('schedule_date', $date)
+                    ->get();
+                    
+                // Log deletion of existing schedules
+                foreach ($existingSchedules as $existingSchedule) {
+                    $shift = $existingSchedule->shift;
+                    AdminSchedulesLog::log(
+                        'delete',
+                        $existingSchedule->id,
+                        $user->id,
+                        $user->name,
+                        $shift->id ?? null,
+                        $shift->shift_name ?? 'Unknown',
+                        $date,
+                        $existingSchedule->toArray(),
+                        null,
+                        "Menghapus jadwal lama untuk {$user->name} pada {$date} (bulk monthly update)"
+                    );
+                }
+                
+                Schedules::where('user_id', $userId)
+                    ->whereDate('schedule_date', $date)
+                    ->delete();
+
+                // Create new schedules for each shift
+                foreach ($dayShifts as $shiftId) {
+                    if (!empty($shiftId)) {
+                        $newSchedule = Schedules::create([
+                            'user_id'       => $userId,
+                            'schedule_date' => $date,
+                            'shift_id'      => $shiftId,
+                        ]);
+                        
+                        $updatedSchedules[] = $newSchedule;
+                    }
+                }
+            }
+        });
+        
+        // Log creation of new schedules
+        foreach ($updatedSchedules as $newSchedule) {
+            $shift = Shift::find($newSchedule->shift_id);
+            AdminSchedulesLog::log(
+                'create',
+                $newSchedule->id,
+                $user->id,
+                $user->name,
+                $shift->id,
+                $shift->shift_name,
+                $newSchedule->schedule_date,
+                null,
+                $newSchedule->toArray(),
+                "Mengupdate jadwal bulanan untuk {$user->name} pada {$newSchedule->schedule_date}"
+            );
+        }
+
+        $totalUpdated = count($updatedSchedules);
+        
+        return redirect()->route('admin.schedules.index')
+            ->with('success', "Jadwal bulanan berhasil diperbarui. {$totalUpdated} jadwal diupdate untuk {$user->name}.");
     }
 
     public function destroy(Schedules $schedule)
@@ -695,7 +860,7 @@ class ScheduleController extends Controller
 
         // Ambil attendance & permissions untuk schedule-schedule ini
         $scheduleIds = $schedules->pluck('id');
-        $attendances = \App\Models\Attendance::whereIn('schedule_id', $scheduleIds)->get();
+        $attendances = \App\Models\Attendance::with('location')->whereIn('schedule_id', $scheduleIds)->get();
         $permissions = \App\Models\Permissions::whereIn('schedule_id', $scheduleIds)->get();
 
         return view('admin.schedules.history', compact('user', 'schedules', 'attendances', 'permissions', 'startDate', 'endDate'));
@@ -851,6 +1016,64 @@ class ScheduleController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengambil jadwal: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk delete schedules
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'schedule_ids' => 'required|array',
+            'schedule_ids.*' => 'exists:schedules,id'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $scheduleIds = $request->schedule_ids;
+            
+            // Get schedules for logging
+            $schedules = Schedules::with(['user', 'shift'])->whereIn('id', $scheduleIds)->get();
+            
+            // Delete schedules
+            $deletedCount = Schedules::whereIn('id', $scheduleIds)->delete();
+
+            // Log activity for each deleted schedule
+            foreach ($schedules as $schedule) {
+                AdminSchedulesLog::create([
+                    'user_id' => Auth::id(),
+                    'action' => 'bulk_delete',
+                    'resource_type' => 'Schedule',
+                    'resource_id' => $schedule->id,
+                    'description' => "Bulk delete jadwal: {$schedule->user->name} - {$schedule->shift->shift_name} pada " . 
+                                   Carbon::parse($schedule->schedule_date)->format('d M Y'),
+                    'old_values' => json_encode([
+                        'user_name' => $schedule->user->name,
+                        'shift_name' => $schedule->shift->shift_name,
+                        'schedule_date' => $schedule->schedule_date,
+                    ]),
+                    'ip_address' => $request->ip    (),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil menghapus {$deletedCount} jadwal",
+                'deleted_count' => $deletedCount
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus jadwal: ' . $e->getMessage()
             ], 500);
         }
     }

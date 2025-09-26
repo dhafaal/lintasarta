@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Users;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\Location;
 use App\Models\Schedules;
 use App\Models\UserActivityLog;
 use Illuminate\Http\Request;
@@ -12,9 +13,6 @@ use Carbon\Carbon;
 
 class AttendancesController extends Controller
 {
-    private $officeLat = -6.2903534643805115;
-    private $officeLng = 106.7852134376512;
-    private $officeRadius = 500; //berjarak 500m
 
     public function index()
     {
@@ -65,8 +63,11 @@ class AttendancesController extends Controller
             return back()->with('error', "Tidak dapat check-in karena Anda memiliki izin yang {$statusText} untuk tanggal ini.");
         }
 
-        if (!$this->isWithinRadius($request->latitude, $request->longitude)) {
-            return back()->with('error', 'Anda berada di luar radius 500 meter dari kantor.');
+        // Find valid location using smart detection
+        $validLocation = $this->findValidLocation($request->latitude, $request->longitude);
+        
+        if (!$validLocation) {
+            return back()->with('error', 'Anda berada di luar radius dari semua lokasi yang tersedia. Pastikan Anda berada di salah satu lokasi kantor.');
         }
 
         // Validate check-in time with late tolerance and early restriction
@@ -79,6 +80,7 @@ class AttendancesController extends Controller
         $attendance = Attendance::firstOrCreate(
             ['schedule_id' => $request->schedule_id, 'user_id' => Auth::id()],
             [
+                'location_id' => $validLocation->id,
                 'status' => $validation['status'],
                 'is_late' => $validation['is_late'],
                 'late_minutes' => $validation['late_minutes'],
@@ -91,6 +93,7 @@ class AttendancesController extends Controller
         }
 
         $attendance->update([
+            'location_id' => $validLocation->id,
             'status' => $validation['status'],
             'is_late' => $validation['is_late'],
             'late_minutes' => $validation['late_minutes'],
@@ -141,8 +144,11 @@ class AttendancesController extends Controller
             return back()->with('error', "Tidak dapat check-out karena Anda memiliki izin yang {$statusText} untuk tanggal ini.");
         }
 
-        if (!$this->isWithinRadius($request->latitude, $request->longitude)) {
-            return back()->with('error', 'Anda berada di luar radius 500 meter dari kantor.');
+        // Find valid location using smart detection
+        $validLocation = $this->findValidLocation($request->latitude, $request->longitude);
+        
+        if (!$validLocation) {
+            return back()->with('error', 'Anda berada di luar radius dari semua lokasi yang tersedia. Pastikan Anda berada di salah satu lokasi kantor.');
         }
 
         // Ambil schedule + shift untuk mendapatkan jam selesai shift
@@ -182,6 +188,7 @@ class AttendancesController extends Controller
         }
 
         $attendance->update([
+            'location_id' => $validLocation->id,
             'check_out_time' => $now,
             'latitude_checkout' => $request->latitude,
             'longitude_checkout' => $request->longitude
@@ -192,47 +199,21 @@ class AttendancesController extends Controller
             'checkout',
             'attendances',
             $attendance->id,
-            "Check Out - {$schedule->shift->shift_name}",
+            "Check Out - {$schedule->shift->shift_name} di {$validLocation->name}",
             [
                 'schedule_id' => $schedule->id,
+                'location_id' => $validLocation->id,
+                'location_name' => $validLocation->name,
                 'check_out_time' => $now->toDateTimeString(),
                 'latitude_checkout' => $request->latitude,
                 'longitude_checkout' => $request->longitude
             ],
-            "Check out berhasil pada {$now->format('H:i')}"
+            "Check out berhasil pada {$now->format('H:i')} di {$validLocation->name}"
         );
 
         return back()->with('success', 'Check-out berhasil.');
     }
 
-
-    private function isWithinRadius($lat, $lng)
-    {
-        $location = \App\Models\Location::first();
-
-        if (!$location) {
-            // Handle jika belum ada lokasi
-            return false; // Atau throw exception
-        }
-
-        $earthRadius = 6371000; // meter
-        $latFrom = deg2rad($lat);
-        $lonFrom = deg2rad($lng);
-        $latTo = deg2rad($location->latitude);
-        $lonTo = deg2rad($location->longitude);
-
-        $latDelta = $latTo - $latFrom;
-        $lonDelta = $lonTo - $lonFrom;
-
-        $a = sin($latDelta / 2) ** 2 +
-            cos($latFrom) * cos($latTo) * sin($lonDelta / 2) ** 2;
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        $distance = $earthRadius * $c;
-        session()->flash('debug_distance', round($distance, 2) . ' meter');
-
-        return $distance <= $location->radius;
-    }
 
     public function absent(Request $request)
     {
@@ -286,7 +267,7 @@ class AttendancesController extends Controller
             ->where('user_id', $user->id)
             ->whereDate('schedule_date', '<=', $today);
 
-        $attendanceQuery = \App\Models\Attendance::with('schedule.shift')
+        $attendanceQuery = \App\Models\Attendance::with(['schedule.shift', 'location'])
             ->where('user_id', $user->id)
             ->whereHas('schedule', function ($q) use ($today) {
                 $q->whereDate('schedule_date', '<=', $today);
@@ -345,6 +326,67 @@ class AttendancesController extends Controller
         ));
     }
 
+    /**
+     * Find valid location based on user coordinates
+     */
+    private function findValidLocation($userLat, $userLng)
+    {
+        $locations = Location::all();
+        $validLocations = [];
+        $debugInfo = [];
+
+        foreach ($locations as $location) {
+            $distance = $this->calculateDistance($userLat, $userLng, $location->latitude, $location->longitude);
+            $debugInfo[] = "{$location->name}: {$distance}m (radius: {$location->radius}m)";
+            
+            if ($distance <= $location->radius) {
+                $validLocations[] = [
+                    'location' => $location,
+                    'distance' => $distance
+                ];
+            }
+        }
+
+        // Sort by distance (closest first)
+        usort($validLocations, function($a, $b) {
+            return $a['distance'] <=> $b['distance'];
+        });
+
+        if (count($validLocations) > 0) {
+            $closestLocation = $validLocations[0]['location'];
+            $distance = $validLocations[0]['distance'];
+            
+            // Store debug info in session
+            session()->flash('location_debug', "Check-in di {$closestLocation->name}: {$distance}m dari lokasi");
+            
+            return $closestLocation;
+        } else {
+            // Store debug info for invalid location
+            session()->flash('location_debug', 'Jarak ke lokasi: ' . implode(', ', $debugInfo));
+            return null;
+        }
+    }
+
+    /**
+     * Calculate distance between two coordinates using Haversine formula
+     */
+    private function calculateDistance($lat1, $lng1, $lat2, $lng2)
+    {
+        $earthRadius = 6371000; // Earth radius in meters
+
+        $lat1Rad = deg2rad($lat1);
+        $lat2Rad = deg2rad($lat2);
+        $deltaLatRad = deg2rad($lat2 - $lat1);
+        $deltaLngRad = deg2rad($lng2 - $lng1);
+
+        $a = sin($deltaLatRad / 2) * sin($deltaLatRad / 2) +
+             cos($lat1Rad) * cos($lat2Rad) *
+             sin($deltaLngRad / 2) * sin($deltaLngRad / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return round($earthRadius * $c);
+    }
+
     private function validateCheckInTime($scheduleId, $checkInTime = null)
     {
         $checkInTime = $checkInTime ?: now();
@@ -363,13 +405,17 @@ class AttendancesController extends Controller
 
         $checkIn = Carbon::parse($checkInTime);
 
-        // Tentukan status berdasarkan waktu check-in
+        // Tentukan status berdasarkan waktu check-in dengan kompensasi 5 menit
         $status = 'hadir';
         $isLate = false;
         $lateMinutes = 0;
+        
+        // Tambahkan kompensasi 5 menit ke waktu shift start
+        $graceTime = 5; // menit kompensasi
+        $shiftStartWithGrace = $shiftStart->copy()->addMinutes($graceTime);
 
-        if ($checkIn->gt($shiftStart)) {
-            // Hitung berapa menit telat
+        if ($checkIn->gt($shiftStartWithGrace)) {
+            // Hitung berapa menit telat dari waktu shift asli (tanpa grace time)
             $lateMinutes = (int) $shiftStart->diffInMinutes($checkIn);
             $status = 'telat';
             $isLate = true;
@@ -382,7 +428,9 @@ class AttendancesController extends Controller
             'late_minutes' => $lateMinutes,
             'message' => $isLate
                 ? 'Anda terlambat ' . $lateMinutes . ' menit.'
-                : 'Check-in berhasil tepat waktu.'
+                : ($checkIn->gt($shiftStart) 
+                    ? 'Check-in berhasil dalam batas toleransi 5 menit.' 
+                    : 'Check-in berhasil tepat waktu.')
         ];
     }
 }

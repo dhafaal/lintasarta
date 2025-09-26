@@ -85,6 +85,7 @@ class AdminActivityLog extends Model
             'schedules' => 'Jadwal',
             'users' => 'User',
             'permissions' => 'Izin',
+            'Location' => 'Lokasi',
             default => ucfirst($this->resource_type),
         };
     }

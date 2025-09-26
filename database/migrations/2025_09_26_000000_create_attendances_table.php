@@ -1,6 +1,6 @@
 <?php
 
-// database/migrations/2025_09_11_000000_create_attendances_table.php
+// database/migrations/2025_09_26_000000_create_attendances_table.php
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('schedule_id')->constrained('schedules')->cascadeOnDelete();
+            $table->unsignedBigInteger('location_id')->nullable();
             $table->enum('status', ['hadir', 'izin', 'telat', 'alpha'])->default('alpha');
             $table->boolean('is_late')->default(false);
             $table->integer('late_minutes')->nullable();

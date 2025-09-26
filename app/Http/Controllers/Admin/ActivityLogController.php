@@ -17,7 +17,7 @@ class ActivityLogController extends Controller
     public function index(Request $request)
     {
         $type = $request->get('type', 'all');
-        $subType = $request->get('sub_type', 'all'); // shifts, users, schedules, permissions
+        $subType = $request->get('sub_type', 'all'); // shifts, users, schedules, permissions, locations
         $search = $request->get('search');
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
@@ -26,6 +26,7 @@ class ActivityLogController extends Controller
         $usersLogs = collect();
         $schedulesLogs = collect();
         $permissionsLogs = collect();
+        $locationLogs = collect();
         $userLogs = collect();
         $authLogs = collect();
 
@@ -111,6 +112,31 @@ class ActivityLogController extends Controller
                     ->orderBy('created_at', 'desc');
                 $permissionsLogs = $permissionsQuery->paginate(20, ['*'], 'permissions_page');
             }
+
+            // Admin Location Logs
+            if ($subType === 'all' || $subType === 'locations') {
+                $locationQuery = AdminActivityLog::with('user')
+                    ->where('resource_type', 'Location')
+                    ->when($search, function ($q) use ($search) {
+                        $q->where('description', 'like', "%{$search}%")
+                          ->orWhere('old_values', 'like', "%{$search}%")
+                          ->orWhere('new_values', 'like', "%{$search}%")
+                          ->orWhereHas('user', function ($q) use ($search) {
+                              $q->where('name', 'like', "%{$search}%");
+                          });
+                    })
+                    ->when($request->get('action'), function ($q) use ($request) {
+                        $q->where('action', $request->get('action'));
+                    })
+                    ->when($dateFrom, function ($q) use ($dateFrom) {
+                        $q->whereDate('created_at', '>=', $dateFrom);
+                    })
+                    ->when($dateTo, function ($q) use ($dateTo) {
+                        $q->whereDate('created_at', '<=', $dateTo);
+                    })
+                    ->orderBy('created_at', 'desc');
+                $locationLogs = $locationQuery->paginate(20, ['*'], 'locations_page');
+            }
         }
 
         if ($type === 'all' || $type === 'user') {
@@ -158,6 +184,7 @@ class ActivityLogController extends Controller
             'usersLogs',
             'schedulesLogs',
             'permissionsLogs',
+            'locationLogs',
             'userLogs',
             'authLogs',
             'type',

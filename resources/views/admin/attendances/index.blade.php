@@ -146,6 +146,12 @@
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
+                                        <i data-lucide="map-pin" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        Lokasi
+                                    </div>
+                                </th>
+                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <div class="flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in text-sky-600 mr-2">
                                             <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
                                             <polyline points="10 17 15 12 10 7"/>
@@ -215,6 +221,21 @@
                                             </svg>
                                             {{ $schedule->shift->shift_name ?? '-' }}
                                         </span>
+                                    </td>
+                                    <td class="px-8 py-6 whitespace-nowrap">
+                                        @if($attendance && $attendance->location)
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center mr-3">
+                                                    <i data-lucide="map-pin" class="w-4 h-4 text-sky-600"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="text-sm font-semibold text-gray-900">{{ $attendance->location->name }}</div>
+                                                    <div class="text-xs text-gray-500">Radius: {{ $attendance->location->radius }}m</div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <span class="text-gray-400 text-sm">-</span>
+                                        @endif
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-base font-semibold text-gray-700">
                                         @if($attendance && $attendance->check_in_time)

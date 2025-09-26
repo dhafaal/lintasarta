@@ -92,6 +92,7 @@
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-In</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-Out</th>
@@ -118,6 +119,21 @@
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                             {{ $schedule->shift->shift_name ?? '-' }}
                                         </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if($attendance && $attendance->location)
+                                            <div class="flex items-center">
+                                                <div class="w-6 h-6 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center mr-2">
+                                                    <i data-lucide="map-pin" class="w-3 h-3 text-sky-600"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="text-xs font-medium text-gray-900">{{ $attendance->location->name }}</div>
+                                                    <div class="text-xs text-gray-500">{{ $attendance->location->radius }}m</div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <span class="text-gray-400 text-xs">-</span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex flex-col space-y-1">

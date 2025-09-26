@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Location;
+use App\Models\AdminActivityLog;
 use Illuminate\Http\Request;
 
 class LocationsController extends Controller
@@ -28,7 +29,18 @@ class LocationsController extends Controller
             'radius' => 'required|integer|min:1',
         ]);
 
-        Location::create($request->all());
+        $location = Location::create($request->all());
+
+        // Log admin activity
+        AdminActivityLog::log(
+            'create',
+            'Location',
+            $location->id,
+            $location->name,
+            null,
+            $location->toArray(),
+            "Membuat lokasi baru: {$location->name}"
+        );
 
         return redirect()->route('admin.locations.index')->with('success', 'Lokasi berhasil ditambahkan.');
     }
@@ -47,14 +59,41 @@ class LocationsController extends Controller
             'radius' => 'required|integer|min:1',
         ]);
 
+        $oldValues = $location->toArray();
         $location->update($request->all());
+
+        // Log admin activity
+        AdminActivityLog::log(
+            'update',
+            'Location',
+            $location->id,
+            $location->name,
+            $oldValues,
+            $location->fresh()->toArray(),
+            "Mengupdate lokasi: {$location->name}"
+        );
 
         return redirect()->route('admin.locations.index')->with('success', 'Lokasi berhasil diupdate.');
     }
 
     public function destroy(Location $location)
     {
+        $locationData = $location->toArray();
+        $locationName = $location->name;
+        
         $location->delete();
+
+        // Log admin activity
+        AdminActivityLog::log(
+            'delete',
+            'Location',
+            null,
+            $locationName,
+            $locationData,
+            null,
+            "Menghapus lokasi: {$locationName}"
+        );
+
         return redirect()->route('admin.locations.index')->with('success', 'Lokasi berhasil dihapus.');
     }
 }

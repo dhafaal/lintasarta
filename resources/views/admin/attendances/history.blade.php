@@ -80,6 +80,10 @@
                                 Shift
                             </th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>
+                                Lokasi
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
                                 Tanggal
                             </th>
@@ -121,6 +125,21 @@
                                         <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
                                         {{ $schedule->shift->shift_name ?? '-' }}
                                     </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($attendance && $attendance->location)
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center mr-3">
+                                                <i data-lucide="map-pin" class="w-4 h-4 text-sky-600"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-semibold text-gray-900">{{ $attendance->location->name }}</div>
+                                                <div class="text-xs text-gray-500">Radius: {{ $attendance->location->radius }}m</div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="text-gray-400 text-sm">-</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}
@@ -179,7 +198,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center">
+                                <td colspan="8" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center">
                                         <i data-lucide="search-x" class="w-12 h-12 text-gray-400 mb-4"></i>
                                         <h3 class="text-lg font-medium text-gray-900 mb-1">Tidak ada data</h3>

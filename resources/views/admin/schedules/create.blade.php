@@ -368,8 +368,8 @@
             });
         }
 
-        // Function to update second dropdown based on first dropdown selection
-        function updateSecondDropdown(day) {
+        // Function to update second dropdown based on first dropdown selection with shift sequence logic
+        async function updateSecondDropdown(day) {
             const firstDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="1"]`);
             const secondDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="2"]`);
             
@@ -378,36 +378,74 @@
             const selectedShiftId = firstDropdown.value;
             const currentSecondValue = secondDropdown.value;
             
-            // Get all original options from the template
-            const allShiftOptions = [
-                @foreach ($shifts as $shift)
-                    { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
-                @endforeach
-            ];
-            
             // Clear second dropdown
             secondDropdown.innerHTML = '<option value="">-- Shift 2 --</option>';
             
-            // Add options that are not selected in first dropdown
-            allShiftOptions.forEach(shift => {
-                if (shift.id !== selectedShiftId) {
-                    const option = document.createElement('option');
-                    option.value = shift.id;
-                    option.textContent = shift.name;
-                    option.setAttribute('data-shift-name', shift.name);
-                    
-                    // Restore previous selection if it's still valid
-                    if (shift.id === currentSecondValue) {
-                        option.selected = true;
-                    }
-                    
-                    secondDropdown.appendChild(option);
+            if (!selectedShiftId) {
+                secondDropdown.disabled = false;
+                return;
+            }
+
+            try {
+                // Call API to get available shifts based on first shift
+                const response = await fetch('{{ route("admin.schedules.get-available-shifts") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        first_shift_id: selectedShiftId
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.shifts && data.shifts.length > 0) {
+                    // Add available shifts to second dropdown
+                    data.shifts.forEach(shift => {
+                        const option = document.createElement('option');
+                        option.value = shift.id;
+                        option.textContent = shift.shift_name;
+                        option.setAttribute('data-shift-name', shift.shift_name);
+                        
+                        // Restore previous selection if it's still valid
+                        if (shift.id == currentSecondValue) {
+                            option.selected = true;
+                        }
+                        
+                        secondDropdown.appendChild(option);
+                    });
+                    secondDropdown.disabled = false;
+                } else {
+                    // No available shifts (e.g., Malam shift selected)
+                    secondDropdown.innerHTML = '<option value="">-- Tidak tersedia --</option>';
+                    secondDropdown.disabled = true;
                 }
-            });
-            
-            // If the current second dropdown value is now invalid, clear it
-            if (selectedShiftId === currentSecondValue) {
-                secondDropdown.value = "";
+            } catch (error) {
+                console.error('Error fetching available shifts:', error);
+                // Fallback to old logic if API fails
+                const allShiftOptions = [
+                    @foreach ($shifts as $shift)
+                        { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
+                    @endforeach
+                ];
+                
+                allShiftOptions.forEach(shift => {
+                    if (shift.id !== selectedShiftId) {
+                        const option = document.createElement('option');
+                        option.value = shift.id;
+                        option.textContent = shift.name;
+                        option.setAttribute('data-shift-name', shift.name);
+                        
+                        if (shift.id === currentSecondValue) {
+                            option.selected = true;
+                        }
+                        
+                        secondDropdown.appendChild(option);
+                    }
+                });
+                secondDropdown.disabled = false;
             }
         }
 

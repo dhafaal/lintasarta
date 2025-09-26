@@ -79,7 +79,33 @@
                                         Reset
                                     </a>
                                 @endif
-                            </form>
+                            </form> 
+                            
+                            <!-- Edit Button -->
+                            <a href="{{ route('admin.schedules.edit', ['schedule' => 'bulk']) }}?user_id={{ $user->id }}"
+                                class="inline-flex items-center px-4 py-2 bg-sky-100 hover:bg-sky-200 text-sky-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-edit mr-2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                                Edit Jadwal
+                            </a>
+
+                            <!-- Bulk Delete Button -->
+                            <button id="bulkDeleteBtn" onclick="bulkDeleteSchedules()" 
+                                class="hidden inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2 mr-2">
+                                    <path d="M3 6h18"/>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c0 1 1 2 2 2v2"/>
+                                    <line x1="10" x2="10" y1="11" y2="17"/>
+                                    <line x1="14" x2="14" y1="11" y2="17"/>
+                                </svg>
+                                <span id="bulkDeleteText">Hapus Terpilih</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -87,6 +113,10 @@
                     <table class="w-full">
                         <thead class="bg-gray-50 border-b-2 border-gray-200">
                             <tr>
+                                <th class="px-4 py-4 text-left">
+                                    <input type="checkbox" id="selectAll" 
+                                        class="w-4 h-4 text-sky-600 bg-gray-100 border-gray-300 rounded focus:ring-sky-500 focus:ring-2">
+                                </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -133,6 +163,10 @@
                         <tbody class="divide-y divide-gray-100">
                             @forelse($schedules as $schedule)
                                 <tr class="hover:bg-sky-50 transition-colors duration-200">
+                                    <td class="px-4 py-6 whitespace-nowrap">
+                                        <input type="checkbox" name="schedule_ids[]" value="{{ $schedule->id }}" 
+                                            class="schedule-checkbox w-4 h-4 text-sky-600 bg-gray-100 border-gray-300 rounded focus:ring-sky-500 focus:ring-2">
+                                    </td>
                                     <td class="px-8 py-6 whitespace-nowrap">
                                         <div class="flex items-center">
                                             @if ($schedule->shift && $schedule->shift->category == 'Pagi')
@@ -257,7 +291,7 @@
                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                                                     class="lucide lucide-edit mr-2">
-                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0    0 2 2h14a2 2 0 0 0 2-2v-7" />
                                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                                 </svg>
                                                 Edit
@@ -429,6 +463,106 @@
     </div>
 
     <script>
+        // Bulk Delete Functions
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const scheduleCheckboxes = document.querySelectorAll('.schedule-checkbox');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const bulkDeleteText = document.getElementById('bulkDeleteText');
+
+            // Handle select all checkbox
+            selectAllCheckbox.addEventListener('change', function() {
+                scheduleCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateBulkDeleteButton();
+            });
+
+            // Handle individual checkboxes
+            scheduleCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateSelectAllState();
+                    updateBulkDeleteButton();
+                });
+            });
+
+            function updateSelectAllState() {
+                const checkedCount = document.querySelectorAll('.schedule-checkbox:checked').length;
+                const totalCount = scheduleCheckboxes.length;
+                
+                selectAllCheckbox.checked = checkedCount === totalCount;
+                selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+            }
+
+            function updateBulkDeleteButton() {
+                const checkedCount = document.querySelectorAll('.schedule-checkbox:checked').length;
+                
+                if (checkedCount > 0) {
+                    bulkDeleteBtn.classList.remove('hidden');
+                    bulkDeleteText.textContent = `Hapus ${checkedCount} Terpilih`;
+                } else {
+                    bulkDeleteBtn.classList.add('hidden');
+                }
+            }
+        });
+
+        function bulkDeleteSchedules() {
+            const checkedBoxes = document.querySelectorAll('.schedule-checkbox:checked');
+            const scheduleIds = Array.from(checkedBoxes).map(cb => cb.value);
+            
+            if (scheduleIds.length === 0) {
+                alert('Pilih jadwal yang akan dihapus');
+                return;
+            }
+
+            if (!confirm(`Apakah Anda yakin ingin menghapus ${scheduleIds.length} jadwal yang dipilih?`)) {
+                return;
+            }
+
+            // Show loading state
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const originalText = bulkDeleteBtn.innerHTML;
+            bulkDeleteBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-red-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Menghapus...
+            `;
+            bulkDeleteBtn.disabled = true;
+
+            // Send delete request
+            fetch('{{ route("admin.schedules.bulk-delete") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    schedule_ids: scheduleIds
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`${data.deleted_count} jadwal berhasil dihapus!`);
+                    location.reload();
+                } else {
+                    alert(data.message || 'Gagal menghapus jadwal');
+                    // Restore button state
+                    bulkDeleteBtn.innerHTML = originalText;
+                    bulkDeleteBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menghapus jadwal');
+                // Restore button state
+                bulkDeleteBtn.innerHTML = originalText;
+                bulkDeleteBtn.disabled = false;
+            });
+        }
+
         let selectedTargetSchedule = null;
 
         function openSwapModal(scheduleId, userName, shiftName, scheduleDate) {

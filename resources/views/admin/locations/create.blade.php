@@ -34,15 +34,33 @@
                 <div class="p-8">
                     <form action="{{ route('admin.locations.store') }}" method="POST" class="space-y-6">
                         @csrf
-                        <div class="space-y-2">
+                        <div class="space-y-3">
                             <label for="name" class="block text-sm font-bold text-gray-800">
-                                Nama Lokasi <span class="text-red-500">*</span>
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                    </svg>
+                                    <span>Nama Lokasi <span class="text-red-500">*</span></span>
+                                </div>
                             </label>
-                            <input type="text" name="name" id="name"
-                                   class="block w-full py-4 px-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 bg-gray-50 focus:bg-white @error('name') border-red-500 @enderror"
-                                   value="{{ old('name') }}" required>
+                            <div class="relative group">
+                                <input type="text" name="name" id="name"
+                                       class="block w-full py-4 px-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 bg-gray-50 focus:bg-white transition-all duration-200 @error('name') border-red-500 @enderror"
+                                       value="{{ old('name') }}" required placeholder="Masukkan nama lokasi (contoh: Kantor Pusat)">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400 group-focus-within:text-sky-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
                             @error('name')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="mt-1 text-sm text-red-600 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
                             @enderror
                         </div>
                         <div class="space-y-2">

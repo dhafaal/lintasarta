@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin - @yield('title')</title>
     <link rel="icon" href="">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -105,9 +106,12 @@
         }
 
         @keyframes clockPulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4);
             }
+
             50% {
                 box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
             }
@@ -164,7 +168,6 @@
             left: 0;
             right: 0;
         }
-
         /* Prevent tooltip/popover from creating horizontal scrollbars
            and make collapsed sidebar tooltips wrap safely on small screens */
         html, body {
@@ -199,7 +202,7 @@
         usersExpanded: false,
         schedulesExpanded: false,
         shiftsExpanded: false,
-        attendancesExpanded: false,
+        locationsExpanded: false,
         mobileMenuOpen: false,
         isMobile: false,
         init() {
@@ -210,7 +213,7 @@
             this.usersExpanded = localStorage.getItem('usersExpanded') === 'true';
             this.schedulesExpanded = localStorage.getItem('schedulesExpanded') === 'true';
             this.shiftsExpanded = localStorage.getItem('shiftsExpanded') === 'true';
-            this.attendancesExpanded = localStorage.getItem('attendancesExpanded') === 'true';
+            this.locationsExpanded = localStorage.getItem('locationsExpanded') === 'true';
             
             // Auto-collapse on mobile with debounce
             let resizeTimeout;
@@ -265,9 +268,9 @@
             this.shiftsExpanded = !this.shiftsExpanded;
             localStorage.setItem('shiftsExpanded', this.shiftsExpanded);
         },
-        toggleAttendances() {
-            this.attendancesExpanded = !this.attendancesExpanded;
-            localStorage.setItem('attendancesExpanded', this.attendancesExpanded);
+        toggleLocations() {
+            this.locationsExpanded = !this.locationsExpanded;
+            localStorage.setItem('locationsExpanded', this.locationsExpanded);
         }
     }" x-init="init()"
     @click.away="closeMobileMenu()"
@@ -327,14 +330,14 @@
             </div>
 
             <!-- Sidebar Navigation -->
-            <nav class="flex-1 space-y-2 p-3 overflow-y" role="navigation">
+            <nav class="flex-1 space-y-2 p-3 overflow-y-auto" role="navigation">
 
                 <!-- Dashboard -->
                 <a href="{{ route('admin.dashboard') }}"
                     @click="closeMobileMenu()"
                     :class="sidebarCollapsed && !isMobile ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
                     class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
-                    {{ request()->routeIs('admin.dashboard') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+        {{ request()->routeIs('admin.dashboard') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
                     :aria-label="sidebarCollapsed && !isMobile ? 'Dashboard' : ''">
                     <i data-lucide="layout-dashboard"
                         class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.dashboard') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
@@ -358,7 +361,7 @@
                         @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.users.index') }}' : toggleUsers()"
                         :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
                         class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
-                        {{ request()->routeIs('admin.users.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                {{ request()->routeIs('admin.users.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
                         :aria-label="(sidebarCollapsed && !isMobile) ? 'Users' : ''">
                         <i data-lucide="users"
                             class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.users.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
@@ -368,7 +371,7 @@
                             :class="usersExpanded ? 'rotate-90' : 'rotate-0'"
                             class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
 
-                        <div x-show="sidebarCollapsed && !isMobile"
+                        <div x-show="sidebarCollapsed"
                             class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Users Management
                             <div
@@ -383,18 +386,19 @@
                         x-transition:enter-end="opacity-100 translate-y-0"
                         x-transition:leave="transition ease-in duration-150"
                         x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 -translate-y-2" class="ml-8 space-y-1">
+                        x-transition:leave-end="opacity-0 -translate-y-2"
+                        class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
                         <a href="{{ route('admin.users.index') }}"
                             @click="closeMobileMenu()"
-                            class="flex items-center px-3 py-2 text-sm text-gray-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors {{ request()->routeIs('admin.users.index') ? 'text-sky-700 bg-sky-50' : '' }}">
-                            <i data-lucide="list" class="w-4 h-4 mr-2"></i>
-                            All Users
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.users.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="users" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>Manage Users</span>
                         </a>
                         <a href="{{ route('admin.users.create') }}"
                             @click="closeMobileMenu()"
-                            class="flex items-center px-3 py-2 text-sm text-gray-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors {{ request()->routeIs('admin.users.create') ? 'text-sky-700 bg-sky-50' : '' }}">
-                            <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i>
-                            Add User
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.users.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="user-plus" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>Add User</span>
                         </a>
                     </div>
                 </div>
@@ -405,7 +409,7 @@
                         @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.schedules.index') }}' : toggleSchedules()"
                         :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
                         class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
-                        {{ request()->routeIs('admin.schedules.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                {{ request()->routeIs('admin.schedules.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
                         :aria-label="sidebarCollapsed ? 'Schedules' : ''">
                         <i data-lucide="calendar"
                             class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.schedules.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
@@ -415,7 +419,7 @@
                             :class="schedulesExpanded ? 'rotate-90' : 'rotate-0'"
                             class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
 
-                        <div x-show="sidebarCollapsed && !isMobile"
+                        <div x-show="sidebarCollapsed"
                             class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Schedule Management
                             <div
@@ -448,14 +452,13 @@
                         </a>
                     </div>
                 </div>
-
                 <!-- Shifts -->
                 <div class="space-y-1 relative">
                     <button
                         @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.shifts.index') }}' : toggleShifts()"
                         :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
                         class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
-                        {{ request()->routeIs('admin.shifts.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                {{ request()->routeIs('admin.shifts.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
                         :aria-label="sidebarCollapsed ? 'Shifts' : ''">
                         <i data-lucide="clock"
                             class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.shifts.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
@@ -465,7 +468,7 @@
                             :class="shiftsExpanded ? 'rotate-90' : 'rotate-0'"
                             class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
 
-                        <div x-show="sidebarCollapsed && !isMobile"
+                        <div x-show="sidebarCollapsed"
                             class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Shift Management
                             <div
@@ -498,32 +501,32 @@
                     </div>
                 </div>
 
-                <!-- Attendances -->
+                <!-- Locations -->
                 <div class="space-y-1 relative">
                     <button
-                        @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.attendances.index') }}' : toggleAttendances()"
+                        @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.locations.index') }}' : toggleLocations()"
                         :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
                         class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
-                        {{ request()->routeIs('admin.attendances.*') || request()->routeIs('admin.locations.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                        :aria-label="sidebarCollapsed ? 'Attendances' : ''">
-                        <i data-lucide="user-check"
-                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.attendances.*') || request()->routeIs('admin.locations.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                {{ request()->routeIs('admin.locations.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                        :aria-label="sidebarCollapsed ? 'Locations' : ''">
+                        <i data-lucide="map-pin"
+                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.locations.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
                             :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed || isMobile" class="flex-1 text-left" x-transition>Attendances</span>
+                        <span x-show="!sidebarCollapsed || isMobile" class="flex-1 text-left" x-transition>Locations</span>
                         <i x-show="(!sidebarCollapsed || isMobile)" data-lucide="chevron-right"
-                            :class="attendancesExpanded ? 'rotate-90' : 'rotate-0'"
+                            :class="locationsExpanded ? 'rotate-90' : 'rotate-0'"
                             class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
 
-                        <div x-show="sidebarCollapsed && !isMobile"
+                        <div x-show="sidebarCollapsed"
                             class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                            Attendance Management
+                            Location Management
                             <div
                                 class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
                             </div>
                         </div>
                     </button>
 
-                    <div x-show="attendancesExpanded && ((!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen))"
+                    <div x-show="locationsExpanded && ((!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen))"
                         x-transition:enter="transition ease-out duration-200"
                         x-transition:enter-start="opacity-0 -translate-y-2"
                         x-transition:enter-end="opacity-100 translate-y-0"
@@ -531,23 +534,69 @@
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 -translate-y-2"
                         class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
-                        <a href="{{ route('admin.attendances.index') }}"
+                        <a href="{{ route('admin.locations.index') }}"
                             @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.attendances.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="user-check"
-                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Manage Attendances</span>
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.locations.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="map" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>Manage Locations</span>
                         </a>
                         <a href="{{ route('admin.locations.create') }}"
                             @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.locations.*') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="map-pin"
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.locations.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="plus-circle"
                                 class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Add Locations</span>
+                            <span>Add Location</span>
                         </a>
                     </div>
                 </div>
 
+                <!-- Divider -->
+                <div class="my-4 border-t border-sky-200 border-opacity-30"></div>
+
+                <!-- Attendance -->
+                <div class="space-y-1 relative">
+                    <a href="{{ route('admin.attendances.index') }}"
+                        @click="closeMobileMenu()"
+                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
+                        class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
+            {{ request()->routeIs('admin.attendances.*')
+                ? 'bg-sky-100 text-sky-700 border border-sky-200'
+                : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                        :aria-label="sidebarCollapsed ? 'Attendance' : ''">
+                        <i data-lucide="user-check"
+                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.attendances.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed || isMobile" x-transition>Attendances</span>
+
+                        <div x-show="sidebarCollapsed"
+                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Attendance Records
+                            <div
+                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Calendar -->
+                    <a href="{{ route('admin.calendar.view') }}"
+                        @click="closeMobileMenu()"
+                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
+                        class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
+       {{ request()->routeIs('admin.calendar.view') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                        :aria-label="sidebarCollapsed ? 'Calendar' : ''">
+                        <i data-lucide="calendar-range"
+                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.calendar.view') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed || isMobile" x-transition>Calendar</span>
+
+                        <div x-show="sidebarCollapsed"
+                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Calendar View
+                            <div
+                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
+                            </div>
+                        </div>
+                    </a>
             </nav>
 
             <!-- Sidebar Footer -->
@@ -596,8 +645,7 @@
                         </button>
                         
                         <div>
-                            <h1 class="text-2xl font-semibold text-gray-7
-                            00 tracking-tight">@yield('title')</h1>
+                            <h1 class="text-2xl font-semibold text-gray-700 tracking-tight">@yield('title')</h1>
                             <p class="text-base text-gray-500 mt-1">Manage your application</p>
                         </div>
                     </div>
@@ -656,9 +704,11 @@
                                         </div>
                                         <div class="flex-1">
                                             <h3 class="text-lg font-bold text-white">{{ auth()->user()->name }}</h3>
-                                            <p class="text-sky-100 text-sm font-medium">{{ auth()->user()->email }}</p>
+                                            <p class="text-sky-100 text-sm font-medium">{{ auth()->user()->email }}
+                                            </p>
                                             <div class="flex items-center mt-1">
-                                                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+                                                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2">
+                                                </div>
                                                 <span class="text-xs text-sky-100">Administrator</span>
                                             </div>
                                         </div>
