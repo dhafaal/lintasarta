@@ -93,14 +93,16 @@ class UserController extends Controller
         $request->validate([
             'name'     => 'required',
             'email'    => 'required|email|unique:users',
-            'password' => 'required|min:6',
+            'password' => 'nullable|min:8',
             'role'     => 'required|in:admin,operator,user'
         ]);
+
+        $plainPassword = $request->password ?: 'password123'; 
 
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($plainPassword),
             'role'     => $request->role,
         ]);
 

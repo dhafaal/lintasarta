@@ -108,7 +108,6 @@
                                 name="password" 
                                 class="block w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500" 
                                 placeholder="Masukkan password yang aman"
-                                required
                                 minlength="8"
                                 autocomplete="new-password"
                             >

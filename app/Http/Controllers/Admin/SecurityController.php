@@ -76,7 +76,7 @@ class SecurityController extends Controller
             0,
             $blockMinutes,
             $isPermanent,
-            auth()->user()->name
+            Auth::user()->name,
         );
 
         // Log the manual block

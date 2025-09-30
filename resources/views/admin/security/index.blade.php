@@ -337,13 +337,13 @@
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                                 required>
                                 <option value="">Select block duration</option>
-                                <option value="1">1 Minutes - Temporary block</option>
+                                <option value="1">1 Hours - Temporary block</option>
                                 <option value="24" selected>24 Hours - Standard block</option>
                                 <option value="168">1 Week - Extended block</option>
                                 <option value="permanent">Permanent - Indefinite block</option>
                             </select>
                         </div>
-                    </div>
+                    </div>  
 
                     <!-- Action Buttons -->
                     <div class="flex items-center justify-end space-x-3 pt-6 mt-6 border-t border-gray-200">
