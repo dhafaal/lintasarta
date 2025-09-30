@@ -3,7 +3,7 @@
 @section('title', 'Activity Logs')
 
 @section('content')
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-whiteo">
         <div class="mx-auto px-6 py-8">
             <!-- Header -->
             <div class="mb-8">

@@ -8,9 +8,12 @@ use App\Models\Permissions;
 use App\Models\Schedules;
 use App\Models\AdminPermissionsLog;
 use App\Models\UserActivityLog;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\AttendancesExport;
 
 class AttendancesController extends Controller
 {
@@ -58,6 +61,9 @@ class AttendancesController extends Controller
         $totalIzin = $attendances->where('status', 'izin')->count();
         $totalAlpha = max(0, $totalSchedules - ($totalHadir + $totalTelat + $totalIzin));
 
+        // Users for per-user export selector
+        $users = User::orderBy('name')->get(['id','name']);
+
         return view('admin.attendances.index', compact(
             'today',
             'todayFormated',
@@ -70,7 +76,8 @@ class AttendancesController extends Controller
             'totalIzin',
             'totalAlpha',
             'search',
-            'statusFilter'
+            'statusFilter',
+            'users'
         ));
     }
 
@@ -372,5 +379,72 @@ class AttendancesController extends Controller
         );
 
         return back()->with('success', $validation['message']);
+    }
+
+    /**
+     * Export attendances for a given month (required) and year (required)
+     */
+    public function exportMonthly(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer|min:2000|max:' . now()->year,
+        ]);
+
+        $month = (int) $request->input('month');
+        $year = (int) $request->input('year');
+
+        $filename = sprintf('absensi-bulanan-%04d-%02d.xlsx', $year, $month);
+        return Excel::download(new AttendancesExport('monthly', $month, $year, null), $filename);
+    }
+
+    /**
+     * Export attendances for a given year (required)
+     */
+    public function exportYearly(Request $request)
+    {
+        $request->validate([
+            'year' => 'required|integer|min:2000|max:' . now()->year,
+        ]);
+
+        $year = (int) $request->input('year');
+        $filename = sprintf('absensi-tahunan-%04d.xlsx', $year);
+        return Excel::download(new AttendancesExport('yearly', null, $year, null), $filename);
+    }
+
+    /**
+     * Export attendances per user with optional month/year filters
+     */
+    public function exportPerUser(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'month' => 'nullable|integer|min:1|max:12',
+            'year' => 'nullable|integer|min:2000|max:' . now()->year,
+        ]);
+
+        $userId = (int) $request->input('user_id');
+        $month = $request->filled('month') ? (int) $request->input('month') : null;
+        $year = $request->filled('year') ? (int) $request->input('year') : null;
+
+        $userName = optional(User::find($userId))->name ?? 'user';
+        $suffix = [];
+        if ($year) { $suffix[] = $year; }
+        if ($month) { $suffix[] = sprintf('%02d', $month); }
+        $suffixStr = $suffix ? ('-' . implode('-', $suffix)) : '';
+
+        $safeUser = str_replace([' ', '/','\\',':'], '-', strtolower($userName));
+        $filename = sprintf('absensi-%s%s.xlsx', $safeUser, $suffixStr);
+
+        return Excel::download(new AttendancesExport('user', $month, $year, $userId), $filename);
+    }
+
+    /**
+     * Export all attendances data (all users, all time)
+     */
+    public function exportAll(Request $request)
+    {
+        $filename = 'absensi-seluruh-data-' . now()->format('Y-m-d') . '.xlsx';
+        return Excel::download(new AttendancesExport('all', null, null, null), $filename);
     }
 }

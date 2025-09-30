@@ -36,6 +36,171 @@
                         <i data-lucide="history" class="w-5 h-5 mr-2"></i>
                         Riwayat Absensi
                     </a>
+
+                    <!-- Export Dropdown -->
+                    <details class="relative">
+                        <summary class="list-none inline-flex items-center px-4 py-2 bg-white border-2 border-sky-200 text-sky-700 font-semibold rounded-xl hover:bg-sky-50 cursor-pointer select-none">
+                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                            Export
+                            <svg class="w-4 h-4 ml-2 text-sky-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                        </summary>
+                        <div class="absolute right-0 mt-2 w-[28rem] bg-white rounded-xl shadow-xl border border-sky-100 p-4 z-20">
+                            <div class="grid grid-cols-1 gap-4">
+                                <!-- Monthly Export -->
+                                <div class="border border-gray-100 rounded-lg p-3">
+                                    <div class="flex items-center mb-2">
+                                        <i data-lucide="calendar" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <span class="text-sm font-semibold text-gray-700">Export Bulanan</span>
+                                    </div>
+                                    <form method="POST" action="{{ route('admin.attendances.export.monthly') }}" class="flex items-center space-x-2">
+                                        @csrf
+                                        <select name="month" class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
+                                            @for($m=1;$m<=12;$m++)
+                                                <option value="{{ $m }}" {{ (int)date('n') === $m ? 'selected' : '' }}>{{ str_pad($m,2,'0',STR_PAD_LEFT) }}</option>
+                                            @endfor
+                                        </select>
+                                        <select name="year" class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
+                                            @for($y = now()->year; $y >= now()->year - 5; $y--)
+                                                <option value="{{ $y }}" {{ now()->year === $y ? 'selected' : '' }}>{{ $y }}</option>
+                                            @endfor
+                                        </select>
+                                        <button type="submit" class="inline-flex items-center px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg">
+                                            <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1"></i>
+                                            Export
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Yearly Export -->
+                                <div class="border border-gray-100 rounded-lg p-3">
+                                    <div class="flex items-center mb-2">
+                                        <i data-lucide="calendar-range" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <span class="text-sm font-semibold text-gray-700">Export Tahunan</span>
+                                    </div>
+                                    <form method="POST" action="{{ route('admin.attendances.export.yearly') }}" class="flex items-center space-x-2">
+                                        @csrf
+                                        <select name="year" class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
+                                            @for($y = now()->year; $y >= now()->year - 5; $y--)
+                                                <option value="{{ $y }}" {{ now()->year === $y ? 'selected' : '' }}>{{ $y }}</option>
+                                            @endfor
+                                        </select>
+                                        <button type="submit" class="inline-flex items-center px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg">
+                                            <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1"></i>
+                                            Export
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Export All Data -->
+                                <div class="border border-gray-100 rounded-lg p-3">
+                                    <div class="flex items-center mb-2">
+                                        <i data-lucide="database" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <span class="text-sm font-semibold text-gray-700">Export Seluruh Data</span>
+                                    </div>
+                                    <form method="POST" action="{{ route('admin.attendances.export.all') }}" class="flex items-center justify-between">
+                                        @csrf
+                                        <span class="text-xs text-gray-500">Semua karyawan, semua waktu</span>
+                                        <button type="submit" class="inline-flex items-center px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg">
+                                            <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1"></i>
+                                            Export
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Per User Export -->
+                                <div class="border border-gray-100 rounded-lg p-3">
+                                    <div class="flex items-center mb-2">
+                                        <i data-lucide="user-round" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <span class="text-sm font-semibold text-gray-700">Export per User</span>
+                                    </div>
+                                    <form method="POST" action="{{ route('admin.attendances.export.user') }}" class="space-y-3">
+                                        @csrf
+
+                                        <!-- User Search Section -->
+                                        <div class="relative">
+                                            <!-- Search Input -->
+                                            <div class="relative">
+                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                                    </svg>
+                                                </div>
+                                                <input type="text"
+                                                       id="export_user_search"
+                                                       class="block w-full pl-10 pr-10 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-gray-50 focus:bg-white transition-all duration-200 text-sm"
+                                                       placeholder="Ketik untuk mencari pengguna..."
+                                                       autocomplete="off">
+                                                <input type="hidden" name="user_id" id="export_selected_user_id" required>
+                                            </div>
+
+                                            <!-- Search Results Dropdown -->
+                                            <div id="export_user_search_results"
+                                                 class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto hidden">
+                                                <div id="export_user_search_loading" class="px-3 py-2 text-sm text-gray-500 text-center hidden">
+                                                    <svg class="animate-spin h-4 w-4 mx-auto mb-1" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Mencari pengguna...
+                                                </div>
+                                                <div id="export_user_search_no_results" class="px-3 py-2 text-sm text-gray-500 text-center hidden">
+                                                    Tidak ada pengguna ditemukan
+                                                </div>
+                                                <div id="export_user_search_results_list" class="divide-y divide-gray-100">
+                                                    <!-- Results will be populated here -->
+                                                </div>
+                                            </div>
+
+                                            <!-- Selected User Display -->
+                                            <div id="export_selected_user_display" class="mt-2 hidden">
+                                                <div class="flex items-center justify-between p-2 bg-sky-50 border border-sky-200 rounded-lg">
+                                                    <div class="flex items-center">
+                                                        <div class="w-6 h-6 bg-sky-100 rounded-full flex items-center justify-center mr-2">
+                                                            <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                            </svg>
+                                                        </div>
+                                                        <div>
+                                                            <div class="text-sm font-medium text-gray-900" id="export_selected_user_name"></div>
+                                                            <div class="text-xs text-gray-500" id="export_selected_user_email"></div>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" onclick="clearExportUserSelection()"
+                                                            class="text-gray-400 hover:text-gray-600 transition-colors">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Month and Year Selection -->
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <select name="month" class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                                <option value="">Bulan (opsional)</option>
+                                                @for($m=1;$m<=12;$m++)
+                                                    <option value="{{ $m }}">{{ str_pad($m,2,'0',STR_PAD_LEFT) }}</option>
+                                                @endfor
+                                            </select>
+                                            <select name="year" class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                                <option value="">Tahun (opsional)</option>
+                                                @for($y = now()->year; $y >= now()->year - 5; $y--)
+                                                    <option value="{{ $y }}">{{ $y }}</option>
+                                                @endfor
+                                            </select>
+                                        </div>
+
+                                        <!-- Export Button -->
+                                        <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105">
+                                            <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1"></i>
+                                            Export
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
                 </div>
             </div>
 
@@ -401,4 +566,162 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Export User Search Functionality
+        document.addEventListener("DOMContentLoaded", function() {
+            const exportUserSearchInput = document.getElementById('export_user_search');
+            const exportUserSearchResults = document.getElementById('export_user_search_results');
+            const exportUserSearchResultsList = document.getElementById('export_user_search_results_list');
+            const exportUserSearchLoading = document.getElementById('export_user_search_loading');
+            const exportUserSearchNoResults = document.getElementById('export_user_search_no_results');
+            const exportSelectedUserId = document.getElementById('export_selected_user_id');
+            const exportSelectedUserDisplay = document.getElementById('export_selected_user_display');
+            const exportSelectedUserName = document.getElementById('export_selected_user_name');
+            const exportSelectedUserEmail = document.getElementById('export_selected_user_email');
+
+            // Users data
+            const exportUsersData = [
+                @foreach($users as $user)
+                    {
+                        id: {{ $user->id }},
+                        name: "{{ $user->name }}",
+                        email: "{{ $user->email ?? '' }}"
+                    },
+                @endforeach
+            ];
+
+            let exportSearchTimeout;
+
+            // Initialize export user search
+            if (exportUserSearchInput) {
+                exportUserSearchInput.addEventListener('input', function() {
+                    const query = this.value.trim();
+
+                    // Clear previous timeout
+                    clearTimeout(exportSearchTimeout);
+
+                    // Hide results if query is empty
+                    if (!query) {
+                        hideExportSearchResults();
+                        return;
+                    }
+
+                    // Show loading state
+                    showExportLoadingState();
+
+                    // Debounce search to avoid too many requests
+                    exportSearchTimeout = setTimeout(() => {
+                        performExportUserSearch(query);
+                    }, 300);
+                });
+
+                // Hide results when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!exportUserSearchInput.contains(e.target) && !exportUserSearchResults.contains(e.target)) {
+                        hideExportSearchResults();
+                    }
+                });
+            }
+
+            function performExportUserSearch(query) {
+                // Filter users based on query
+                const filteredUsers = exportUsersData.filter(user =>
+                    user.name.toLowerCase().includes(query.toLowerCase()) ||
+                    user.email.toLowerCase().includes(query.toLowerCase())
+                );
+
+                // Show results
+                showExportSearchResults(filteredUsers, query);
+            }
+
+            function showExportSearchResults(users, query) {
+                exportUserSearchResultsList.innerHTML = '';
+
+                if (users.length === 0) {
+                    hideExportLoadingState();
+                    showExportNoResultsState();
+                    return;
+                }
+
+                hideExportLoadingState();
+                hideExportNoResultsState();
+
+                users.forEach(user => {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors';
+                    userItem.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 bg-sky-100 rounded-full flex items-center justify-center mr-2">
+                                <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${highlightExportText(user.name, query)}</div>
+                                <div class="text-xs text-gray-500">${highlightExportText(user.email, query)}</div>
+                            </div>
+                        </div>
+                    `;
+
+                    userItem.addEventListener('click', () => selectExportUser(user));
+                    exportUserSearchResultsList.appendChild(userItem);
+                });
+
+                exportUserSearchResults.classList.remove('hidden');
+            }
+
+            function highlightExportText(text, query) {
+                if (!query || !text) return text;
+
+                const regex = new RegExp(`(${query})`, 'gi');
+                return text.replace(regex, '<mark class="bg-yellow-200 text-yellow-800">$1</mark>');
+            }
+
+            function selectExportUser(user) {
+                exportSelectedUserId.value = user.id;
+                exportSelectedUserName.textContent = user.name;
+                exportSelectedUserEmail.textContent = user.email;
+                exportSelectedUserDisplay.classList.remove('hidden');
+                exportUserSearchInput.value = user.name;
+
+                // Hide search results
+                hideExportSearchResults();
+            }
+
+            function clearExportUserSelection() {
+                exportSelectedUserId.value = '';
+                exportSelectedUserName.textContent = '';
+                exportSelectedUserEmail.textContent = '';
+                exportSelectedUserDisplay.classList.add('hidden');
+                exportUserSearchInput.value = '';
+            }
+
+            function showExportLoadingState() {
+                exportUserSearchResults.classList.remove('hidden');
+                exportUserSearchLoading.classList.remove('hidden');
+                exportUserSearchNoResults.classList.add('hidden');
+                exportUserSearchResultsList.innerHTML = '';
+            }
+
+            function hideExportLoadingState() {
+                exportUserSearchLoading.classList.add('hidden');
+            }
+
+            function showExportNoResultsState() {
+                exportUserSearchResults.classList.remove('hidden');
+                exportUserSearchNoResults.classList.remove('hidden');
+            }
+
+            function hideExportNoResultsState() {
+                exportUserSearchNoResults.classList.add('hidden');
+            }
+
+            function hideExportSearchResults() {
+                exportUserSearchResults.classList.add('hidden');
+                hideExportLoadingState();
+                hideExportNoResultsState();
+            }
+        });
+    </script>
 @endsection

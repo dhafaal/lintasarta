@@ -72,6 +72,11 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         Route::prefix('attendances')->name('attendances.')->group(function () {
             Route::get('/', [AdminAttendanceController::class, 'index'])->name('index');
             Route::get('/history', [AdminAttendanceController::class, 'history'])->name('history');
+            // Export routes
+            Route::post('/export/monthly', [AdminAttendanceController::class, 'exportMonthly'])->name('export.monthly');
+            Route::post('/export/yearly', [AdminAttendanceController::class, 'exportYearly'])->name('export.yearly');
+            Route::post('/export/user', [AdminAttendanceController::class, 'exportPerUser'])->name('export.user');
+            Route::post('/export/all', [AdminAttendanceController::class, 'exportAll'])->name('export.all');
             Route::post('/permissions/{permission}/approve', [AdminAttendanceController::class, 'approvePermission'])
                 ->name('permission.approve');
             Route::post('/permissions/{permission}/reject', [AdminAttendanceController::class, 'rejectPermission'])

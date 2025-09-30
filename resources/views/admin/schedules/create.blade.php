@@ -72,19 +72,74 @@
                             </div>
                         </div>
 
-                        <!-- User Selection -->
+                        <!-- User Selection with Search -->
                         <div class="space-y-3">
-                            <label for="user_id" class="block text-sm font-bold text-gray-800">
+                            <label for="user_search" class="block text-sm font-bold text-gray-800">
                                 Pilih Pengguna <span class="text-red-500">*</span>
                             </label>
-                            <select id="user_id" name="user_id"
-                                class="block w-full pl-3 pr-10 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 bg-gray-50 focus:bg-white cursor-pointer"
-                                required>
-                                <option value="" disabled selected>Pilih pengguna</option>
-                                @foreach ($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                @endforeach
-                            </select>
+
+                            <!-- Search Input -->
+                            <div class="relative">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <input type="text"
+                                           id="user_search"
+                                           class="block w-full pl-12 pr-10 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 bg-gray-50 focus:bg-white transition-all duration-200"
+                                           placeholder="Ketik untuk mencari pengguna..."
+                                           autocomplete="off">
+                                    <input type="hidden" name="user_id" id="selected_user_id" required>
+                                </div>
+
+                                <!-- Search Results Dropdown -->
+                                <div id="user_search_results"
+                                     class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto hidden">
+                                    <div id="user_search_loading" class="px-4 py-3 text-sm text-gray-500 text-center hidden">
+                                        <svg class="animate-spin h-4 w-4 mx-auto mb-1" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Mencari pengguna...
+                                    </div>
+                                    <div id="user_search_no_results" class="px-4 py-3 text-sm text-gray-500 text-center hidden">
+                                        Tidak ada pengguna ditemukan
+                                    </div>
+                                    <div id="user_search_results_list" class="divide-y divide-gray-100">
+                                        <!-- Results will be populated here -->
+                                    </div>
+                                </div>
+
+                                <!-- Selected User Display -->
+                                <div id="selected_user_display" class="mt-3 hidden">
+                                    <div class="flex items-center justify-between p-3 bg-sky-50 border border-sky-200 rounded-lg">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center mr-3">
+                                                <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900" id="selected_user_name"></div>
+                                                <div class="text-xs text-gray-500" id="selected_user_email"></div>
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="clearUserSelection()"
+                                                class="text-gray-400 hover:text-gray-600 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Validation Error -->
+                                <div id="user_validation_error" class="mt-2 text-sm text-red-600 hidden">
+                                    Silakan pilih pengguna terlebih dahulu
+                                </div>
+                            </div>
                         </div>
 
 
@@ -121,45 +176,7 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preset Shift Cepat</label>
-                            <div class="space-y-2">
-                                <div class="text-xs text-gray-500 font-medium">Shift 1 (Dropdown Atas):</div>
-                                <div class="flex flex-wrap gap-2">
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-sky-50 text-sky-600 text-sm font-medium rounded-lg hover:bg-sky-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('pagi', 1)">
-                                        Shift 1: Pagi
-                                    </button>
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-orange-50 text-orange-600 text-sm font-medium rounded-lg hover:bg-orange-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('siang', 1)">
-                                        Shift 1: Siang
-                                    </button>
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-purple-50 text-purple-600 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('malam', 1)">
-                                        Shift 1: Malam
-                                    </button>
-                                </div>
-                                <div class="text-xs text-gray-500 font-medium">Shift 2 (Dropdown Bawah):</div>
-                                <div class="flex flex-wrap gap-2">
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-sky-50 text-sky-600 text-sm font-medium rounded-lg hover:bg-sky-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('pagi', 2)">
-                                        Shift 2: Pagi
-                                    </button>
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-orange-50 text-orange-600 text-sm font-medium rounded-lg hover:bg-orange-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('siang', 2)">
-                                        Shift 2: Siang
-                                    </button>
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-purple-50 text-purple-600 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('malam', 2)">
-                                        Shift 2: Malam
-                                    </button>
-                                </div>
-                                <div class="text-xs text-gray-500 font-medium">Kontrol:</div>
+                            <div class="text-xs text-gray-500 font-medium">Kontrol:</div>
                                 <div class="flex flex-wrap gap-2">
                                     <button type="button"
                                         class="px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors duration-200"
@@ -167,7 +184,6 @@
                                         Kosongkan Semua
                                     </button>
                                 </div>
-                            </div>
                         </div>
 
                         <!-- Action Buttons -->
@@ -453,7 +469,7 @@
         document.getElementById('scheduleForm')?.addEventListener('submit', function() {
             const submitBtn = document.getElementById('submitBtn');
             const submitText = document.getElementById('submitText');
-            
+
             submitBtn.disabled = true;
             submitText.innerHTML = `
                 <svg class="w-5 h-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
@@ -462,6 +478,187 @@
                 </svg>
                 Menyimpan...
             `;
+        });
+
+        // User Search Functionality
+        document.addEventListener("DOMContentLoaded", function() {
+            const userSearchInput = document.getElementById('user_search');
+            const userSearchResults = document.getElementById('user_search_results');
+            const userSearchResultsList = document.getElementById('user_search_results_list');
+            const userSearchLoading = document.getElementById('user_search_loading');
+            const userSearchNoResults = document.getElementById('user_search_no_results');
+            const selectedUserId = document.getElementById('selected_user_id');
+            const selectedUserDisplay = document.getElementById('selected_user_display');
+            const selectedUserName = document.getElementById('selected_user_name');
+            const selectedUserEmail = document.getElementById('selected_user_email');
+            const userValidationError = document.getElementById('user_validation_error');
+
+            // Users data - in production, this should come from an API endpoint
+            const usersData = [
+                @foreach ($users as $user)
+                    {
+                        id: {{ $user->id }},
+                        name: "{{ $user->name }}",
+                        email: "{{ $user->email ?? '' }}"
+                    },
+                @endforeach
+            ];
+
+            let searchTimeout;
+
+            // Initialize user search
+            if (userSearchInput) {
+                userSearchInput.addEventListener('input', function() {
+                    const query = this.value.trim();
+
+                    // Clear previous timeout
+                    clearTimeout(searchTimeout);
+
+                    // Hide results if query is empty
+                    if (!query) {
+                        hideSearchResults();
+                        return;
+                    }
+
+                    // Show loading state
+                    showLoadingState();
+
+                    // Debounce search to avoid too many requests
+                    searchTimeout = setTimeout(() => {
+                        performUserSearch(query);
+                    }, 300);
+                });
+
+                // Hide results when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!userSearchInput.contains(e.target) && !userSearchResults.contains(e.target)) {
+                        hideSearchResults();
+                    }
+                });
+            }
+
+            function performUserSearch(query) {
+                // Filter users based on query
+                const filteredUsers = usersData.filter(user =>
+                    user.name.toLowerCase().includes(query.toLowerCase()) ||
+                    user.email.toLowerCase().includes(query.toLowerCase())
+                );
+
+                // Show results
+                showSearchResults(filteredUsers, query);
+            }
+
+            function showSearchResults(users, query) {
+                userSearchResultsList.innerHTML = '';
+
+                if (users.length === 0) {
+                    hideLoadingState();
+                    showNoResultsState();
+                    return;
+                }
+
+                hideLoadingState();
+                hideNoResultsState();
+
+                users.forEach(user => {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors';
+                    userItem.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${highlightText(user.name, query)}</div>
+                                <div class="text-xs text-gray-500">${highlightText(user.email, query)}</div>
+                            </div>
+                        </div>
+                    `;
+
+                    userItem.addEventListener('click', () => selectUser(user));
+                    userSearchResultsList.appendChild(userItem);
+                });
+
+                userSearchResults.classList.remove('hidden');
+            }
+
+            function highlightText(text, query) {
+                if (!query || !text) return text;
+
+                const regex = new RegExp(`(${query})`, 'gi');
+                return text.replace(regex, '<mark class="bg-yellow-200 text-yellow-800">$1</mark>');
+            }
+
+            function selectUser(user) {
+                selectedUserId.value = user.id;
+                selectedUserName.textContent = user.name;
+                selectedUserEmail.textContent = user.email;
+                selectedUserDisplay.classList.remove('hidden');
+                userSearchInput.value = user.name;
+
+                // Hide search results
+                hideSearchResults();
+
+                // Clear validation error
+                userValidationError.classList.add('hidden');
+
+                // Trigger existing schedule loading if month/year are already selected
+                const monthSelect = document.getElementById("calendarMonth");
+                const yearSelect = document.getElementById("calendarYear");
+                if (monthSelect.value && yearSelect.value) {
+                    loadExistingSchedules();
+                }
+            }
+
+            function clearUserSelection() {
+                selectedUserId.value = '';
+                selectedUserName.textContent = '';
+                selectedUserEmail.textContent = '';
+                selectedUserDisplay.classList.add('hidden');
+                userSearchInput.value = '';
+                userValidationError.classList.add('hidden');
+            }
+
+            function showLoadingState() {
+                userSearchResults.classList.remove('hidden');
+                userSearchLoading.classList.remove('hidden');
+                userSearchNoResults.classList.add('hidden');
+                userSearchResultsList.innerHTML = '';
+            }
+
+            function hideLoadingState() {
+                userSearchLoading.classList.add('hidden');
+            }
+
+            function showNoResultsState() {
+                userSearchResults.classList.remove('hidden');
+                userSearchNoResults.classList.remove('hidden');
+            }
+
+            function hideNoResultsState() {
+                userSearchNoResults.classList.add('hidden');
+            }
+
+            function hideSearchResults() {
+                userSearchResults.classList.add('hidden');
+                hideLoadingState();
+                hideNoResultsState();
+            }
+
+            // Add validation for user selection
+            const originalLoadExistingSchedules = loadExistingSchedules;
+            loadExistingSchedules = function() {
+                const userId = selectedUserId.value;
+                if (!userId) {
+                    userValidationError.classList.remove('hidden');
+                    return;
+                }
+
+                userValidationError.classList.add('hidden');
+                originalLoadExistingSchedules.apply(this, arguments);
+            };
         });
     </script>
 @endsection

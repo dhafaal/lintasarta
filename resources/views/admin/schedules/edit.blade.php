@@ -166,53 +166,14 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preset Shift Cepat</label>
-                            <div class="space-y-2">
-                                <div class="text-xs text-gray-500 font-medium">Shift 1 (Dropdown Atas):</div>
-                                <div class="flex flex-wrap gap-2">
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-sky-50 text-sky-600 text-sm font-medium rounded-lg hover:bg-sky-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('pagi', 1)">
-                                        Shift 1: Pagi
-                                    </button>
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-orange-50 text-orange-600 text-sm font-medium rounded-lg hover:bg-orange-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('siang', 1)">
-                                        Shift 1: Siang
-                                    </button>
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-purple-50 text-purple-600 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('malam', 1)">
-                                        Shift 1: Malam
-                                    </button>
-                                </div>
-                                <div class="text-xs text-gray-500 font-medium">Shift 2 (Dropdown Bawah):</div>
-                                <div class="flex flex-wrap gap-2">
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-sky-50 text-sky-600 text-sm font-medium rounded-lg hover:bg-sky-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('pagi', 2)">
-                                        Shift 2: Pagi
-                                    </button>
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-orange-50 text-orange-600 text-sm font-medium rounded-lg hover:bg-orange-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('siang', 2)">
-                                        Shift 2: Siang
-                                    </button>
-                                    <button type="button"
-                                        class="px-3 py-1.5 bg-purple-50 text-purple-600 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors duration-200"
-                                        onclick="applyQuickPreset('malam', 2)">
-                                        Shift 2: Malam
-                                    </button>
-                                </div>
-                                <div class="text-xs text-gray-500 font-medium">Kontrol:</div>
+                            <div class="text-xs text-gray-500 font-medium">Kontrol:</div>
                                 <div class="flex flex-wrap gap-2">
                                     <button type="button"
                                         class="px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors duration-200"
                                         onclick="clearPreset()">
                                         Kosongkan Semua
                                     </button>
-                                </div>
-                            </div>
+                                </div>      
                         </div>
 
                         <!-- Action Buttons -->
@@ -339,9 +300,15 @@
                     const shift1Selected = existingSchedulesForDay[0] ? existingSchedulesForDay[0].shift_id : '';
                     const shift2Selected = existingSchedulesForDay[1] ? existingSchedulesForDay[1].shift_id : '';
                     
+                    // Check if this day has any shifts assigned
+                    const hasShifts = shift1Selected || shift2Selected;
+                    const dayClass = hasShifts 
+                        ? "p-2 bg-white border-2 border-blue-400 rounded-lg flex flex-col items-center hover:shadow-sm transition-all duration-200 ring-2 ring-blue-100" 
+                        : "p-2 bg-white border border-gray-100 rounded-lg flex flex-col items-center hover:shadow-sm transition-shadow duration-200";
+                    
                     html += `
-                    <div class="p-2 bg-white border border-gray-100 rounded-lg flex flex-col items-center hover:shadow-sm transition-shadow duration-200">
-                        <span class="text-sm font-semibold text-gray-700 mb-1">${day}</span>
+                    <div class="${dayClass}">
+                        <span class="text-sm font-semibold ${hasShifts ? 'text-blue-700' : 'text-gray-700'} mb-1">${day}</span>
                         <div class="w-full space-y-1">
                             <select name="shifts[${day}][]" data-day="${day}" data-shift-position="1" onchange="updateSecondDropdown(${day})"
                                 class="shift-dropdown-1 w-full px-2 py-1 border border-gray-200 rounded-md text-xs focus:ring-1 focus:ring-sky-200 focus:border-sky-500 bg-white transition-colors duration-150">
@@ -567,4 +534,4 @@
             `;
         });
     </script>
-@endsection
+@endsection 

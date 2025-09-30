@@ -337,7 +337,7 @@
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                                 required>
                                 <option value="">Select block duration</option>
-                                <option value="1">1 Hour - Temporary block</option>
+                                <option value="1">1 Minutes - Temporary block</option>
                                 <option value="24" selected>24 Hours - Standard block</option>
                                 <option value="168">1 Week - Extended block</option>
                                 <option value="permanent">Permanent - Indefinite block</option>
@@ -495,7 +495,7 @@
             // Confirm action
             let durationText = '';
             switch(duration) {
-                case '1': durationText = '1 hour'; break;
+                case '1': durationText = '1 Hours'; break;
                 case '24': durationText = '24 hours'; break;
                 case '168': durationText = '1 week'; break;
                 case 'permanent': durationText = 'permanently'; break;
