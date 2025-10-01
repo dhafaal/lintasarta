@@ -811,6 +811,21 @@
                                         <i data-lucide="chevron-right"
                                             class="w-4 h-4 text-gray-400 group-hover:text-red-600"></i>
                                     </a>
+                                    <!-- Profile Link -->
+                                    <a href="{{ route('admin.profile.index') }}"
+                                        class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-teal-50 transition-all duration-200 group">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+                                            <i data-lucide="user-circle" class="w-5 h-5 text-teal-600"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-teal-700">
+                                                Profile</p>
+                                            <p class="text-xs text-gray-500">Manage your profile</p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-gray-400 group-hover:text-teal-600"></i>
+                                    </a>
                                 </div>
 
                                 <!-- Divider -->

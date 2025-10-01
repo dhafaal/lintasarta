@@ -12,8 +12,10 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AttendancesController as AdminAttendanceController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\SecurityController;
+use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Users\AttendancesController as UsersAttendanceController;
 use App\Http\Controllers\Users\PermissionController as UsersPermissionController;
+use App\Http\Controllers\Users\ProfileController as UsersProfileController;
 use App\Http\Controllers\Users\CalendarController;
 use App\Http\Controllers\DashboardRedirectController;
 
@@ -107,6 +109,12 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
             Route::post('/terminate-all-sessions', [SecurityController::class, 'terminateAllUserSessions'])->name('terminate-all-sessions');
             Route::post('/clear-failed-attempts', [SecurityController::class, 'clearFailedAttempts'])->name('clear-failed-attempts');
         });
+
+        // Profile Management
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/', [AdminProfileController::class, 'index'])->name('index');
+            Route::post('/change-password', [AdminProfileController::class, 'changePassword'])->name('change-password');
+        });
     });
 
 // ======= OPERATOR =======
@@ -141,6 +149,12 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':User'])
             Route::get('/create', [UsersPermissionController::class, 'create'])->name('create');
             Route::post('/', [UsersPermissionController::class, 'store'])->name('store');
             Route::delete('/{schedule}', [UsersPermissionController::class, 'cancel'])->name('cancel');
+        });
+
+        // Profile Management
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/', [UsersProfileController::class, 'index'])->name('index');
+            Route::post('/change-password', [UsersProfileController::class, 'changePassword'])->name('change-password');
         });
     });
 
