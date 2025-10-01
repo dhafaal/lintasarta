@@ -240,6 +240,7 @@
                     if (!data.success) throw new Error(data.message || 'Data tidak valid');
                     currentCalendarData = data;
                     renderCalendar(data);
+                    await loadExistingSchedules(); // Auto-load existing schedules after calendar loads
                     return data; // Return data untuk promise
                 } catch (err) {
                     calendarContainer.innerHTML =
@@ -339,30 +340,16 @@
                     `${data.monthName} ${data.year} memiliki ${data.daysInMonth} hari.`;
             }
 
-            monthSelect.addEventListener("change", function() {
-                loadCalendar();
-                loadExistingSchedules();
+            monthSelect.addEventListener("change", async function() {
+                await loadCalendar();
             });
-            yearSelect.addEventListener("change", function() {
-                loadCalendar();
-                loadExistingSchedules();
+            yearSelect.addEventListener("change", async function() {
+                await loadCalendar();
             });
             if (userSelect) userSelect.addEventListener("change", loadExistingSchedules);
             
-            // Initial loads - untuk edit, langsung load dengan user yang sudah dipilih
-            loadCalendar().then(() => {
-                // Untuk mode edit, pastikan existing schedules dimuat setelah kalender siap
-                if (userSelect && userSelect.value) {
-                    loadExistingSchedules();
-                }
-            }).catch(() => {
-                // Fallback jika loadCalendar tidak return promise
-                setTimeout(() => {
-                    if (userSelect && userSelect.value) {
-                        loadExistingSchedules();
-                    }
-                }, 500);
-            });
+            // Initial load
+            loadCalendar();
         });
 
         // Atur ID shift sesuai dengan ID shift yang ada di database

@@ -483,14 +483,17 @@ class ScheduleController extends Controller
         return view('admin.schedules.edit', compact('schedule', 'users', 'shifts'));
     }
 
-    public function update(Request $request, Schedules $schedule)
+    public function update(Request $request, $schedule)
     {
         // Check if this is a bulk monthly update or single schedule update
         $formType = $request->input('form_type');
         
-        if ($formType === 'bulk_monthly') {
-            return $this->updateMonthly($request, $schedule);
+        if ($formType === 'bulk_monthly' || $schedule === 'bulk') {
+            return $this->updateMonthly($request, null);
         }
+        
+        // For single schedule update, find the schedule
+        $schedule = Schedules::findOrFail($schedule);
         
         // Handle single schedule update (original functionality)
         $request->validate([
@@ -526,7 +529,7 @@ class ScheduleController extends Controller
     /**
      * Update monthly schedules for a user (used in edit mode)
      */
-    private function updateMonthly(Request $request, Schedules $schedule)
+    private function updateMonthly(Request $request, $schedule = null)
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',

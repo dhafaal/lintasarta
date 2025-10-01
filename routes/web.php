@@ -38,7 +38,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         Route::get('schedules/user/{id}', [ScheduleController::class, 'userSchedules'])->name('schedules.user');
         Route::post('schedules/bulk-store', [ScheduleController::class, 'bulkStore'])->name('schedules.bulkStore');
         Route::get('schedules/history/{user}', [ScheduleController::class, 'history'])->name('schedules.history');
-        Route::get('schedules/calendAar-grid-data', [ScheduleController::class, 'calendarGridData'])
+        Route::get('schedules/calendar-grid-data', [ScheduleController::class, 'calendarGridData'])
             ->name('schedules.calendar-grid-data');
         
         // Swap schedules routes

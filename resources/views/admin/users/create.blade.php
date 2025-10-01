@@ -114,13 +114,13 @@
                         </div>
                         <!-- Enhanced password requirements -->
                         <div class="bg-sky-50 border border-sky-200 rounded-lg p-3">
-                            <p class="text-xs font-medium text-sky-800 mb-2">Persyaratan Password:</p>
+                            <p class="text-xs font-medium text-sky-800 mb-2">NOTE</p>
                             <ul class="text-xs text-sky-700 space-y-1">
                                 <li class="flex items-center">
                                     <svg class="w-3 h-3 mr-2 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
-                                    Minimal 8 karakter
+                                    Password akan otomatis terisi = password 123
                                 </li>
                                 <li class="flex items-center">
                                     <svg class="w-3 h-3 mr-2 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

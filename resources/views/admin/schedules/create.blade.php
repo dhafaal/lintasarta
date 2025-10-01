@@ -148,6 +148,17 @@
                             <label class="block text-sm font-medium text-gray-700">
                                 Jadwal Per Tanggal <span class="text-red-500">*</span>
                             </label>
+                            <div class="bg-sky-50 border border-sky-200 rounded-lg p-3 mb-3">
+                                <div class="flex items-start space-x-2">
+                                    <svg class="w-4 h-4 text-sky-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="text-sm text-sky-700">
+                                        <p class="font-medium">Jadwal Existing akan ditampilkan otomatis</p>
+                                        <p class="text-xs mt-1">Saat Anda memilih user yang sudah memiliki jadwal, shift existing akan muncul otomatis di tanggal yang sesuai. Anda dapat menambahkan shift kedua atau mengubah shift yang ada.</p>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
                                 <div class="grid grid-cols-7 gap-1 mb-3">
                                     <div class="text-center text-xs font-semibold text-gray-600">Ming</div>
@@ -176,7 +187,45 @@
                         </div>
 
                         <div class="space-y-2">
-                            <div class="text-xs text-gray-500 font-medium">Kontrol:</div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preset Shift Cepat</label>
+                            <div class="space-y-2">
+                                <div class="text-xs text-gray-500 font-medium">Shift 1 (Dropdown Atas):</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-sky-50 text-sky-600 text-sm font-medium rounded-lg hover:bg-sky-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('pagi', 1)">
+                                        Shift 1: Pagi
+                                    </button>
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-orange-50 text-orange-600 text-sm font-medium rounded-lg hover:bg-orange-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('siang', 1)">
+                                        Shift 1: Siang
+                                    </button>
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-purple-50 text-purple-600 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('malam', 1)">
+                                        Shift 1: Malam
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-500 font-medium">Shift 2 (Dropdown Bawah):</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-sky-50 text-sky-600 text-sm font-medium rounded-lg hover:bg-sky-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('pagi', 2)">
+                                        Shift 2: Pagi
+                                    </button>
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-orange-50 text-orange-600 text-sm font-medium rounded-lg hover:bg-orange-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('siang', 2)">
+                                        Shift 2: Siang
+                                    </button>
+                                    <button type="button"
+                                        class="px-3 py-1.5 bg-purple-50 text-purple-600 text-sm font-medium rounded-lg hover:bg-purple-100 transition-colors duration-200"
+                                        onclick="applyQuickPreset('malam', 2)">
+                                        Shift 2: Malam
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-500 font-medium">Kontrol:</div>
                                 <div class="flex flex-wrap gap-2">
                                     <button type="button"
                                         class="px-3 py-1.5 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors duration-200"
@@ -184,6 +233,7 @@
                                         Kosongkan Semua
                                     </button>
                                 </div>
+                            </div>
                         </div>
 
                         <!-- Action Buttons -->
@@ -220,7 +270,7 @@
             const userExistingSchedulesUrl = "{{ route('admin.schedules.user-existing-schedules') }}";
             const monthSelect = document.getElementById("calendarMonth");
             const yearSelect = document.getElementById("calendarYear");
-            const userSelect = document.getElementById("user_id");
+            // userSelect is now handled by search functionality
             const calendarContainer = document.getElementById("calendarDays");
             
             let currentCalendarData = null;
@@ -248,7 +298,8 @@
             }
 
             async function loadExistingSchedules() {
-                const userId = userSelect.value;
+                const selectedUserId = document.getElementById('selected_user_id');
+                const userId = selectedUserId ? selectedUserId.value : null;
                 const month = monthSelect.value;
                 const year = yearSelect.value;
                 const loadingIndicator = document.getElementById('loadingIndicator');
@@ -339,149 +390,13 @@
                 loadCalendar();
                 loadExistingSchedules();
             });
-            if (userSelect) userSelect.addEventListener("change", loadExistingSchedules);
+            // User selection is now handled by search functionality
             
             // Initial loads
             loadCalendar();
             loadExistingSchedules();
-        });
-
-        // Atur ID shift sesuai dengan ID shift yang ada di database
-        const SHIFT_IDS = {
-            pagi: 1, // ganti sesuai id shift pagi
-            siang: 2, // ganti sesuai id shift siang
-            malam: 3 // ganti sesuai id shift malam
-        };
-
-        function applyQuickPreset(type, shiftPosition = 1) {
-            const shiftId = SHIFT_IDS[type];
-            if (!shiftId) return alert("ID shift untuk " + type + " belum diatur!");
-
-            // Apply to specific shift position (1 or 2)
-            const selector = shiftPosition === 1 
-                ? '.shift-dropdown-1'
-                : '.shift-dropdown-2';
             
-            document.querySelectorAll(selector).forEach(select => {
-                select.value = shiftId;
-                
-                // If this is a first dropdown, update the corresponding second dropdown
-                if (shiftPosition === 1) {
-                    const day = select.getAttribute('data-day');
-                    updateSecondDropdown(day);
-                }
-            });
-        }
-
-        function clearPreset() {
-            document.querySelectorAll('#calendarDays select').forEach(select => {
-                select.value = "";
-            });
-            // Reset all second dropdowns to show all options
-            document.querySelectorAll('.shift-dropdown-1').forEach(firstDropdown => {
-                const day = firstDropdown.getAttribute('data-day');
-                updateSecondDropdown(day);
-            });
-        }
-
-        // Function to update second dropdown based on first dropdown selection with shift sequence logic
-        async function updateSecondDropdown(day) {
-            const firstDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="1"]`);
-            const secondDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="2"]`);
-            
-            if (!firstDropdown || !secondDropdown) return;
-            
-            const selectedShiftId = firstDropdown.value;
-            const currentSecondValue = secondDropdown.value;
-            
-            // Clear second dropdown
-            secondDropdown.innerHTML = '<option value="">-- Shift 2 --</option>';
-            
-            if (!selectedShiftId) {
-                secondDropdown.disabled = false;
-                return;
-            }
-
-            try {
-                // Call API to get available shifts based on first shift
-                const response = await fetch('{{ route("admin.schedules.get-available-shifts") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        first_shift_id: selectedShiftId
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data.shifts && data.shifts.length > 0) {
-                    // Add available shifts to second dropdown
-                    data.shifts.forEach(shift => {
-                        const option = document.createElement('option');
-                        option.value = shift.id;
-                        option.textContent = shift.shift_name;
-                        option.setAttribute('data-shift-name', shift.shift_name);
-                        
-                        // Restore previous selection if it's still valid
-                        if (shift.id == currentSecondValue) {
-                            option.selected = true;
-                        }
-                        
-                        secondDropdown.appendChild(option);
-                    });
-                    secondDropdown.disabled = false;
-                } else {
-                    // No available shifts (e.g., Malam shift selected)
-                    secondDropdown.innerHTML = '<option value="">-- Tidak tersedia --</option>';
-                    secondDropdown.disabled = true;
-                }
-            } catch (error) {
-                console.error('Error fetching available shifts:', error);
-                // Fallback to old logic if API fails
-                const allShiftOptions = [
-                    @foreach ($shifts as $shift)
-                        { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
-                    @endforeach
-                ];
-                
-                allShiftOptions.forEach(shift => {
-                    if (shift.id !== selectedShiftId) {
-                        const option = document.createElement('option');
-                        option.value = shift.id;
-                        option.textContent = shift.name;
-                        option.setAttribute('data-shift-name', shift.name);
-                        
-                        if (shift.id === currentSecondValue) {
-                            option.selected = true;
-                        }
-                        
-                        secondDropdown.appendChild(option);
-                    }
-                });
-                secondDropdown.disabled = false;
-            }
-        }
-
-        // Form submission loading states
-        document.getElementById('scheduleForm')?.addEventListener('submit', function() {
-            const submitBtn = document.getElementById('submitBtn');
-            const submitText = document.getElementById('submitText');
-
-            submitBtn.disabled = true;
-            submitText.innerHTML = `
-                <svg class="w-5 h-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Menyimpan...
-            `;
-        });
-
-        // User Search Functionality
-        document.addEventListener("DOMContentLoaded", function() {
+            // User Search Functionality
             const userSearchInput = document.getElementById('user_search');
             const userSearchResults = document.getElementById('user_search_results');
             const userSearchResultsList = document.getElementById('user_search_results_list');
@@ -493,7 +408,7 @@
             const selectedUserEmail = document.getElementById('selected_user_email');
             const userValidationError = document.getElementById('user_validation_error');
 
-            // Users data - in production, this should come from an API endpoint
+            // Users data
             const usersData = [
                 @foreach ($users as $user)
                     {
@@ -605,8 +520,6 @@
                 userValidationError.classList.add('hidden');
 
                 // Trigger existing schedule loading if month/year are already selected
-                const monthSelect = document.getElementById("calendarMonth");
-                const yearSelect = document.getElementById("calendarYear");
                 if (monthSelect.value && yearSelect.value) {
                     loadExistingSchedules();
                 }
@@ -619,6 +532,12 @@
                 selectedUserDisplay.classList.add('hidden');
                 userSearchInput.value = '';
                 userValidationError.classList.add('hidden');
+                
+                // Clear existing schedules
+                currentExistingSchedules = {};
+                if (currentCalendarData) {
+                    renderCalendar(currentCalendarData);
+                }
             }
 
             function showLoadingState() {
@@ -646,19 +565,106 @@
                 hideLoadingState();
                 hideNoResultsState();
             }
-
-            // Add validation for user selection
-            const originalLoadExistingSchedules = loadExistingSchedules;
-            loadExistingSchedules = function() {
-                const userId = selectedUserId.value;
-                if (!userId) {
-                    userValidationError.classList.remove('hidden');
-                    return;
-                }
-
-                userValidationError.classList.add('hidden');
-                originalLoadExistingSchedules.apply(this, arguments);
-            };
+            
+            // Make clearUserSelection global for onclick access
+            window.clearUserSelection = clearUserSelection;
         });
+
+        // Atur ID shift sesuai dengan ID shift yang ada di database
+        const SHIFT_IDS = {
+            pagi: 1, // ganti sesuai id shift pagi
+            siang: 2, // ganti sesuai id shift siang
+            malam: 3 // ganti sesuai id shift malam
+        };
+
+        function applyQuickPreset(type, shiftPosition = 1) {
+            const shiftId = SHIFT_IDS[type];
+            if (!shiftId) return alert("ID shift untuk " + type + " belum diatur!");
+
+            // Apply to specific shift position (1 or 2)
+            const selector = shiftPosition === 1 
+                ? '.shift-dropdown-1'
+                : '.shift-dropdown-2';
+            
+            document.querySelectorAll(selector).forEach(select => {
+                select.value = shiftId;
+                
+                // If this is a first dropdown, update the corresponding second dropdown
+                if (shiftPosition === 1) {
+                    const day = select.getAttribute('data-day');
+                    updateSecondDropdown(day);
+                }
+            });
+        }
+
+        function clearPreset() {
+            document.querySelectorAll('#calendarDays select').forEach(select => {
+                select.value = "";
+            });
+            // Reset all second dropdowns to show all options
+            document.querySelectorAll('.shift-dropdown-1').forEach(firstDropdown => {
+                const day = firstDropdown.getAttribute('data-day');
+                updateSecondDropdown(day);
+            });
+        }
+
+        // Function to update second dropdown based on first dropdown selection
+        function updateSecondDropdown(day) {
+            const firstDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="1"]`);
+            const secondDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="2"]`);
+            
+            if (!firstDropdown || !secondDropdown) return;
+            
+            const selectedShiftId = firstDropdown.value;
+            const currentSecondValue = secondDropdown.value;
+            
+            // Get all original options from the template
+            const allShiftOptions = [
+                @foreach ($shifts as $shift)
+                    { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
+                @endforeach
+            ];
+            
+            // Clear second dropdown
+            secondDropdown.innerHTML = '<option value="">-- Shift 2 --</option>';
+            
+            // Add options that are not selected in first dropdown
+            allShiftOptions.forEach(shift => {
+                if (shift.id !== selectedShiftId) {
+                    const option = document.createElement('option');
+                    option.value = shift.id;
+                    option.textContent = shift.name;
+                    option.setAttribute('data-shift-name', shift.name);
+                    
+                    // Restore previous selection if it's still valid
+                    if (shift.id === currentSecondValue) {
+                        option.selected = true;
+                    }
+                    
+                    secondDropdown.appendChild(option);
+                }
+            });
+            
+            // If the current second dropdown value is now invalid, clear it
+            if (selectedShiftId === currentSecondValue) {
+                secondDropdown.value = "";
+            }
+        }
+
+        // Form submission loading states
+        document.getElementById('scheduleForm')?.addEventListener('submit', function() {
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            
+            submitBtn.disabled = true;
+            submitText.innerHTML = `
+                <svg class="w-5 h-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Menyimpan...
+            `;
+        });
+
     </script>
 @endsection
