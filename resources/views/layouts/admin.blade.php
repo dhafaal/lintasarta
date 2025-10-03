@@ -551,13 +551,13 @@
                         <a href="{{ route('admin.attendances.index') }}"
                             @click="closeMobileMenu()"
                             class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.attendances.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="users" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <i data-lucide="book-check" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
                             <span>View Attendances</span>
                         </a>
                         <a href="{{ route('admin.attendances.leave-requests') }}"
                             @click="closeMobileMenu()"
                             class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.attendances.leave-requests') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="calendar-days"
+                            <i data-lucide="book    "
                                 class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
                             <span>Leave Requests</span>
                         </a>

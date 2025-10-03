@@ -783,8 +783,8 @@ class ScheduleController extends Controller
 
             for ($day = 1; $day <= $daysInMonth; $day++) {
                 $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
-
-                $schedules = Schedules::with(['shift', 'attendance'])
+                // Load shift + attendance(s) + permissions for accurate hours
+                $schedules = Schedules::with(['shift', 'attendances', 'permissions'])
                     ->where('user_id', $user->id)
                     ->whereDate('schedule_date', $date)
                     ->get();
@@ -797,12 +797,34 @@ class ScheduleController extends Controller
 
                     foreach ($schedules as $schedule) {
                         if (!$schedule->shift) continue;
+                        // Determine minutes from actual attendance & permissions
+                        $minutes = 0;
+                        // Find attendance record for this schedule (may be hasMany)
+                        $attendance = null;
+                        if (isset($schedule->attendances) && $schedule->attendances) {
+                            $attendance = $schedule->attendances->firstWhere('user_id', $user->id) ?? $schedule->attendances->first();
+                        } elseif (isset($schedule->attendance)) { // backward compatibility
+                            $attendance = $schedule->attendance;
+                        }
+                        // Find approved permission for this schedule
+                        $permission = null;
+                        if (isset($schedule->permissions) && $schedule->permissions) {
+                            $permission = $schedule->permissions->firstWhere('status', 'approved');
+                        }
 
-                        $start = Carbon::parse($schedule->shift->start_time);
-                        $end = Carbon::parse($schedule->shift->end_time);
-                        if ($end->lt($start)) $end->addDay();
+                        if ($permission) {
+                            $minutes = 0; // approved izin/cuti -> 0
+                        } elseif ($attendance && $attendance->status === 'alpha') {
+                            $minutes = 0; // alpha -> 0
+                        } elseif ($attendance && $attendance->check_in_time && $attendance->check_out_time) {
+                            $cin = Carbon::parse($attendance->check_in_time);
+                            $cout = Carbon::parse($attendance->check_out_time);
+                            if ($cout->lt($cin)) { $cout->addDay(); }
+                            $minutes = $cin->diffInMinutes($cout);
+                        } else {
+                            $minutes = 0;
+                        }
 
-                        $minutes = $start->diffInMinutes($end);
                         $totalMinutes += $minutes;
 
                         $shiftLetters[] = strtoupper(substr($schedule->shift->shift_name, 0, 1));
@@ -810,11 +832,8 @@ class ScheduleController extends Controller
                         $shiftNames[] = $schedule->shift->shift_name;
                         $hoursList[] = round($minutes / 60, 1) . 'j';
                         
-                        // Get attendance status for this schedule
-                        $attendanceStatus = null;
-                        if ($schedule->attendance) {
-                            $attendanceStatus = $schedule->attendance->status;
-                        }
+                        // Get attendance status for this schedule for coloring
+                        $attendanceStatus = $attendance->status ?? ($permission ? 'izin' : null);
                         $attendanceStatuses[] = $attendanceStatus;
                     }
 

@@ -1,7 +1,7 @@
 <!-- Employee Information -->
-<div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 mb-6">
+<div class="bg-gradient-to-r from-sky-50 to-blue-50 rounded-xl p-6 mb-6 border border-sky-200">
     <div class="flex items-center space-x-4">
-        <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
+        <div class="w-16 h-16 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center shadow-sm">
             <span class="text-lg font-bold text-white">
                 {{ strtoupper(substr($leaveRequest->user->name, 0, 2)) }}
             </span>
@@ -10,7 +10,7 @@
             <h3 class="text-lg font-semibold text-gray-900">{{ $leaveRequest->user->name }}</h3>
             <p class="text-sm text-gray-600">{{ $leaveRequest->user->email }}</p>
             <div class="flex items-center space-x-4 mt-2">
-                <span class="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                <span class="text-xs text-sky-600 bg-sky-100 px-2 py-1 rounded-full font-medium">
                     {{ $permissions->count() }} schedules requested
                 </span>
                 <span class="text-xs text-gray-500">
@@ -21,17 +21,33 @@
         <div class="text-right">
             @if($leaveRequest->status === 'pending')
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
-                    <i data-lucide="clock" class="w-4 h-4 mr-1"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-clock mr-1">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
                     Pending Review
                 </span>
             @elseif($leaveRequest->status === 'approved')
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                    <i data-lucide="check-circle" class="w-4 h-4 mr-1"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-check-circle mr-1">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
                     Approved
                 </span>
             @elseif($leaveRequest->status === 'rejected')
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                    <i data-lucide="x-circle" class="w-4 h-4 mr-1"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-x-circle mr-1">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="m15 9-6 6"/>
+                        <path d="m9 9 6 6"/>
+                    </svg>
                     Rejected
                 </span>
             @endif
@@ -40,31 +56,48 @@
 </div>
 
 <!-- Leave Reason -->
-<div class="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+<div class="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
     <h4 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-        <i data-lucide="message-square" class="w-5 h-5 text-purple-600 mr-2"></i>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-message-square text-sky-600 mr-2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
         Leave Reason
     </h4>
-    <div class="bg-gray-50 rounded-lg p-4">
+    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
         <p class="text-gray-700 leading-relaxed">{{ $leaveRequest->reason }}</p>
     </div>
 </div>
 
 <!-- Schedules Selection -->
-<div class="bg-white border border-gray-200 rounded-xl p-6">
+<div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
     <div class="flex items-center justify-between mb-4">
         <h4 class="text-lg font-semibold text-gray-900 flex items-center">
-            <i data-lucide="calendar-days" class="w-5 h-5 text-purple-600 mr-2"></i>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-calendar-days text-sky-600 mr-2">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                <line x1="16" x2="16" y1="2" y2="6"/>
+                <line x1="8" x2="8" y1="2" y2="6"/>
+                <line x1="3" x2="21" y1="10" y2="10"/>
+                <path d="M8 14h.01"/>
+                <path d="M12 14h.01"/>
+                <path d="M16 14h.01"/>
+                <path d="M8 18h.01"/>
+                <path d="M12 18h.01"/>
+                <path d="M16 18h.01"/>
+            </svg>
             Requested Schedules
         </h4>
         @if($leaveRequest->status === 'pending')
             <div class="flex space-x-2">
                 <button type="button" onclick="selectAllSchedules()" 
-                        class="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors">
+                        class="text-xs px-3 py-1.5 bg-sky-100 text-sky-700 rounded-lg hover:bg-sky-200 transition-colors font-medium">
                     Select All
                 </button>
                 <button type="button" onclick="clearAllSchedules()" 
-                        class="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        class="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
                     Clear All
                 </button>
             </div>
@@ -82,21 +115,39 @@
                                value="{{ $permission->id }}" 
                                id="permission_{{ $permission->id }}"
                                {{ $permission->status === 'approved' ? 'checked' : '' }}
-                               class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                               class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
                     @else
                         <div class="w-4 h-4 flex items-center justify-center">
                             @if($permission->status === 'approved')
-                                <i data-lucide="check-circle" class="w-4 h-4 text-green-600"></i>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-check-circle text-green-600">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
                             @else
-                                <i data-lucide="x-circle" class="w-4 h-4 text-red-600"></i>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-x-circle text-red-600">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="m15 9-6 6"/>
+                                    <path d="m9 9 6 6"/>
+                                </svg>
                             @endif
                         </div>
                     @endif
                     
                     <label for="permission_{{ $permission->id }}" class="flex-1 cursor-pointer">
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
-                                <i data-lucide="calendar" class="w-4 h-4 text-blue-600"></i>
+                            <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-calendar text-sky-600">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" x2="16" y1="2" y2="6"/>
+                                    <line x1="8" x2="8" y1="2" y2="6"/>
+                                    <line x1="3" x2="21" y1="10" y2="10"/>
+                                </svg>
                             </div>
                             <div class="flex-1">
                                 <div class="text-sm font-medium text-gray-900">
@@ -141,7 +192,12 @@
                         onclick="processSelectedSchedules('reject')"
                         class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-sm">
                     <span class="flex items-center space-x-2">
-                        <i data-lucide="x" class="w-4 h-4"></i>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-x">
+                            <path d="M18 6 6 18"/>
+                            <path d="m6 6 12 12"/>
+                        </svg>
                         <span>Reject All</span>
                     </span>
                 </button>
@@ -150,7 +206,11 @@
                         onclick="processSelectedSchedules('approve')"
                         class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 shadow-sm">
                     <span class="flex items-center space-x-2">
-                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="lucide lucide-check">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
                         <span>Approve Selected</span>
                     </span>
                 </button>
@@ -203,7 +263,6 @@
             });
             
             if (response.ok) {
-                // Show success message and close modal
                 alert('Leave request processed successfully!');
                 closeLeaveDetailModal();
                 location.reload();

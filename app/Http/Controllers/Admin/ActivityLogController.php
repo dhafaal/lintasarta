@@ -28,6 +28,7 @@ class ActivityLogController extends Controller
         $permissionsLogs = collect();
         $locationLogs = collect();
         $userLogs = collect();
+        $attendanceLogs = collect();
         $authLogs = collect();
 
         if ($type === 'all' || $type === 'admin') {
@@ -139,7 +140,7 @@ class ActivityLogController extends Controller
             }
         }
 
-        if ($type === 'all' || $type === 'user') {
+        if ($type === 'all' || $type === 'user' || $type === 'admin') {
             $userQuery = UserActivityLog::with('user')
                 ->when($search, function ($q) use ($search) {
                     $q->where('description', 'like', "%{$search}%")
@@ -157,6 +158,31 @@ class ActivityLogController extends Controller
                 ->orderBy('created_at', 'desc');
 
             $userLogs = $userQuery->paginate(20, ['*'], 'user_page');
+
+            // Attendance-specific logs (user activity logs filtered by resource_type or description)
+            $attendanceQuery = UserActivityLog::with('user')
+                ->when($search, function ($q) use ($search) {
+                    $q->where('description', 'like', "%{$search}%")
+                      ->orWhere('resource_name', 'like', "%{$search}%")
+                      ->orWhereHas('user', function ($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+                })
+                ->when($dateFrom, function ($q) use ($dateFrom) {
+                    $q->whereDate('created_at', '>=', $dateFrom);
+                })
+                ->when($dateTo, function ($q) use ($dateTo) {
+                    $q->whereDate('created_at', '<=', $dateTo);
+                })
+                ->where(function ($q) {
+                    $q->where('resource_type', 'Attendance')
+                      ->orWhere('description', 'like', '%Check In%')
+                      ->orWhere('description', 'like', '%Check Out%')
+                      ->orWhere('description', 'like', '%Absent%');
+                })
+                ->orderBy('created_at', 'desc');
+
+            $attendanceLogs = $attendanceQuery->paginate(20, ['*'], 'attendance_page');
         }
 
         if ($type === 'all' || $type === 'auth') {
@@ -187,6 +213,7 @@ class ActivityLogController extends Controller
             'locationLogs',
             'userLogs',
             'authLogs',
+            'attendanceLogs',
             'type',
             'subType',
             'search',

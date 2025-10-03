@@ -86,38 +86,48 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
 
             foreach ($schedules as $schedule) {
                 if ($schedule->shift) {
-                    // Cek attendance untuk schedule ini
+                    // Ambil attendance & permission terkait
                     $attendance = $schedule->attendances->where('user_id', $user->id)->first();
-                    
-                    // Cek permission untuk schedule ini
                     $permission = $schedule->permissions->where('user_id', $user->id)
                         ->whereIn('status', ['approved'])
                         ->first();
-                    
-                    $start = Carbon::parse($schedule->shift->start_time);
-                    $end   = Carbon::parse($schedule->shift->end_time);
-                    if ($end->lt($start)) $end->addDay();
 
-                    $minutes = $start->diffInMinutes($end);
-                    
-                    // Priority: Permission > Attendance > Normal
+                    // Priority: Permission > Attendance-based duration > Default 0
                     if ($permission) {
-                        // Jika ada permission yang approved, jam kerja = 0
-                        $minutes = 0;
+                        // Approved permissions: 0 jam kerja dan beri label jenis permission
                         $permissionType = ucfirst($permission->type);
                         $shiftNames[] = $schedule->shift->shift_name . " ({$permissionType})";
-                    } elseif ($attendance && $attendance->status === 'alpha') {
-                        // Jika status alpha, jam kerja = 0
-                        $minutes = 0;
-                        $shiftNames[] = $schedule->shift->shift_name . ' (Alpha)';
-                    } else {
-                        $dayMinutes += $minutes;
-                        $shiftCount++;
-                        
-                        // Tambahkan nama shift dengan penanda jika lebih dari satu shift
-                        $position = $shiftCount > 1 ? '' : '';
-                        $shiftNames[] = $schedule->shift->shift_name . $position;
+                        // 0 minutes added
+                        continue;
                     }
+
+                    // Jika ada attendance dan status alpha -> 0 menit dengan label Alpha
+                    if ($attendance && $attendance->status === 'alpha') {
+                        $shiftNames[] = $schedule->shift->shift_name . ' (Alpha)';
+                        continue;
+                    }
+
+                    // Hitung dari check-in/checkout jika tersedia
+                    $minutes = 0;
+                    if ($attendance && $attendance->check_in_time && $attendance->check_out_time) {
+                        // Gunakan schedule_date sebagai anchor untuk menangani lintas hari
+                        $scheduleDate = Carbon::parse($schedule->schedule_date)->startOfDay();
+                        $checkIn  = Carbon::parse($attendance->check_in_time);
+                        $checkOut = Carbon::parse($attendance->check_out_time);
+
+                        // Jika check-out < check-in, anggap checkout keesokan hari
+                        if ($checkOut->lt($checkIn)) {
+                            $checkOut->addDay();
+                        }
+                        $minutes = $checkIn->diffInMinutes($checkOut);
+                    } else {
+                        // Tidak ada data lengkap check-in/out -> 0 menit
+                        $minutes = 0;
+                    }
+
+                    $dayMinutes += $minutes;
+                    $shiftCount++;
+                    $shiftNames[] = $schedule->shift->shift_name;
                 }
             }
 

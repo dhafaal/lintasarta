@@ -96,6 +96,7 @@
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-In</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-Out</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Hours</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                             </tr>
                         </thead>
@@ -166,6 +167,23 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $attendance && $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') : '-' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        @php
+                                            $minutes = 0;
+                                            if ($permission && $permission->status === 'approved') {
+                                                $minutes = 0;
+                                            } elseif ($attendance && $attendance->status === 'alpha') {
+                                                $minutes = 0;
+                                            } elseif ($attendance && $attendance->check_in_time && $attendance->check_out_time) {
+                                                $cin = \Carbon\Carbon::parse($attendance->check_in_time);
+                                                $cout = \Carbon\Carbon::parse($attendance->check_out_time);
+                                                if ($cout->lt($cin)) { $cout->addDay(); }
+                                                $minutes = $cin->diffInMinutes($cout);
+                                            }
+                                            $hours = $minutes / 60;
+                                        @endphp
+                                        {{ $hours == floor($hours) ? floor($hours).' h' : number_format($hours, 1).' h' }}
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-600">
                                         @if($permission)

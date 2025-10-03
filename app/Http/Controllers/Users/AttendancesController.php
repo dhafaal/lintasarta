@@ -9,6 +9,7 @@ use App\Models\Schedules;
 use App\Models\UserActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class AttendancesController extends Controller
@@ -42,6 +43,96 @@ class AttendancesController extends Controller
         return view('users.attendances.index', compact('schedule', 'attendance', 'schedules', 'todayPermission'));
     }
 
+    /**
+     * Request Early Checkout: create a pending permission of type 'early_checkout'
+     */
+    public function requestEarlyCheckout(Request $request)
+    {
+        $request->validate([
+            'schedule_id' => 'required|exists:schedules,id',
+            'reason' => 'required|string|min:5',
+        ]);
+
+        $user = Auth::user();
+        $schedule = Schedules::with('shift')->findOrFail($request->schedule_id);
+
+        // Ensure user owns schedule
+        if ($schedule->user_id !== $user->id) {
+            return back()->with('error', 'Tidak dapat mengajukan untuk jadwal milik user lain.');
+        }
+
+        // Ensure already checked-in and not checked-out
+        $attendance = Attendance::where('schedule_id', $schedule->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$attendance || !$attendance->check_in_time) {
+            return back()->with('error', 'Anda belum check-in.');
+        }
+        if ($attendance->check_out_time) {
+            return back()->with('error', 'Anda sudah check-out.');
+        }
+
+        // Compute LAST shift end for the same day (multi-shift aware)
+        $sameDaySchedules = Schedules::with('shift')
+            ->where('user_id', $user->id)
+            ->whereDate('schedule_date', $schedule->schedule_date)
+            ->get();
+        $lastEnd = null;
+        foreach ($sameDaySchedules as $sch) {
+            if (!$sch->shift) continue;
+            $date = \Carbon\Carbon::parse($sch->schedule_date);
+            $startT = \Carbon\Carbon::parse($sch->shift->start_time);
+            $endT   = \Carbon\Carbon::parse($sch->shift->end_time);
+            $startDT = $date->copy()->setTimeFrom($startT);
+            $endDT   = $date->copy()->setTimeFrom($endT);
+            if ($endDT->lt($startDT)) { $endDT->addDay(); }
+            if (!$lastEnd || $endDT->gt($lastEnd)) { $lastEnd = $endDT->copy(); }
+        }
+
+        $now = now();
+        if ($lastEnd && $now->gte($lastEnd)) {
+            return back()->with('error', 'Waktu shift sudah selesai, lakukan check-out biasa.');
+        }
+
+        // Prevent duplicate pending request for the same day (multi-shift aware)
+        $existing = \App\Models\Permissions::where('user_id', $user->id)
+            ->where('type', 'izin')
+            ->where('status', 'pending')
+            ->where('reason', 'like', '[EARLY_CHECKOUT]%')
+            ->whereHas('schedule', function($q) use ($schedule) {
+                $q->whereDate('schedule_date', $schedule->schedule_date);
+            })
+            ->first();
+        if ($existing) {
+            return back()->with('warning', 'Pengajuan checkout lebih cepat sudah dibuat dan menunggu persetujuan.');
+        }
+
+        $permission = \App\Models\Permissions::create([
+            'user_id' => $user->id,
+            'schedule_id' => $schedule->id,
+            'type' => 'izin',
+            'reason' => '[EARLY_CHECKOUT] ' . $request->reason,
+            'status' => 'pending',
+        ]);
+
+        // Log user activity
+        UserActivityLog::log(
+            'request_permission',
+            'permissions',
+            $permission->id,
+            "Request Early Checkout - {$schedule->schedule_date}",
+            [
+                'schedule_id' => $schedule->id,
+                'type' => 'izin',
+                'reason' => $request->reason,
+                'requested_checkout_time' => $now->toDateTimeString(),
+            ],
+            'Mengajukan checkout lebih cepat'
+        );
+
+        return back()->with('success', 'Pengajuan checkout lebih cepat telah dikirim dan menunggu persetujuan admin.');
+    }
     public function checkin(Request $request)
     {
         $request->validate([
@@ -79,7 +170,7 @@ class AttendancesController extends Controller
             return back()->with('error', $validation['message']);
         }
 
-        // Cek apakah sudah ada attendance record
+        // Cek apakah sudah ada attendance record (utama)
         $attendance = Attendance::where('schedule_id', $request->schedule_id)
             ->where('user_id', Auth::id())
             ->first();
@@ -115,6 +206,29 @@ class AttendancesController extends Controller
             ]);
         }
 
+        // Multi-shift: apply check-in to all schedules on same date
+        $sameDaySchedules = Schedules::where('user_id', Auth::id())
+            ->whereDate('schedule_date', $schedule->schedule_date)
+            ->pluck('id');
+        foreach ($sameDaySchedules as $sid) {
+            if ((int)$sid === (int)$request->schedule_id) { continue; }
+            $att = Attendance::firstOrNew([
+                'schedule_id' => $sid,
+                'user_id' => Auth::id(),
+            ]);
+            if (!$att->check_in_time) {
+                $att->fill([
+                    'location_id' => $validLocation->id,
+                    'status' => 'hadir', // untuk shift lain jangan tandai telat
+                    'is_late' => false,
+                    'late_minutes' => 0,
+                    'check_in_time' => now(),
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
+                ])->save();
+            }
+        }
+
         // Log user activity
         UserActivityLog::log(
             'checkin',
@@ -143,88 +257,114 @@ class AttendancesController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
-        // Cek apakah user memiliki izin (pending/approved) untuk tanggal ini
-        $schedule = Schedules::findOrFail($request->schedule_id);
-        $existingPermission = \App\Models\Permissions::where('user_id', Auth::id())
-            ->whereHas('schedule', function ($q) use ($schedule) {
-                $q->whereDate('schedule_date', $schedule->schedule_date);
-            })
-            ->whereIn('status', ['pending', 'approved'])
-            ->first();
+        // Use transaction to ensure atomic multi-shift updates
+        return DB::transaction(function () use ($request) {
+            // Cek apakah user memiliki izin (pending/approved) untuk tanggal ini
+            $schedule = Schedules::findOrFail($request->schedule_id);
+            $existingPermission = \App\Models\Permissions::where('user_id', Auth::id())
+                ->whereHas('schedule', function ($q) use ($schedule) {
+                    $q->whereDate('schedule_date', $schedule->schedule_date);
+                })
+                ->whereIn('status', ['pending', 'approved'])
+                ->first();
 
-        if ($existingPermission) {
-            $statusText = $existingPermission->status === 'pending' ? 'menunggu persetujuan' : 'telah disetujui';
-            return back()->with('error', "Tidak dapat check-out karena Anda memiliki izin yang {$statusText} untuk tanggal ini.");
-        }
+            if ($existingPermission) {
+                $statusText = $existingPermission->status === 'pending' ? 'menunggu persetujuan' : 'telah disetujui';
+                return back()->with('error', "Tidak dapat check-out karena Anda memiliki izin yang {$statusText} untuk tanggal ini.");
+            }
 
-        // Find valid location using smart detection
-        $validLocation = $this->findValidLocation($request->latitude, $request->longitude);
-        
-        if (!$validLocation) {
-            return back()->with('error', 'Anda berada di luar radius dari semua lokasi yang tersedia. Pastikan Anda berada di salah satu lokasi kantor.');
-        }
+            // Find valid location using smart detection
+            $validLocation = $this->findValidLocation($request->latitude, $request->longitude);
+            if (!$validLocation) {
+                return back()->with('error', 'Anda berada di luar radius dari semua lokasi yang tersedia. Pastikan Anda berada di salah satu lokasi kantor.');
+            }
 
-        // Ambil schedule + shift untuk mendapatkan jam selesai shift
-        $schedule = \App\Models\Schedules::with('shift')->find($request->schedule_id);
+            // Ambil semua schedule hari yang sama untuk menentukan akhir shift terakhir (cross-midnight aware)
+            $schedule = \App\Models\Schedules::with('shift')->find($request->schedule_id);
+            if (!$schedule || !$schedule->shift) {
+                return back()->with('error', 'Data jadwal tidak ditemukan.');
+            }
 
-        if (!$schedule || !$schedule->shift) {
-            return back()->with('error', 'Data jadwal tidak ditemukan.');
-        }
+            $sameDaySchedules = Schedules::with('shift')
+                ->where('user_id', Auth::id())
+                ->whereDate('schedule_date', $schedule->schedule_date)
+                ->get();
 
-        // Buat DateTime lengkap untuk shift start & end berdasarkan schedule_date
-        $scheduleDate = \Carbon\Carbon::parse($schedule->schedule_date);
-        $shiftStartTime = \Carbon\Carbon::parse($schedule->shift->start_time);
-        $shiftEndTime = \Carbon\Carbon::parse($schedule->shift->end_time);
-        $shiftStart = $scheduleDate->copy()->setTimeFrom($shiftStartTime);
-        $shiftEnd = $scheduleDate->copy()->setTimeFrom($shiftEndTime);
-        // Tangani shift malam (end < start => selesai besok)
-        if ($shiftEnd->lt($shiftStart)) {
-            $shiftEnd->addDay();
-        }
+            $finalEnd = null; $firstStart = null;
+            foreach ($sameDaySchedules as $sch) {
+                if (!$sch->shift) continue;
+                $date = Carbon::parse($sch->schedule_date);
+                $st = Carbon::parse($sch->shift->start_time);
+                $et = Carbon::parse($sch->shift->end_time);
+                $startDT = $date->copy()->setTimeFrom($st);
+                $endDT = $date->copy()->setTimeFrom($et);
+                if ($endDT->lt($startDT)) { $endDT->addDay(); } // cross-midnight
+                if (!$firstStart || $startDT->lt($firstStart)) { $firstStart = $startDT->copy(); }
+                if (!$finalEnd || $endDT->gt($finalEnd)) { $finalEnd = $endDT->copy(); }
+            }
 
-        $now = now();
+            $now = now();
 
-        if ($now->lt($shiftEnd)) {
-            return back()->with('error', 'Anda belum bisa check-out. Waktu shift belum selesai.');
-        }
+            // Early checkout guard
+            if ($finalEnd && $now->lt($finalEnd)) {
+                return back()->with('warning', 'Anda mencoba checkout sebelum jam shift berakhir (akhir shift terakhir). Silakan isi alasan checkout lebih cepat.');
+            }
 
-        $attendance = Attendance::where('schedule_id', $request->schedule_id)
-            ->where('user_id', Auth::id())
-            ->first();
+            // Collect open attendances for this day
+            $sameDayIds = $sameDaySchedules->pluck('id');
+            $openAttendances = Attendance::whereIn('schedule_id', $sameDayIds)
+                ->where('user_id', Auth::id())
+                ->whereNotNull('check_in_time')
+                ->whereNull('check_out_time')
+                ->get();
 
-        if (!$attendance || !$attendance->check_in_time) {
-            return back()->with('error', 'Anda belum check-in.');
-        }
+            if ($openAttendances->isEmpty()) {
+                return back()->with('error', 'Semua shift hari ini sudah di-checkout.');
+            }
 
-        if ($attendance->check_out_time) {
-            return back()->with('error', 'Anda sudah check-out.');
-        }
+            // Update each open attendance safely (checkout time cannot precede check-in)
+            $affected = 0; $firstAttendance = null;
+            foreach ($openAttendances as $att) {
+                $checkoutTime = $now;
+                if ($att->check_in_time && $checkoutTime->lt(Carbon::parse($att->check_in_time))) {
+                    $checkoutTime = Carbon::parse($att->check_in_time); // clamp
+                }
+                $att->update([
+                    'location_id' => $validLocation->id,
+                    'check_out_time' => $checkoutTime,
+                    'latitude_checkout' => $request->latitude,
+                    'longitude_checkout' => $request->longitude,
+                ]);
+                $affected++;
+                if (!$firstAttendance) { $firstAttendance = $att; }
+            }
 
-        $attendance->update([
-            'location_id' => $validLocation->id,
-            'check_out_time' => $now,
-            'latitude_checkout' => $request->latitude,
-            'longitude_checkout' => $request->longitude
-        ]);
+            // Log user activity (once)
+            if ($firstAttendance) {
+                UserActivityLog::log(
+                    'checkout',
+                    'attendances',
+                    $firstAttendance->id,
+                    "Check Out - Multi-shift di {$validLocation->name}",
+                    [
+                        'schedule_ids' => $sameDayIds->values()->all(),
+                        'affected_attendances' => $affected,
+                        'first_shift_start' => optional($firstStart)->toDateTimeString(),
+                        'final_shift_end' => optional($finalEnd)->toDateTimeString(),
+                        'check_out_time' => $now->toDateTimeString(),
+                        'location_id' => $validLocation->id,
+                        'location_name' => $validLocation->name,
+                        'latitude_checkout' => $request->latitude,
+                        'longitude_checkout' => $request->longitude,
+                    ],
+                    $affected > 1
+                        ? "Check out berhasil untuk {$affected} shift pada {$now->format('H:i')} di {$validLocation->name}"
+                        : "Check out berhasil pada {$now->format('H:i')} di {$validLocation->name}"
+                );
+            }
 
-        // Log user activity
-        UserActivityLog::log(
-            'checkout',
-            'attendances',
-            $attendance->id,
-            "Check Out - {$schedule->shift->shift_name} di {$validLocation->name}",
-            [
-                'schedule_id' => $schedule->id,
-                'location_id' => $validLocation->id,
-                'location_name' => $validLocation->name,
-                'check_out_time' => $now->toDateTimeString(),
-                'latitude_checkout' => $request->latitude,
-                'longitude_checkout' => $request->longitude
-            ],
-            "Check out berhasil pada {$now->format('H:i')} di {$validLocation->name}"
-        );
-
-        return back()->with('success', 'Check-out berhasil.');
+            return back()->with('success', 'Check-out berhasil untuk semua shift hari ini.');
+        });
     }
 
 

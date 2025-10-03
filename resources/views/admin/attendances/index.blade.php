@@ -11,6 +11,8 @@
                     <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
                         <i data-lucide="calendar-check" class="w-6 h-6 text-sky-700"></i>
                     </div>
+
+            
                     <div>
                         <h1 class="text-3xl font-bold text-gray-700 tracking-tight">Manajemen Absensi</h1>
                         <p class="text-gray-500 mt-1">{{ $todayFormated }} - Kelola data absensi harian</p>
@@ -353,45 +355,87 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @forelse($schedulesToday as $schedule)
+                            @php $groups = $schedulesToday->groupBy('user_id'); @endphp
+                            @forelse($groups as $userId => $userSchedules)
                                 @php
-                                    $attendance = $attendances->firstWhere('schedule_id', $schedule->id);
-                                    $permission = $permissions->firstWhere('schedule_id', $schedule->id);
+                                    $user = optional($userSchedules->first())->user;
+                                    $scheduleIds = $userSchedules->pluck('id');
+                                    $attGroup = $attendances->whereIn('schedule_id', $scheduleIds);
+                                    $permGroup = $permissions->whereIn('schedule_id', $scheduleIds);
+
+                                    // Location: pick any available
+                                    $firstWithLocation = $attGroup->first(function($a){ return $a && $a->location; });
+                                    $location = $firstWithLocation ? $firstWithLocation->location : null;
+
+                                    // Times
+                                    $checkInTime = optional($attGroup->whereNotNull('check_in_time')->sortBy('check_in_time')->first())->check_in_time;
+                                    $checkOutTime = optional($attGroup->whereNotNull('check_out_time')->sortByDesc('check_out_time')->first())->check_out_time;
+
+                                    // Status priority: izin > telat > hadir > alpha
+                                    $statusText = '-';
+                                    if ($attGroup->where('status','izin')->isNotEmpty()) { $statusText = 'izin'; }
+                                    elseif ($attGroup->where('status','telat')->isNotEmpty()) { $statusText = 'telat'; }
+                                    elseif ($attGroup->where('status','hadir')->isNotEmpty()) { $statusText = 'hadir'; }
+                                    elseif ($attGroup->isNotEmpty()) { $statusText = optional($attGroup->first())->status ?: '-'; }
+
+                                    $statusColor = 'bg-gray-100 text-gray-700';
+                                    if($statusText === 'hadir') { $statusColor = 'bg-green-100 text-green-800'; }
+                                    if($statusText === 'telat') { $statusColor = 'bg-orange-100 text-orange-800'; }
+                                    if($statusText === 'izin') { $statusColor = 'bg-yellow-100 text-yellow-800'; }
+                                    if($statusText === 'alpha') { $statusColor = 'bg-red-100 text-red-800'; }
+
+                                    // Shifts sorted Pagi -> Siang -> Malam
+                                    $order = ['Pagi' => 1, 'Siang' => 2, 'Malam' => 3];
+                                    $sortedSchedules = $userSchedules->sortBy(function($s) use ($order){ return $order[$s->shift->category ?? ''] ?? 99; });
+
+                                    // Permission resolution
+                                    $earlyPending = $permGroup->first(function($p){
+                                        return $p->status === 'pending' && $p->type === 'izin' && is_string($p->reason) && preg_match('/^\[EARLY_CHECKOUT\]/', $p->reason);
+                                    });
+                                    $otherPending = $permGroup->first(function($p){
+                                        return $p->status === 'pending' && (!$p->reason || !preg_match('/^\[EARLY_CHECKOUT\]/', (string)$p->reason));
+                                    });
+                                    $latestPerm = $permGroup->sortByDesc('created_at')->first();
+                                    $isEarly = $latestPerm && is_string($latestPerm->reason ?? '') && preg_match('/^\[EARLY_CHECKOUT\]/', $latestPerm->reason);
                                 @endphp
                                 <tr class="hover:bg-sky-50 transition-colors duration-200 group">
                                     <td class="px-8 py-6 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-4 group-hover:from-sky-200 group-hover:to-sky-300 transition-colors">
-                                                <span class="text-sky-600 font-bold text-sm">{{ substr($schedule->user->name, 0, 1) }}</span>
+                                                <span class="text-sky-600 font-bold text-sm">{{ substr($user->name ?? '-', 0, 1) }}</span>
                                             </div>
                                             <div>
-                                                <div class="text-base font-semibold text-gray-700">{{ $schedule->user->name }}</div>
-                                                <div class="text-sm text-gray-500">{{ $schedule->user->email }}</div>
+                                                <div class="text-base font-semibold text-gray-700">{{ $user->name ?? '-' }}</div>
+                                                <div class="text-sm text-gray-500">{{ $user->email ?? '-' }}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
-                                            @if($schedule->shift && $schedule->shift->category == 'Pagi') bg-yellow-100 text-yellow-800
-                                            @elseif($schedule->shift && $schedule->shift->category == 'Siang') bg-orange-100 text-orange-800
-                                            @elseif($schedule->shift && $schedule->shift->category == 'Malam') bg-indigo-100 text-indigo-800
-                                            @else bg-gray-100 text-gray-800 @endif">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock mr-1">
-                                                <circle cx="12" cy="12" r="10"/>
-                                                <polyline points="12 6 12 12 16 14"/>
-                                            </svg>
-                                            {{ $schedule->shift->shift_name ?? '-' }}
-                                        </span>
+                                        <div class="flex flex-col space-y-2">
+                                            @foreach($sortedSchedules as $us)
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                                                    @if($us->shift && $us->shift->category == 'Pagi') bg-yellow-100 text-yellow-800
+                                                    @elseif($us->shift && $us->shift->category == 'Siang') bg-orange-100 text-orange-800
+                                                    @elseif($us->shift && $us->shift->category == 'Malam') bg-indigo-100 text-indigo-800
+                                                    @else bg-gray-100 text-gray-800 @endif">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock mr-1">
+                                                        <circle cx="12" cy="12" r="10"/>
+                                                        <polyline points="12 6 12 12 16 14"/>
+                                                    </svg>
+                                                    {{ $us->shift->shift_name ?? '-' }}
+                                                </span>
+                                            @endforeach
+                                        </div>
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap">
-                                        @if($attendance && $attendance->location)
+                                        @if($location)
                                             <div class="flex items-center">
                                                 <div class="w-8 h-8 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center mr-3">
                                                     <i data-lucide="map-pin" class="w-4 h-4 text-sky-600"></i>
                                                 </div>
                                                 <div>
-                                                    <div class="text-sm font-semibold text-gray-900">{{ $attendance->location->name }}</div>
-                                                    <div class="text-xs text-gray-500"><span class="uppercase">{{ ucfirst($attendance->location->type) }}</span></div>
+                                                    <div class="text-sm font-semibold text-gray-900">{{ $location->name }}</div>
+                                                    <div class="text-xs text-gray-500"><span class="uppercase">{{ ucfirst($location->type ?? '-') }}</span></div>
                                                 </div>
                                             </div>
                                         @else
@@ -399,96 +443,67 @@
                                         @endif
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-base font-semibold text-gray-700">
-                                        @if($attendance && $attendance->check_in_time)
+                                        @if($checkInTime)
                                             <span class="inline-flex items-center text-green-700">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle mr-1">
                                                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                                                     <polyline points="22 4 12 14.01 9 11.01"/>
                                                 </svg>
-                                                {{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}
+                                                {{ \Carbon\Carbon::parse($checkInTime)->format('H:i') }}
                                             </span>
                                         @else
                                             -
                                         @endif
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-base font-semibold text-gray-700">
-                                        @if($attendance && $attendance->check_out_time)
+                                        @if($checkOutTime)
                                             <span class="inline-flex items-center text-red-700">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle mr-1">
                                                     <circle cx="12" cy="12" r="10"/>
                                                     <path d="M15 9l-6 6"/>
                                                     <path d="M9 9l6 6"/>
                                                 </svg>
-                                                {{ \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') }}
+                                                {{ \Carbon\Carbon::parse($checkOutTime)->format('H:i') }}
                                             </span>
                                         @else
                                             -
                                         @endif
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap">
-                                        @if(($attendance->status ?? 'alpha') === 'hadir')
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle mr-1">
-                                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                                    <polyline points="22 4 12 14.01 9 11.01"/>
-                                                </svg>
-                                                Hadir
-                                            </span>
-                                        @elseif(($attendance->status ?? 'alpha') === 'telat')
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock-alert mr-1">
-                                                    <circle cx="12" cy="12" r="10"/>
-                                                    <polyline points="12 6 12 12 16 14"/>
-                                                    <path d="M12 2v4"/>
-                                                    <path d="M12 18v4"/>
-                                                </svg>
-                                                Telat
-                                                @if($attendance && $attendance->late_minutes)
-                                                    <span class="ml-1 text-xs">({{ $attendance->late_minutes }} mnt)</span>
-                                                @endif
-                                            </span>
-                                        @elseif(($attendance->status ?? 'alpha') === 'izin')
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock mr-1">
-                                                    <circle cx="12" cy="12" r="10"/>
-                                                    <polyline points="12 6 12 12 16 14"/>
-                                                </svg>
-                                                Izin
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle mr-1">
-                                                    <circle cx="12" cy="12" r="10"/>
-                                                    <path d="M15 9l-6 6"/>
-                                                    <path d="M9 9l6 6"/>
-                                                </svg>
-                                                Alpha
-                                            </span>
-                                        @endif
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $statusColor }}">
+                                            {{ ucfirst($statusText) }}
+                                        </span>
                                     </td>
-                                    <td class="px-8 py-6 text-sm text-gray-900">
-                                        <div class="max-w-xs">
-                                            @if($permission)
-                                                <div class="text-gray-900 font-medium">{{ $permission->reason }}</div>
-                                                <div class="text-xs text-gray-500 mt-1">
-                                                    Status: 
-                                                    @if($permission->status === 'pending')
-                                                        <span class="text-amber-600 font-medium">Menunggu Persetujuan</span>
-                                                    @elseif($permission->status === 'approved')
-                                                        <span class="text-green-600 font-medium">Disetujui</span>
-                                                    @elseif($permission->status === 'rejected')
-                                                        <span class="text-red-600 font-medium">Ditolak</span>
+                                    <td class="px-8 py-6 whitespace-nowrap text-sm text-gray-700">
+                                        @if($latestPerm)
+                                            @php
+                                                $cleanReason = $isEarly
+                                                    ? preg_replace('/^\[EARLY_CHECKOUT\]\s*/', '', (string)($latestPerm->reason ?? ''))
+                                                    : ($latestPerm->reason ?? '');
+                                            @endphp
+                                            <div>
+                                                <div class="font-medium {{ $latestPerm->status === 'rejected' ? 'text-red-600' : ($latestPerm->status === 'pending' ? 'text-yellow-700' : 'text-gray-700') }}">
+                                                    @if($isEarly)
+                                                        Early Checkout: {{ $cleanReason }}
+                                                    @else
+                                                        {{ $cleanReason }}
                                                     @endif
                                                 </div>
-                                            @else
-                                                <span class="text-gray-400">-</span>
-                                            @endif
-                                        </div>
+                                                <div class="text-xs mt-1">
+                                                    Status:
+                                                    <span class="font-semibold {{ $latestPerm->status === 'rejected' ? 'text-red-600' : ($latestPerm->status === 'pending' ? 'text-yellow-700' : 'text-green-700') }}">
+                                                        {{ ucfirst($latestPerm->status) }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-left">
                                         <div class="flex items-center justify-start space-x-2">
-                                            @if($permission && $permission->status == 'pending')
-                                                <form action="{{ route('admin.attendances.permission.approve', $permission) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menyetujui izin ini?')">
+                                            @if($earlyPending)
+                                                <form action="{{ route('admin.attendances.permission.approve', $earlyPending) }}" method="post" class="inline" onsubmit="return confirm('Setujui early checkout ini?')">
                                                     @csrf
                                                     <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200 hover:scale-105">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
@@ -497,7 +512,7 @@
                                                         Setujui
                                                     </button>
                                                 </form>
-                                                <form action="{{ route('admin.attendances.permission.reject', $permission) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menolak izin ini?')">
+                                                <form action="{{ route('admin.attendances.permission.reject', $earlyPending) }}" method="post" class="inline" onsubmit="return confirm('Tolak early checkout ini?')">
                                                     @csrf
                                                     <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200 hover:scale-105">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
@@ -507,29 +522,26 @@
                                                         Tolak
                                                     </button>
                                                 </form>
-                                            @elseif($permission)
-                                                <div class="text-center">
-                                                    @if($permission->status === 'approved')
-                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
-                                                                <circle cx="4" cy="4" r="3"/>
-                                                            </svg>
-                                                            Disetujui
-                                                        </span>
-                                                    @elseif($permission->status === 'rejected')
-                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
-                                                                <circle cx="4" cy="4" r="3"/>
-                                                            </svg>
-                                                            Ditolak
-                                                        </span>
-                                                    @endif
-                                                    @if($permission->approved_by)
-                                                        <div class="text-xs text-gray-500 mt-1">
-                                                            oleh {{ $permission->approver->name ?? 'Admin' }}
-                                                        </div>
-                                                    @endif
-                                                </div>
+                                            @elseif($otherPending)
+                                                <form action="{{ route('admin.attendances.permission.approve', $otherPending) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menyetujui izin ini?')">
+                                                    @csrf
+                                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200 hover:scale-105">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
+                                                            <polyline points="20 6 9 17 4 12"/>
+                                                        </svg>
+                                                        Setujui
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('admin.attendances.permission.reject', $otherPending) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menolak izin ini?')">
+                                                    @csrf
+                                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200 hover:scale-105">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
+                                                            <path d="M18 6 6 18"/>
+                                                            <path d="m6 6 12 12"/>
+                                                        </svg>
+                                                        Tolak
+                                                    </button>
+                                                </form>
                                             @else
                                                 <span class="text-gray-400 text-sm">-</span>
                                             @endif

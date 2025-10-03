@@ -103,24 +103,54 @@ class AttendancesController extends Controller
             'approved_at' => now(),
         ]);
 
-        // Pastikan attendance mencerminkan izin dan bersih dari waktu check-in/out
-        Attendance::updateOrCreate(
-            [
-                'user_id' => $permission->user_id,
-                'schedule_id' => $permission->schedule_id,
-            ],
-            [
-                'status' => 'izin',
-                'is_late' => false,
-                'late_minutes' => 0,
-                'check_in_time' => null,
-                'check_out_time' => null,
-                'latitude' => null,
-                'longitude' => null,
-                'latitude_checkout' => null,
-                'longitude_checkout' => null,
-            ]
-        );
+        // Update attendance based on permission type
+        $isEarlyCheckout = ($permission->type === 'izin') && (strpos((string)$permission->reason, '[EARLY_CHECKOUT]') === 0);
+        if ($isEarlyCheckout) {
+            // Multi-shift support: checkout all attendances on the same date
+            $scheduleDate = optional($permission->schedule)?->schedule_date;
+            $requested = Carbon::parse($permission->created_at);
+
+            if ($scheduleDate) {
+                // Get all same-day schedules for the user
+                $sameDayScheduleIds = Schedules::where('user_id', $permission->user_id)
+                    ->whereDate('schedule_date', $scheduleDate)
+                    ->pluck('id');
+
+                // Update all open attendances (checked-in, not checked-out)
+                $affected = Attendance::whereIn('schedule_id', $sameDayScheduleIds)
+                    ->where('user_id', $permission->user_id)
+                    ->whereNotNull('check_in_time')
+                    ->whereNull('check_out_time')
+                    ->update(['check_out_time' => $requested]);
+
+                // Fallback: also update single attendance if needed
+                $attendance = Attendance::where('user_id', $permission->user_id)
+                    ->where('schedule_id', $permission->schedule_id)
+                    ->first();
+                if ($attendance && !$attendance->check_out_time) {
+                    $attendance->update(['check_out_time' => $requested]);
+                }
+            }
+        } else {
+            // Default behavior for izin/cuti/sakit: set attendance to izin
+            Attendance::updateOrCreate(
+                [
+                    'user_id' => $permission->user_id,
+                    'schedule_id' => $permission->schedule_id,
+                ],
+                [
+                    'status' => 'izin',
+                    'is_late' => false,
+                    'late_minutes' => 0,
+                    'check_in_time' => null,
+                    'check_out_time' => null,
+                    'latitude' => null,
+                    'longitude' => null,
+                    'latitude_checkout' => null,
+                    'longitude_checkout' => null,
+                ]
+            );
+        }
 
         // Log admin permission activity
         AdminPermissionsLog::log(
@@ -133,7 +163,14 @@ class AttendancesController extends Controller
             $permissionDate,
             $oldStatus,
             'approved',
-            ['approved_by' => Auth::id(), 'approved_at' => now(), 'attendance_updated' => true],
+            [
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'attendance_updated' => true,
+                'requested_checkout_time' => optional($permission->created_at)?->toDateTimeString(),
+                // Optional: number of attendances affected for early checkout
+                'affected_attendances_same_day' => isset($affected) ? $affected : null,
+            ],
             "Menyetujui izin {$permissionType} dari {$userName} dan memperbarui kehadiran"
         );
 
@@ -162,28 +199,32 @@ class AttendancesController extends Controller
             'approved_at' => now(),
         ]);
 
+        $isEarlyCheckout = ($permission->type === 'izin') && (strpos((string)$permission->reason, '[EARLY_CHECKOUT]') === 0);
         $attendance = Attendance::where('user_id', $permission->user_id)
             ->where('schedule_id', $permission->schedule_id)
             ->first();
 
-        $attendanceAction = 'updated';
-        if ($attendance) {
-            // Jika permission ditolak, reset attendance agar user bisa check-in
-            $attendance->update([
-                'status' => 'alpha', // Set ke alpha dulu, nanti bisa berubah saat check-in
-                'is_late' => false,
-                'late_minutes' => 0,
-                'check_in_time' => null, // Reset check-in time agar bisa check-in lagi
-                'check_out_time' => null, // Reset check-out time
-                'latitude' => null,
-                'longitude' => null,
-                'latitude_checkout' => null,
-                'longitude_checkout' => null,
-            ]);
+        if ($isEarlyCheckout) {
+            // Early checkout rejected: jangan reset attendance. User tetap check-in dan bisa lanjut kerja.
+            $attendanceAction = 'kept_open_for_continue';
         } else {
-            // Jika belum ada attendance record, jangan buat dulu
-            // Biarkan kosong agar user bisa check-in normal
-            $attendanceAction = 'cleared - user can now check-in';
+            $attendanceAction = 'updated';
+            if ($attendance) {
+                // Permission selain early checkout: reset ke alpha agar user bisa check-in normal
+                $attendance->update([
+                    'status' => 'alpha',
+                    'is_late' => false,
+                    'late_minutes' => 0,
+                    'check_in_time' => null,
+                    'check_out_time' => null,
+                    'latitude' => null,
+                    'longitude' => null,
+                    'latitude_checkout' => null,
+                    'longitude_checkout' => null,
+                ]);
+            } else {
+                $attendanceAction = 'cleared - user can now check-in';
+            }
         }
 
         // Log admin permission activity
@@ -563,15 +604,33 @@ class AttendancesController extends Controller
                 // Approve selected permissions
                 foreach ($allPermissions as $perm) {
                     $newStatus = in_array($perm->id, $approvedIds) ? 'approved' : 'rejected';
-                    $perm->update(['status' => $newStatus]);
+                    $oldStatus = $perm->status;
+                $perm->update(['status' => $newStatus]);
                     
-                    // Log admin action
-                    AdminPermissionsLog::create([
-                        'user_id' => Auth::id(),
-                        'permission_id' => $perm->id,
-                        'action' => $newStatus,
-                        'notes' => "Leave request {$newStatus} by admin"
-                    ]);
+                    // Log admin action with detailed fields
+                    AdminPermissionsLog::log(
+                        action: $newStatus === 'approved' ? 'approve' : 'reject',
+                        permissionId: $perm->id,
+                        targetUserId: $perm->user_id,
+                        targetUserName: optional($perm->user)->name,
+                        permissionType: $perm->type,
+                        permissionReason: $perm->reason,
+                        permissionDate: optional($perm->schedule)->schedule_date,
+                        oldStatus: $perm->getOriginal('status'),
+                        newStatus: $newStatus,
+                        additionalData: [
+                            'schedule_id' => $perm->schedule_id,
+                            'affected_attendance' => $newStatus === 'approved' ? 'set_izin' : 'reset_alpha',
+                        ],
+                        description: sprintf(
+                            '%s %s for %s (%s) on %s',
+                            $newStatus === 'approved' ? 'Approved' : 'Rejected',
+                            strtoupper($perm->type),
+                            optional($perm->user)->name,
+                            $perm->reason,
+                            optional($perm->schedule)?->schedule_date?->format('d M Y')
+                        )
+                    );
 
                     // Handle attendance based on status
                     if ($newStatus === 'approved') {
@@ -625,12 +684,29 @@ class AttendancesController extends Controller
                 foreach ($allPermissions as $perm) {
                     $perm->update(['status' => 'rejected']);
                     
-                    AdminPermissionsLog::create([
-                        'user_id' => Auth::id(),
-                        'permission_id' => $perm->id,
-                        'action' => 'rejected',
-                        'notes' => 'Entire leave request rejected by admin'
-                    ]);
+                    AdminPermissionsLog::log(
+                        action: 'reject',
+                        permissionId: $perm->id,
+                        targetUserId: $perm->user_id,
+                        targetUserName: optional($perm->user)->name,
+                        permissionType: $perm->type,
+                        permissionReason: $perm->reason,
+                        permissionDate: optional($perm->schedule)->schedule_date,
+                        oldStatus: $perm->getOriginal('status'),
+                        newStatus: 'rejected',
+                        additionalData: [
+                            'schedule_id' => $perm->schedule_id,
+                            'affected_attendance' => 'reset_alpha',
+                            'scope' => 'reject_all_in_request'
+                        ],
+                        description: sprintf(
+                            'Rejected %s for %s (%s) on %s',
+                            strtoupper($perm->type),
+                            optional($perm->user)->name,
+                            $perm->reason,
+                            optional($perm->schedule)?->schedule_date?->format('d M Y')
+                        )
+                    );
 
                     // Reset attendance for rejected permission
                     $attendance = Attendance::where('user_id', $perm->user_id)
@@ -691,13 +767,31 @@ class AttendancesController extends Controller
             foreach ($allPermissions as $perm) {
                 $perm->update(['status' => $newStatus]);
                 
-                // Log admin action
-                AdminPermissionsLog::create([
-                    'user_id' => Auth::id(),
-                    'permission_id' => $perm->id,
-                    'action' => $newStatus,
-                    'notes' => "Leave request {$newStatus} by admin"
-                ]);
+                // Log admin action with detailed fields
+                AdminPermissionsLog::log(
+                    action: $newStatus === 'approved' ? 'approve' : 'reject',
+                    permissionId: $perm->id,
+                    targetUserId: $perm->user_id,
+                    targetUserName: optional($perm->user)->name,
+                    permissionType: $perm->type,
+                    permissionReason: $perm->reason,
+                    permissionDate: optional($perm->schedule)->schedule_date,
+                    oldStatus: $oldStatus,
+                    newStatus: $newStatus,
+                    additionalData: [
+                        'schedule_id' => $perm->schedule_id,
+                        'affected_attendance' => $newStatus === 'approved' ? 'set_izin' : 'reset_alpha',
+                        'selection' => in_array($perm->id, $approvedIds) ? 'selected' : 'unselected'
+                    ],
+                    description: sprintf(
+                        '%s %s for %s (%s) on %s',
+                        $newStatus === 'approved' ? 'Approved' : 'Rejected',
+                        strtoupper($perm->type),
+                        optional($perm->user)->name,
+                        $perm->reason,
+                        optional($perm->schedule)?->schedule_date?->format('d M Y')
+                    )
+                );
 
                 // Handle attendance based on status
                 if ($newStatus === 'approved') {

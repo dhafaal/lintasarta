@@ -47,6 +47,38 @@
 
         {{-- Main Content --}}
         @if ($schedule)
+            @php
+                // Load all today's schedules for current user to detect multi-shift
+                $todaySchedules = \App\Models\Schedules::with('shift')
+                    ->where('user_id', Auth::id())
+                    ->whereDate('schedule_date', now()->toDateString())
+                    ->orderBy('id')
+                    ->get();
+
+                $shiftCount = $todaySchedules->count();
+
+                // Compute combined work window and total planned minutes across shifts
+                $firstStartDT = null; // earliest start
+                $lastEndDT = null;    // latest end
+                $plannedMinutes = 0;  // sum of durations per shift
+
+                foreach ($todaySchedules as $sch) {
+                    if (!$sch->shift) continue;
+                    $date = \Carbon\Carbon::parse($sch->schedule_date);
+                    $startT = \Carbon\Carbon::parse($sch->shift->start_time);
+                    $endT   = \Carbon\Carbon::parse($sch->shift->end_time);
+                    $startDT = $date->copy()->setTimeFrom($startT);
+                    $endDT   = $date->copy()->setTimeFrom($endT);
+                    if ($endDT->lt($startDT)) { $endDT->addDay(); }
+
+                    if (!$firstStartDT || $startDT->lt($firstStartDT)) { $firstStartDT = $startDT->copy(); }
+                    if (!$lastEndDT || $endDT->gt($lastEndDT)) { $lastEndDT = $endDT->copy(); }
+
+                    $plannedMinutes += $startDT->diffInMinutes($endDT);
+                }
+
+                $plannedHoursText = $plannedMinutes ? sprintf('%02d:%02d', intdiv($plannedMinutes,60), $plannedMinutes%60) : null;
+            @endphp
             {{-- Today's Schedule Card --}}
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6 hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between mb-4">
@@ -69,7 +101,11 @@
                             </div>
                             <div>
                                 <p class="text-sm text-sky-600 font-medium">Shift</p>
-                                <p class="text-lg font-semibold text-sky-900">{{ $schedule->shift->shift_name }}</p>
+                                @if($shiftCount > 1)
+                                  <p class="text-lg font-semibold text-sky-900">{{ $todaySchedules[0]->shift->shift_name ?? '-' }} & {{ $todaySchedules[1]->shift->shift_name ?? '-' }} <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 align-middle">{{ $shiftCount }} Shifts</span></p>
+                                @else
+                                  <p class="text-lg font-semibold text-sky-900">{{ $schedule->shift->shift_name }}</p>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -81,7 +117,22 @@
                             </div>
                             <div>
                                 <p class="text-sm text-sky-600 font-medium">Working Hours</p>
-                                <p class="text-lg font-semibold text-sky-900">{{ $schedule->shift->start_time }} - {{ $schedule->shift->end_time }}</p>
+                                @if($shiftCount > 1 && $firstStartDT && $lastEndDT)
+                                  <p class="text-lg font-semibold text-sky-900">{{ $firstStartDT->format('H:i') }} - {{ $lastEndDT->format('H:i') }} <span class="ml-2 text-xs text-sky-700">(Planned {{ $plannedHoursText }})</span></p>
+                                  <p class="text-xs text-sky-600 mt-1">
+                                    @foreach($todaySchedules as $idx => $sch)
+                                      @php
+                                        $d = \Carbon\Carbon::parse($sch->schedule_date);
+                                        $st = \Carbon\Carbon::parse($sch->shift->start_time); $et = \Carbon\Carbon::parse($sch->shift->end_time);
+                                      @endphp
+                                      Shift {{ $idx+1 }}: {{ $st->format('H:i') }} - {{ $et->format('H:i') }}@if(!$loop->last), @endif
+                                    @endforeach
+                                  </p>
+                                  <p class="text-xs text-sky-700 mt-1">Checkout normal di akhir Shift {{ $shiftCount }}: <span id="final-end-time">{{ $lastEndDT->format('H:i') }}</span> · <span id="final-end-countdown" class="font-medium"></span></p>
+                                  <div id="final-end-dataset" data-final-end="{{ $lastEndDT->toIso8601String() }}" class="hidden"></div>
+                                @else
+                                  <p class="text-lg font-semibold text-sky-900">{{ $schedule->shift->start_time }} - {{ $schedule->shift->end_time }}</p>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -89,6 +140,15 @@
                 
                 {{-- Attendance Status --}}
                 @if ($attendance)
+                    @php
+                        $workedMinutes = null;
+                        if ($attendance->check_in_time) {
+                            $start = \Carbon\Carbon::parse($attendance->check_in_time);
+                            $end   = $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time) : now();
+                            $workedMinutes = $start->diffInMinutes($end);
+                        }
+                        $workedText = $workedMinutes !== null ? sprintf('%02d:%02d', intdiv($workedMinutes,60), $workedMinutes%60) : null;
+                    @endphp
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
                         <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 border border-emerald-200">
                             <div class="flex items-center space-x-3">
@@ -125,6 +185,36 @@
                                     <p class="text-sm text-orange-600 font-medium">Check Out</p>
                                     <p class="text-lg font-semibold text-orange-900">{{ $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') : '-' }}</p>
                                 </div>
+                            </div>
+                        </div>
+                        {{-- Worked vs Planned --}}
+                        <div class="md:col-span-3">
+                            <div class="mt-2 p-4 rounded-xl border {{ $shiftCount>1 ? 'border-sky-200 bg-sky-50' : 'border-gray-200 bg-gray-50' }}">
+                                <div class="flex items-center justify-between">
+                                    <div class="text-sm font-semibold text-gray-900">Jam Kerja</div>
+                                    <div class="text-sm text-gray-700">
+                                        @if($workedText)
+                                            <span class="font-semibold">{{ $workedText }}</span>
+                                        @else
+                                            -
+                                        @endif
+                                        @if($plannedHoursText)
+                                            <span class="text-gray-400"> / Planned {{ $plannedHoursText }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                @if($plannedMinutes && $workedMinutes !== null)
+                                    @php
+                                        $progress = min(100, (int) round(($workedMinutes / max(1,$plannedMinutes)) * 100));
+                                    @endphp
+                                    <div class="mt-3 h-2 w-full bg-white/70 rounded-full overflow-hidden border border-gray-200">
+                                        <div class="h-2 bg-gradient-to-r from-emerald-400 to-emerald-600" style="width: {{ $progress }}%"></div>
+                                    </div>
+                                    <div class="mt-1 text-xs text-gray-500">Progress: {{ $progress }}%</div>
+                                @endif
+                                @if($shiftCount>1 && $lastEndDT)
+                                    <div class="text-xs text-sky-700 mt-1">Checkout normal di akhir Shift {{ $shiftCount }}: {{ $lastEndDT->format('H:i') }}</div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -195,21 +285,63 @@
                     })
                     ->where('status', 'rejected')
                     ->first();
+
+                // Pending Early Checkout permission (type izin with special prefix)
+                $earlyCheckoutPermission = \App\Models\Permissions::where('user_id', Auth::id())
+                    ->whereHas('schedule', function ($q) {
+                        $q->whereDate('schedule_date', now()->toDateString());
+                    })
+                    ->where('status', 'pending')
+                    ->where('type', 'izin')
+                    ->where('reason', 'like', '[EARLY_CHECKOUT]%')
+                    ->first();
             @endphp
             
             @if ($rejectedPermission)
-                <div class="mb-6 p-6 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-2xl">
-                    <div class="flex items-center space-x-4">
-                        <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-                            <i data-lucide="info" class="w-5 h-5 text-white"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-blue-900">Izin Ditolak</h3>
-                            <p class="text-sm text-blue-700">Izin Anda telah ditolak. Silakan lakukan check-in untuk masuk kerja.</p>
-                            <p class="text-sm text-blue-600 mt-1">Alasan izin: {{ $rejectedPermission->reason }}</p>
+                @if ($earlyCheckoutPermission)
+                    <div class="mb-6 p-6 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-2xl">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="info" class="w-5 h-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-blue-900">Izin Ditolak</h3>
+                                    <p class="text-sm text-blue-700">Izin Anda telah ditolak. Anda melakukan pengajuan checkout lebih cepat.</p>
+                                    <p class="text-sm text-blue-600 mt-1">Alasan izin (ditolak): {{ $rejectedPermission->reason }}</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="document.getElementById('ec-review-modal').classList.remove('hidden')" class="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                                <span>Tinjau Early Checkout</span>
+                            </button>
                         </div>
                     </div>
-                </div>
+                @else
+                    <div class="mb-6 p-6 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-2xl">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="info" class="w-5 h-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-blue-900">Izin Ditolak</h3>
+                                    <p class="text-sm text-blue-600 mt-1">Alasan izin: {{ $rejectedPermission->reason }}</p>
+                                </div>
+                            </div>
+                            @if($attendance && $attendance->check_in_time && !$attendance->check_out_time)
+                                <button type="button"
+                                        onclick="document.getElementById('early-checkout-modal').classList.remove('hidden')"
+                                        class="inline-flex items-center space-x-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg">
+                                    <i data-lucide="clock" class="w-4 h-4"></i>
+                                    <span>Ajukan Early Checkout</span>
+                                </button>
+                            @else
+                                <span class="text-xs text-blue-700">Silakan check-in untuk mengajukan early checkout.</span>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             @endif
 
             {{-- Action Buttons --}}
@@ -332,6 +464,116 @@
     </div>
 </div>
 </div>
+
+{{-- Modal: Early Checkout Request --}}
+@if ($schedule)
+<div id="early-checkout-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative transform transition-all border border-gray-100">
+    <div class="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-amber-100 rounded-t-2xl">
+      <div class="flex items-center space-x-4">
+        <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center shadow-sm">
+          <i data-lucide="clock" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900">Pengajuan Checkout Lebih Cepat</h2>
+          <p class="text-sm text-amber-700">Isi alasan mengapa Anda perlu checkout sebelum shift berakhir</p>
+        </div>
+      </div>
+      <button type="button" onclick="document.getElementById('early-checkout-modal').classList.add('hidden')" class="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-white/50 transition-all duration-200">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <form method="POST" action="{{ route('user.attendances.request-early-checkout') }}" class="p-6 space-y-6">
+      @csrf
+      <input type="hidden" name="schedule_id" value="{{ $schedule->id }}" />
+      <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <div class="text-sm text-gray-700">
+          <strong>Shift:</strong> {{ $schedule->shift->shift_name ?? '-' }} • {{ $schedule->shift->start_time ?? '' }} - {{ $schedule->shift->end_time ?? '' }}
+        </div>
+        <div class="text-xs text-gray-500">Tanggal: {{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}</div>
+      </div>
+      <div class="space-y-2">
+        <label class="block text-sm font-semibold text-gray-900">Alasan <span class="text-red-500">*</span></label>
+        <textarea name="reason" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors resize-none" rows="4" placeholder="Tuliskan alasan checkout lebih cepat..." required></textarea>
+        <p class="text-xs text-gray-500">Minimal 5 karakter</p>
+      </div>
+      <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+        <button type="button" onclick="document.getElementById('early-checkout-modal').classList.add('hidden')" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors">Batal</button>
+        <button type="submit" class="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 shadow-sm">
+          Kirim Pengajuan
+        </button>
+      </div>
+    </form>
+  </div>
+  </div>
+@endif
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Auto-open early checkout modal when server warns early checkout attempt
+    @if(session('warning') && strpos(session('warning'), 'checkout sebelum') !== false)
+      document.getElementById('early-checkout-modal')?.classList.remove('hidden');
+    @endif
+  });
+</script>
+
+@if(isset($earlyCheckoutPermission) && $earlyCheckoutPermission)
+{{-- Modal: Review Early Checkout (with rejected permissions info) --}}
+<div id="ec-review-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative transform transition-all border border-gray-100">
+    <div class="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-blue-100 rounded-t-2xl">
+      <div class="flex items-center space-x-4">
+        <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-sm">
+          <i data-lucide="clipboard-list" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900">Tinjau Early Checkout</h2>
+          <p class="text-sm text-blue-700">Lihat detail izin ditolak dan pengajuan early checkout</p>
+        </div>
+      </div>
+      <button type="button" onclick="document.getElementById('ec-review-modal').classList.add('hidden')" class="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-white/50 transition-all duration-200">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="p-6 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div class="text-sm font-semibold text-gray-900 mb-2">Izin Ditolak (Sebelumnya)</div>
+          <div class="text-sm text-gray-700">Alasan: {{ $rejectedPermission->reason ?? '-' }}</div>
+          <div class="text-xs text-gray-500 mt-1">Status: Ditolak</div>
+        </div>
+        <div class="bg-amber-50 rounded-lg p-4 border border-amber-200">
+          <div class="text-sm font-semibold text-amber-900 mb-2">Pengajuan Early Checkout</div>
+          @php
+            $ecReason = preg_replace('/^\[EARLY_CHECKOUT\]\s*/', '', $earlyCheckoutPermission->reason ?? '');
+          @endphp
+          <div class="text-sm text-amber-800">Alasan: {{ $ecReason ?: '-' }}</div>
+          <div class="text-xs text-amber-700 mt-1">Diajukan: {{ optional($earlyCheckoutPermission->created_at)->format('d M Y H:i') }}</div>
+          <div class="text-xs text-amber-700">Status: {{ ucfirst($earlyCheckoutPermission->status) }}</div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-gray-500">Schedule: {{ optional($schedule?->shift)->shift_name }} • {{ $schedule->shift->start_time ?? '' }} - {{ $schedule->shift->end_time ?? '' }}</div>
+        <div class="flex items-center space-x-3">
+          @if(auth()->user() && method_exists(auth()->user(), 'role') ? auth()->user()->role === 'Admin' : (auth()->user()->role ?? '') === 'Admin')
+            <form method="POST" action="{{ route('admin.attendances.permission.reject', ['permission' => $earlyCheckoutPermission->id]) }}">
+              @csrf
+              <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg">Reject</button>
+            </form>
+            <form method="POST" action="{{ route('admin.attendances.permission.approve', ['permission' => $earlyCheckoutPermission->id]) }}">
+              @csrf
+              <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg">Approve</button>
+            </form>
+          @else
+            <div class="text-xs text-gray-500">Menunggu tindakan Admin</div>
+          @endif
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+@endif
 
 {{-- Modal Form Request Permission --}}
 <div id="izin-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">

@@ -168,6 +168,10 @@
                                 Check Out
                             </th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <i data-lucide="clock" class="w-4 h-4 inline mr-1"></i>
+                                Jam Kerja
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 <i data-lucide="activity" class="w-4 h-4 inline mr-1"></i>
                                 Status
                             </th>
@@ -235,6 +239,23 @@
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    @php
+                                        $minutes = 0;
+                                        if ($permission && $permission->status === 'approved') {
+                                            $minutes = 0;
+                                        } elseif ($attendance && $attendance->status === 'alpha') {
+                                            $minutes = 0;
+                                        } elseif ($attendance && $attendance->check_in_time && $attendance->check_out_time) {
+                                            $cin = \Carbon\Carbon::parse($attendance->check_in_time);
+                                            $cout = \Carbon\Carbon::parse($attendance->check_out_time);
+                                            if ($cout->lt($cin)) { $cout->addDay(); }
+                                            $minutes = $cin->diffInMinutes($cout);
+                                        }
+                                        $hours = $minutes / 60;
+                                    @endphp
+                                    {{ $hours == floor($hours) ? floor($hours).' jam' : number_format($hours, 1).' jam' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if($attendance?->status === 'hadir')

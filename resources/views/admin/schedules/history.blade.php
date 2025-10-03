@@ -226,14 +226,22 @@
                                                 <polyline points="12 6 12 12 16 14"/>
                                             </svg>
                                             @php
-                                                $start = \Carbon\Carbon::parse($schedule->shift->start_time);
-                                                $end = \Carbon\Carbon::parse($schedule->shift->end_time);
-                                                if ($end->lt($start)) {
-                                                    $end->addDay();
+                                                $minutes = 0;
+                                                // Permission approved => 0 menit
+                                                if ($permission && $permission->status === 'approved') {
+                                                    $minutes = 0;
+                                                } elseif ($attendance && $attendance->status === 'alpha') {
+                                                    // Alpha => 0 menit
+                                                    $minutes = 0;
+                                                } elseif ($attendance && $attendance->check_in_time && $attendance->check_out_time) {
+                                                    $cin = \Carbon\Carbon::parse($attendance->check_in_time);
+                                                    $cout = \Carbon\Carbon::parse($attendance->check_out_time);
+                                                    if ($cout->lt($cin)) { $cout->addDay(); }
+                                                    $minutes = $cin->diffInMinutes($cout);
                                                 }
-                                                $duration = $start->diffInHours($end);
+                                                $hours = $minutes / 60;
                                             @endphp
-                                            {{ $duration }} jam
+                                            {{ $hours == floor($hours) ? floor($hours).' jam' : number_format($hours, 1).' jam' }}
                                         </div>
                                         @if($attendance && ($attendance->check_in_time || $attendance->check_out_time))
                                             <div class="text-xs text-gray-500">

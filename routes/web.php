@@ -147,6 +147,12 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':User'])
             Route::get('/', [UsersAttendanceController::class, 'index'])->name('index');
             Route::post('/checkin', [UsersAttendanceController::class, 'checkin'])->name('checkin');
             Route::post('/checkout', [UsersAttendanceController::class, 'checkout'])->name('checkout');
+            // Graceful fallback if someone hits GET on early-checkout URL
+            Route::get('/request-early-checkout', function () {
+                return redirect()->route('user.attendances.index')
+                    ->with('warning', 'Gunakan formulir untuk mengajukan checkout lebih cepat.');
+            })->name('request-early-checkout.get');
+            Route::post('/request-early-checkout', [UsersAttendanceController::class, 'requestEarlyCheckout'])->name('request-early-checkout');
             Route::post('/absent', [UsersAttendanceController::class, 'absent'])->name('absent');
             Route::get('/history', [UsersAttendanceController::class, 'history'])->name('history');
         });
