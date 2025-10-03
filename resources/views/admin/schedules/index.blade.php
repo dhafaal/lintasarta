@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="min-h-screen bg-white sm:p-6 lg:p-8">
-        <div class="mx-auto space-y-8">
+        <div class="space-y-8">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div class="flex items-center space-x-4">
                     <div

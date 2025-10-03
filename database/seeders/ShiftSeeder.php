@@ -12,15 +12,15 @@ class ShiftSeeder extends Seeder
     {
         DB::table('shifts')->insert([
             [
-                'shift_name' => 'Shift A',
+                'shift_name' => 'Pagi Normal',
                 'category' => 'Pagi',
-                'start_time' => '08:00:00',
-                'end_time' => '17:00:00',
+                'start_time' => '07:00:00',
+                'end_time' => '16:00:00',
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ],
             [
-                'shift_name' => 'Shift B',
+                'shift_name' => 'Siang Normal',
                 'category' => 'Siang',
                 'start_time' => '11:00:00',
                 'end_time' => '20:00:00',
@@ -28,10 +28,10 @@ class ShiftSeeder extends Seeder
                 'updated_at' => Carbon::now(),
             ],
             [
-                'shift_name' => 'Shift C',
+                'shift_name' => 'malam Normal',
                 'category' => 'Malam',
                 'start_time' => '20:00:00',
-                'end_time' => '08:00:00',
+                'end_time' => '07:00:00',
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ],  

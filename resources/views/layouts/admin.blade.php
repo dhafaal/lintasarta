@@ -285,7 +285,7 @@
              x-transition:leave="transition-opacity ease-linear duration-300"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 md:hidden"
+             class="fixed inset-0 bg-gray-800/50 z-20 md:hidden"
              @click="closeMobileMenu()"></div>
 
         <!-- Sidebar -->
@@ -450,6 +450,13 @@
                                 class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
                             <span>Add Schedule</span>
                         </a>
+                        <a href="{{ route('admin.calendar.view') }}"
+                            @click="closeMobileMenu()"
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.calendar.view') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="calendar-range"
+                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>Calendar</span>
+                        </a>
                     </div>
                 </div>
                 <!-- Shifts -->
@@ -578,25 +585,7 @@
                     </a>
 
                     <!-- Calendar -->
-                    <a href="{{ route('admin.calendar.view') }}"
-                        @click="closeMobileMenu()"
-                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
-                        class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
-       {{ request()->routeIs('admin.calendar.view') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                        :aria-label="sidebarCollapsed ? 'Calendar' : ''">
-                        <i data-lucide="calendar-range"
-                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.calendar.view') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed || isMobile" x-transition>Calendar</span>
 
-                        <div x-show="sidebarCollapsed"
-                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                            Calendar View
-                            <div
-                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
-                            </div>
-                        </div>
-                    </a>
             </nav>
 
             <!-- Sidebar Footer -->
@@ -718,7 +707,7 @@
                                 <!-- Menu Items -->
                                 <div class="p-4 space-y-2">
                                     <!-- Dashboard Link -->
-                                    <a href="{{ route('admin.dashboard') }}"
+                                    <!--<a href="{{ route('admin.dashboard') }}" --
                                         class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-sky-50 transition-all duration-200 group">
                                         <div
                                             class="w-10 h-10 rounded-xl bg-sky-100 flex items-center justify-center group-hover:bg-sky-200 transition-colors">
@@ -731,10 +720,10 @@
                                         </div>
                                         <i data-lucide="chevron-right"
                                             class="w-4 h-4 text-gray-400 group-hover:text-sky-600"></i>
-                                    </a>
+                                    </a> -->
 
                                     <!-- Users Management Link -->
-                                    <a href="{{ route('admin.users.index') }}"
+                                    <!--<a href="{{ route('admin.users.index') }}"
                                         class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-purple-50 transition-all duration-200 group">
                                         <div
                                             class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
@@ -747,10 +736,10 @@
                                         </div>
                                         <i data-lucide="chevron-right"
                                             class="w-4 h-4 text-gray-400 group-hover:text-purple-600"></i>
-                                    </a>
+                                    </a> -->
 
                                     <!-- Schedules Link -->
-                                    <a href="{{ route('admin.schedules.index') }}"
+                                    <!--<a href="{{ route('admin.schedules.index') }}"
                                         class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-emerald-50 transition-all duration-200 group">
                                         <div
                                             class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
@@ -764,10 +753,10 @@
                                         </div>
                                         <i data-lucide="chevron-right"
                                             class="w-4 h-4 text-gray-400 group-hover:text-emerald-600"></i>
-                                    </a>
+                                    </a> -->
 
                                     <!-- Attendance Link -->
-                                    <a href="{{ route('admin.attendances.index') }}"
+                                    <!--<a href="{{ route('admin.attendances.index') }}"
                                         class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-amber-50 transition-all duration-200 group">
                                         <div
                                             class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
@@ -780,7 +769,7 @@
                                         </div>
                                         <i data-lucide="chevron-right"
                                             class="w-4 h-4 text-gray-400 group-hover:text-amber-600"></i>
-                                    </a>
+                                    </a> -->
                                     <!-- Activity Logs Link -->
                                     <a href="{{ route('admin.activity-logs.index') }}"
                                         class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-indigo-50 transition-all duration-200 group">

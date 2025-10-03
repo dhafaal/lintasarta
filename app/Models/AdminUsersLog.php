@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class AdminUsersLog extends Model
 {
@@ -56,7 +57,7 @@ class AdminUsersLog extends Model
         ?string $description = null
     ): void {
         self::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'action' => $action,
             'target_user_id' => $targetUserId,
             'target_user_name' => $targetUserName,

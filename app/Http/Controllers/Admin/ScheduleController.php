@@ -791,6 +791,7 @@ class ScheduleController extends Controller
 
                 if ($schedules->isNotEmpty()) {
                     $shiftLetters = [];
+                    $shiftNames = [];
                     $hoursList = [];
                     $attendanceStatuses = [];
 
@@ -805,6 +806,8 @@ class ScheduleController extends Controller
                         $totalMinutes += $minutes;
 
                         $shiftLetters[] = strtoupper(substr($schedule->shift->shift_name, 0, 1));
+                        // Collect full shift names for table rendering
+                        $shiftNames[] = $schedule->shift->shift_name;
                         $hoursList[] = round($minutes / 60, 1) . 'j';
                         
                         // Get attendance status for this schedule
@@ -817,6 +820,7 @@ class ScheduleController extends Controller
 
                     $row['shifts'][$day] = [
                         'shift' => implode(',', $shiftLetters), // contoh: "P,M"
+                        'shift_name' => implode(' + ', $shiftNames), // contoh: "Pagi + Malam"
                         'hours' => implode(' + ', $hoursList), // contoh: "8j + 8j"
                         'attendance_statuses' => $attendanceStatuses, // array of attendance statuses for each shift
                         'primary_attendance' => $attendanceStatuses[0] ?? null, // primary attendance status for coloring
@@ -824,6 +828,7 @@ class ScheduleController extends Controller
                 } else {
                     $row['shifts'][$day] = [
                         'shift' => '',
+                        'shift_name' => '',
                         'hours' => '',
                         'attendance_statuses' => [],
                         'primary_attendance' => null,

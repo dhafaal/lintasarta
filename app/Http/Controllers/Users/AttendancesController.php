@@ -331,7 +331,8 @@ class AttendancesController extends Controller
      */
     private function findValidLocation($userLat, $userLng)
     {
-        $locations = Location::all();
+        // Only consider active locations
+        $locations = Location::where('is_active', true)->get();
         $validLocations = [];
         $debugInfo = [];
 

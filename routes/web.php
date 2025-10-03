@@ -26,6 +26,11 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::resource('locations', LocationsController::class);   
+        Route::post('locations/{location}/toggle-active', [LocationsController::class, 'toggleActive'])
+            ->name('locations.toggle-active');
+        Route::post('locations/bulk-activate', [LocationsController::class, 'bulkActivate'])->name('locations.bulk-activate');
+        Route::post('locations/bulk-deactivate', [LocationsController::class, 'bulkDeactivate'])->name('locations.bulk-deactivate');
+        Route::post('locations/bulk-delete', [LocationsController::class, 'bulkDelete'])->name('locations.bulk-delete');
 
         // Users
         Route::resource('users', UserController::class);

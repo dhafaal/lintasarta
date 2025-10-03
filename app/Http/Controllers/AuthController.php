@@ -65,7 +65,7 @@ class AuthController extends Controller
                 'locked_out_login_attempt',
                 'blocked',
                 $email,
-                null,
+                null,   
                 "Login attempt for locked out email: {$email}"
             );
             

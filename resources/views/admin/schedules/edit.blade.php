@@ -3,28 +3,30 @@
 @section('title', 'Edit Jadwal')
 
 @section('content')
-    <div class="min-h-screen bg-white sm:p-6 lg:p-8">
-        <div class="mx-auto">
-            <!-- Header -->
-            <div class="mb-8">
-                <div class="flex items-center gap-4 mb-3">
-                    <div class="p-3 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl shadow-sm">
+    <div class="min-h-screen bg-white">
+        {{-- Header Section --}}
+        <div class="bg-white border-gray-200 px-6 py-4">
+            <div class="mx-auto">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="lucide lucide-edit text-sky-700">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            class="lucide lucide-calendar text-sky-600">
+                            <path d="M8 2v4"/>
+                            <path d="M16 2v4"/>
+                            <rect width="18" height="18" x="3" y="4" rx="2"/>
+                            <path d="M3 10h18"/>
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-700 tracking-tight">
+                        <h1 class="text-2xl font-bold text-gray-800">
                             @if(isset($isBulkEdit) && $isBulkEdit)
                                 Edit Jadwal Bulanan
                             @else
                                 Edit Jadwal Bulanan
                             @endif
                         </h1>
-                        <p class="text-gray-500 mt-1">
+                        <p class="text-sm text-gray-500">
                             @if(isset($isBulkEdit) && $isBulkEdit)
                                 @if(isset($selectedUser))
                                     Edit jadwal bulanan untuk {{ $selectedUser->name }} dengan mengubah informasi di bawah ini
@@ -38,30 +40,54 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Form Card -->
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                <!-- Form Header -->
-                <div class="bg-gradient-to-r from-sky-500 to-sky-600 px-8 py-6">
-                    <h2 class="text-xl font-semibold text-white">Informasi Jadwal</h2>
-                    <p class="text-sky-100 mt-1">Lengkapi semua field yang diperlukan untuk jadwal bulanan</p>
+        {{-- Main Content --}}
+        <div class="mx-auto px-6 py-6">
+            {{-- Form Card --}}
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-blue-50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                class="lucide lucide-edit text-sky-600">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-800">Edit Informasi Jadwal</h2>
+                            <p class="text-sm text-gray-500">Lengkapi semua field yang diperlukan untuk jadwal bulanan</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="p-8">
-                    <form action="{{ isset($isBulkEdit) && $isBulkEdit ? route('admin.schedules.update', 'bulk') : route('admin.schedules.update', $schedule) }}" method="POST" class="space-y-8" id="scheduleForm">
+                <div class="p-6">
+                    <form action="{{ isset($isBulkEdit) && $isBulkEdit ? route('admin.schedules.update', 'bulk') : route('admin.schedules.update', $schedule) }}" method="POST" class="space-y-6" id="scheduleForm">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="form_type" value="bulk_monthly">
 
-                        <!-- Month and Year -->
-                        <div class="space-y-3">
-                            <label class="block text-sm font-bold text-gray-800">
-                                Pilih Bulan dan Tahun <span class="text-red-500">*</span>
+                        {{-- Bulan dan Tahun --}}
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">
+                                <div class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                        class="lucide lucide-calendar text-sky-600">
+                                        <path d="M8 2v4"/>
+                                        <path d="M16 2v4"/>
+                                        <rect width="18" height="18" x="3" y="4" rx="2"/>
+                                        <path d="M3 10h18"/>
+                                    </svg>
+                                    <span>Pilih Bulan dan Tahun <span class="text-red-500">*</span></span>
+                                </div>
                             </label>
-                            <div class="flex items-center gap-4">
-                                <div class="relative group">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="relative">
                                     <select id="calendarMonth" name="month"
-                                        class="block w-48 py-4 px-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 bg-gray-50 focus:bg-white cursor-pointer"
+                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white cursor-pointer"
                                         required>
                                         <option value="" disabled>Pilih bulan</option>
                                         @php
@@ -73,10 +99,17 @@
                                             </option>
                                         @endfor
                                     </select>
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-chevron-down text-gray-400">
+                                            <path d="m6 9 6 6 6-6"/>
+                                        </svg>
+                                    </div>
                                 </div>
-                                <div class="relative group">
+                                <div class="relative">
                                     <select id="calendarYear" name="year"
-                                        class="block w-32 py-4 px-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 bg-gray-50 focus:bg-white cursor-pointer"
+                                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white cursor-pointer"
                                         required>
                                         <option value="" disabled>Pilih tahun</option>
                                         @php
@@ -87,49 +120,82 @@
                                                 {{ $y }}</option>
                                         @endfor
                                     </select>
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-chevron-down text-gray-400">
+                                            <path d="m6 9 6 6 6-6"/>
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
-                            <p class="text-sm text-gray-500">
-                                <i class="fas fa-info-circle mr-1"></i>
+                            <p class="text-xs text-gray-500 flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-info">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 16v-4"/>
+                                    <path d="M12 8h.01"/>
+                                </svg>
                                 Mengubah bulan/tahun akan memuat ulang kalender dan menampilkan jadwal yang sudah ada
                             </p>
                         </div>
 
-                        <!-- User Information (Read-only) -->
-                        <div class="space-y-3">
-                            <label class="block text-sm font-bold text-gray-800">
-                                Karyawan
-                            </label>
-                            <div class="relative group">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        {{-- Karyawan --}}
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-gray-700">
+                                <div class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                        class="lucide lucide-user text-sky-600">
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
                                     </svg>
+                                    <span>Karyawan</span>
                                 </div>
+                            </label>
+                            <div class="relative">
                                 @if(isset($isBulkEdit) && $isBulkEdit)
                                     @if(isset($selectedUser))
-                                        <div class="block w-full pl-12 pr-4 py-4 border-2 border-sky-200 rounded-xl bg-sky-50 text-gray-900 font-medium">
+                                        <div class="block w-full px-4 py-2.5 border border-sky-300 rounded-lg bg-sky-50 text-gray-900 font-medium">
                                             {{ $selectedUser->name }}
                                         </div>
                                         <input type="hidden" name="user_id" value="{{ $selectedUser->id }}">
                                         <input type="hidden" id="user_id" value="{{ $selectedUser->id }}">
                                     @else
-                                        <select name="user_id" id="user_id" class="block w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 bg-gray-50 focus:bg-white" required>
+                                        <select name="user_id" id="user_id" class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white cursor-pointer" required>
                                             <option value="">Pilih Karyawan</option>
                                             @foreach($users as $user)
                                                 <option value="{{ $user->id }}">{{ $user->name }}</option>
                                             @endforeach
                                         </select>
+                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                class="lucide lucide-chevron-down text-gray-400">
+                                                <path d="m6 9 6 6 6-6"/>
+                                            </svg>
+                                        </div>
                                     @endif
                                 @else
-                                    <div class="block w-full pl-12 pr-4 py-4 border-2 border-sky-200 rounded-xl bg-sky-50 text-gray-900 font-medium">
+                                    <div class="block w-full px-4 py-2.5 border border-sky-300 rounded-lg bg-sky-50 text-gray-900 font-medium">
                                         {{ $schedule->user->name }}
                                     </div>
                                     <input type="hidden" name="user_id" value="{{ $schedule->user_id }}">
                                     <input type="hidden" id="user_id" value="{{ $schedule->user_id }}">
                                 @endif
+                                @if(!isset($selectedUser) || !$selectedUser)
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-user text-gray-400">
+                                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                    </div>
+                                @endif
                             </div>
-                            <p class="text-sm text-gray-500">Karyawan tidak dapat diubah saat mengedit jadwal</p>
+                            <p class="text-xs text-gray-500">Karyawan tidak dapat diubah saat mengedit jadwal</p>
                         </div>
 
 
@@ -176,26 +242,31 @@
                                 </div>      
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-200 dark:border-gray-700">
+                        {{-- Action Buttons --}}
+                        <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
                             <button type="submit"
-                                class="flex-1 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus:ring-4 focus:ring-sky-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 id="submitBtn">
-                                <span class="flex items-center justify-center gap-3" id="submitText">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4v10m6-10v10m-6-4h6"></path>
+                                <span class="flex items-center justify-center gap-2" id="submitText">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                        class="lucide lucide-save">
+                                        <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+                                        <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/>
+                                        <path d="M7 3v4a1 1 0 0 0 1 1h7"/>
                                     </svg>
                                     Update Jadwal Bulanan
                                 </span>
                             </button>
                             <a href="{{ route('admin.schedules.index') }}"
-                                class="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold py-4 px-8 rounded-xl transition-all duration-200 text-center focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-600 border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500">
-                                <span class="flex items-center justify-center gap-3">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                                    </svg>
-                                    Kembali ke Daftar
-                                </span>
+                                class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus:ring-4 focus:ring-gray-200 border border-gray-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-arrow-left">
+                                    <path d="m12 19-7-7 7-7"/>
+                                    <path d="M19 12H5"/>
+                                </svg>
+                                Kembali ke Daftar
                             </a>
                         </div>
                         

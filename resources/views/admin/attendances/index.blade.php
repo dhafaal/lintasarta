@@ -395,7 +395,7 @@
                                                 </div>
                                                 <div>
                                                     <div class="text-sm font-semibold text-gray-900">{{ $attendance->location->name }}</div>
-                                                    <div class="text-xs text-gray-500">Radius: {{ $attendance->location->radius }}m</div>
+                                                    <div class="text-xs text-gray-500"><span class="uppercase">{{ ucfirst($attendance->location->type) }}</span></div>
                                                 </div>
                                             </div>
                                         @else

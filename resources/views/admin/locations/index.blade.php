@@ -49,7 +49,7 @@
                 </div>
                 <x-stats-card
                     title="Lokasi Aktif"
-                    :count="$locations->count()"
+                    :count="$locations->where('is_active', true)->count()"
                     subtitle="Siap digunakan"
                     bgColor="bg-gradient-to-br from-green-100 to-green-200"
                     icon='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 text-green-600 lucide lucide-check-circle-2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>'
@@ -97,10 +97,21 @@
                                     </a>
                                 @endif
                             </form>
-                            <div class="text-sm text-sky-600 bg-sky-100 px-3 py-1 rounded-full">
-                                {{ $locations->count() }} lokasi
+                            <div class="hidden sm:flex items-center space-x-2">
+                                <button type="button" id="btn-bulk-activate" class="px-3 py-2 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 transition">Aktifkan</button>
+                                <button type="button" id="btn-bulk-deactivate" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition">Nonaktifkan</button>
+                                <button type="button" id="btn-bulk-delete" class="px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 transition">Hapus</button>
                             </div>
+                            <div class="text-sm text-sky-600 bg-sky-100 px-3 py-1 rounded-full">{{ $locations->count() }} lokasi</div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="px-8 pt-4 bg-white">
+                    <div class="inline-flex rounded-xl border border-sky-200 overflow-hidden">
+                        <button type="button" id="tab-wfo" class="px-4 py-2 text-sm font-semibold bg-sky-100 text-sky-800">WFO</button>
+                        <button type="button" id="tab-wfa" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">WFA</button>
                     </div>
                 </div>
 
@@ -108,6 +119,9 @@
                     <table class="w-full">
                         <thead class="bg-gray-50 border-b-2 border-gray-200">
                             <tr>
+                                <th class="px-4 py-4 text-left">
+                                    <input id="select-all" type="checkbox" class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
+                                </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -151,123 +165,93 @@
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @forelse($locations as $location)
-                                <tr class="hover:bg-sky-50 transition-colors duration-200 group">
-                                    <td class="px-8 py-6 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div
-                                                class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-4 group-hover:from-sky-200 group-hover:to-sky-300 transition-colors">
-                                                <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <div class="text-base font-semibold text-gray-700">{{ $location->name }}</div>
-                                                <div class="text-sm text-gray-500">Lokasi Absensi</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-6 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">
-                                            <div class="font-medium">{{ number_format($location->latitude, 6) }}</div>
-                                            <div class="text-xs text-gray-500">{{ number_format($location->longitude, 6) }}</div>
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-6 whitespace-nowrap">
-                                        <div class="flex items-center space-x-3">
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-sky-100 text-sky-800">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                    class="lucide lucide-target mr-1">
-                                                    <circle cx="12" cy="12" r="10"></circle>
-                                                    <circle cx="12" cy="12" r="6"></circle>
-                                                    <circle cx="12" cy="12" r="2"></circle>
-                                                </svg>
-                                                {{ $location->radius }}m
-                                            </span>
-                                            @if($location->radius <= 100)
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                    Ketat
-                                                </span>
-                                            @elseif($location->radius <= 500)
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                    Sedang
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                                    Luas
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-6 whitespace-nowrap text-left">
-                                        <div class="flex items-center justify-start space-x-3">
-                                            <a href="{{ route('admin.locations.edit', $location) }}"
-                                               class="inline-flex items-center px-4 py-2 bg-sky-100 hover:bg-sky-200 text-sky-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                    class="lucide lucide-edit mr-2">
-                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                                </svg>
-                                                Edit
-                                            </a>
-                                            <form action="{{ route('admin.locations.destroy', $location) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus lokasi ini?')" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                        class="inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                        class="lucide lucide-trash-2 mr-2">
-                                                        <path d="M3 6h18"></path>
-                                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                                                        <line x1="10" x2="10" y1="11" y2="17"></line>
-                                                        <line x1="14" x2="14" y1="11" y2="17"></line>
-                                                    </svg>
-                                                    Hapus
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="px-8 py-16 text-center">
-                                        <div class="flex flex-col items-center">
-                                            <div
-                                                class="w-20 h-20 bg-gradient-to-br from-sky-100 to-sky-200 rounded-full flex items-center justify-center mb-6">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                    class="lucide lucide-map-pin text-sky-400">
-                                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                                    <circle cx="12" cy="10" r="3"></circle>
-                                                </svg>
-                                            </div>
-                                            <h3 class="text-xl font-bold text-gray-900 mb-2">Belum ada lokasi</h3>
-                                            <p class="text-gray-600 mb-6 max-w-sm">Mulai dengan menambahkan lokasi pertama untuk absensi karyawan</p>
-                                            <a href="{{ route('admin.locations.create') }}"
-                                               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg">
-                                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                                </svg>
-                                                Tambah Lokasi Pertama
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforelse
+                        <!-- WFO body -->
+                        <tbody id="tbody-wfo" class="divide-y divide-gray-100">
+                            @include('admin.locations.partials.wfo', ['locations' => $locations])
+                        </tbody>
+                        <!-- WFA body -->
+                        <tbody id="tbody-wfa" class="divide-y divide-gray-100 hidden">
+                            @include('admin.locations.partials.wfa', ['locations' => $locations])
                         </tbody>
                     </table>
                 </div>
+                <form id="bulk-form" method="POST" class="hidden">
+                    @csrf
+                </form>
             </div>
         </div>
     </div>
+    <script>
+    (function(){
+        const tabWfo = document.getElementById('tab-wfo');
+        const tabWfa = document.getElementById('tab-wfa');
+        const bodyWfo = document.getElementById('tbody-wfo');
+        const bodyWfa = document.getElementById('tbody-wfa');
+        const selectAll = document.getElementById('select-all');
+        const bulkForm = document.getElementById('bulk-form');
+        const btnActivate = document.getElementById('btn-bulk-activate');
+        const btnDeactivate = document.getElementById('btn-bulk-deactivate');
+        const btnDelete = document.getElementById('btn-bulk-delete');
+
+        function activate(tab){
+            if(tab === 'wfo'){
+                bodyWfo.classList.remove('hidden');
+                bodyWfa.classList.add('hidden');
+                tabWfo.classList.add('bg-sky-100','text-sky-800');
+                tabWfa.classList.remove('bg-sky-100','text-sky-800');
+                tabWfa.classList.add('text-gray-600');
+            } else {
+                bodyWfo.classList.add('hidden');
+                bodyWfa.classList.remove('hidden');
+                tabWfa.classList.add('bg-sky-100','text-sky-800');
+                tabWfo.classList.remove('bg-sky-100','text-sky-800');
+            }
+            // reset select all when switching
+            if (selectAll) selectAll.checked = false;
+        }
+        // bind tab click listeners
+        tabWfo?.addEventListener('click', () => activate('wfo'));
+        tabWfa?.addEventListener('click', () => activate('wfa'));
+        // set default tab
+        activate('wfo');
+        // Return NodeList of checkboxes only from the visible tab body
+        function getAllCheckboxes(){
+            const visibleBody = bodyWfo.classList.contains('hidden') ? bodyWfa : bodyWfo;
+            return visibleBody.querySelectorAll('input[name="ids[]"]');
+        }
+        selectAll?.addEventListener('change', (e) => {
+            getAllCheckboxes().forEach(cb => cb.checked = e.target.checked);
+        });
+
+        function submitBulk(action){
+            const selected = Array.from(getAllCheckboxes()).some(cb => cb.checked);
+            if(!selected){
+                alert('Pilih minimal satu lokasi.');
+                return;
+            }
+            // Clear previous hidden ids
+            bulkForm.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
+            // Append current selected ids into hidden form
+            getAllCheckboxes().forEach(cb => {
+                if(cb.checked){
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ids[]';
+                    input.value = cb.value;
+                    bulkForm.appendChild(input);
+                }
+            });
+            bulkForm.action = action;
+            bulkForm.submit();
+        }
+
+        btnActivate?.addEventListener('click', () => submitBulk("{{ route('admin.locations.bulk-activate') }}"));
+        btnDeactivate?.addEventListener('click', () => submitBulk("{{ route('admin.locations.bulk-deactivate') }}"));
+        btnDelete?.addEventListener('click', () => {
+            if(confirm('Yakin ingin menghapus lokasi terpilih?')){
+                submitBulk("{{ route('admin.locations.bulk-delete') }}");
+            }
+        });
+    })();
+</script>
 @endsection

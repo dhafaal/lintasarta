@@ -51,10 +51,14 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
         }
 
         $data[] = [];
+        $totalHoursFormatted = ($this->grandTotalHours == floor($this->grandTotalHours)) 
+            ? floor($this->grandTotalHours) . 'j' 
+            : number_format($this->grandTotalHours, 1) . 'j';
+        
         $data[] = [
             'NO'   => '',
             'NAMA' => 'TOTAL JAM KERJA SEMUA PEGAWAI',
-            'REKAP' => $this->grandTotalHours . 'j'
+            'REKAP' => $totalHoursFormatted
         ];
 
         return $data;
@@ -68,29 +72,62 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
 
         for ($day = 1; $day <= $this->daysInMonth; $day++) {
             $date = Carbon::createFromDate($this->year, $this->month, $day)->format('Y-m-d');
-            $schedule = Schedules::with('shift')->where('user_id', $user->id)->whereDate('schedule_date', $date)->first();
+            
+            // Ambil semua schedule untuk hari ini (bisa ada shift 1 dan shift 2)
+            $schedules = Schedules::with(['shift', 'attendances'])
+                ->where('user_id', $user->id)
+                ->whereDate('schedule_date', $date)
+                ->orderBy('id') // Gunakan id untuk ordering
+                ->get();
 
-            if ($schedule && $schedule->shift) {
-                $start = Carbon::parse($schedule->shift->start_time);
-                $end   = Carbon::parse($schedule->shift->end_time);
-                if ($end->lt($start)) $end->addDay();
+            $shiftNames = [];
+            $dayMinutes = 0;
+            $shiftCount = 0;
 
-                $minutes = $start->diffInMinutes($end);
-                $totalMinutes += $minutes;
+            foreach ($schedules as $schedule) {
+                if ($schedule->shift) {
+                    $start = Carbon::parse($schedule->shift->start_time);
+                    $end   = Carbon::parse($schedule->shift->end_time);
+                    if ($end->lt($start)) $end->addDay();
 
-                $shiftCode = strtoupper(substr($schedule->shift->shift_name, 0, 1));
-                $rowShift[$day] = $shiftCode;
-                $rowHours[$day] = floor($minutes / 60) . 'j';
+                    $minutes = $start->diffInMinutes($end);
+                    $dayMinutes += $minutes;
+                    $shiftCount++;
+                    
+                    // Tambahkan nama shift dengan penanda jika lebih dari satu shift
+                    $position = $shiftCount > 1 ? '' : '';
+                    $shiftNames[] = $schedule->shift->shift_name . $position;
+                }
+            }
+
+            $totalMinutes += $dayMinutes;
+
+            if (!empty($shiftNames)) {
+                // Gabungkan shift jika ada lebih dari satu
+                $rowShift[$day] = implode(' + ', $shiftNames);
+                
+                // Format jam kerja
+                $hours = $dayMinutes / 60;
+                if ($hours == floor($hours)) {
+                    $rowHours[$day] = floor($hours) . 'j';
+                } else {
+                    $rowHours[$day] = number_format($hours, 1) . 'j';
+                }
             } else {
-                $rowShift[$day] = '';
-                $rowHours[$day] = '';
+                $rowShift[$day] = '-';
+                $rowHours[$day] = '-';
             }
         }
 
         $rowShift['TOTAL JAM'] = '';
-        $rowHours['TOTAL JAM'] = round($totalMinutes / 60, 1) . 'j';
+        $totalHours = $totalMinutes / 60;
+        if ($totalHours == floor($totalHours)) {
+            $rowHours['TOTAL JAM'] = floor($totalHours) . 'j';
+        } else {
+            $rowHours['TOTAL JAM'] = number_format($totalHours, 1) . 'j';
+        }
 
-        return [$rowShift, $rowHours, round($totalMinutes / 60, 1)];
+        return [$rowShift, $rowHours, $totalHours];
     }
 
     public function headings(): array
@@ -132,13 +169,18 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
         $this->styleData($sheet, $dataStartRow, $highestRow, $colCount, $highestCol);
         $this->styleRekapTotal($sheet, $highestRow);
 
-        // Adjusted column widths for better readability
-        $sheet->getColumnDimension('A')->setWidth(6); // Slightly wider for NO
-        $sheet->getColumnDimension('B')->setWidth(35); // Wider for NAMA
+        // Adjusted column widths untuk shift 1 dan shift 2
+        $sheet->getColumnDimension('A')->setWidth(6); // NO
+        $sheet->getColumnDimension('B')->setWidth(35); // NAMA
         for ($i = 3; $i < $colCount; $i++) {
-            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setWidth(4.5); // Slightly narrower for days
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setWidth(18); // Lebih lebar untuk shift ganda
         }
-        $sheet->getColumnDimension($highestCol)->setWidth(12); // Adjusted for TOTAL JAM
+        $sheet->getColumnDimension($highestCol)->setWidth(15); // TOTAL JAM
+
+        // Set row height untuk mengakomodasi shift ganda
+        for ($row = $dataStartRow; $row <= $highestRow; $row++) {
+            $sheet->getRowDimension($row)->setRowHeight(35); // Lebih tinggi untuk shift ganda
+        }
 
         $sheet->freezePane('C6');
         return [];
@@ -200,13 +242,14 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
         // Consistent font and cleaner borders
         $sheet->getStyle("A{$startRow}:{$highestCol}{$highestRow}")->applyFromArray([
             'font' => [
-                'name' => 'Geist',
-                'size' => 10,
+                'name' => 'Arial',
+                'size' => 9,
                 'color' => ['argb' => 'FF1A1A1A'], // Darker gray for text
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
                 'vertical' => Alignment::VERTICAL_CENTER,
+                'wrapText' => true, // Wrap text untuk nama shift panjang
             ],
             'borders' => [
                 'allBorders' => [
@@ -226,17 +269,39 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
             }
         }
 
-        // Refined shift colors
+        // Shift colors sesuai dengan calendar
         for ($row = $startRow; $row <= $highestRow; $row += 2) {
             for ($i = 3; $i < $colCount; $i++) {
                 $col = Coordinate::stringFromColumnIndex($i);
                 $val = $sheet->getCell($col . $row)->getValue();
-                if ($val === 'P') {
-                    $this->applyShiftStyle($sheet, $col . $row, 'FF003087', 'FFE6EEFF'); // Soft blue
-                } elseif ($val === 'S') {
-                    $this->applyShiftStyle($sheet, $col . $row, 'FF2E7D32', 'FFE8F5E9'); // Soft green
-                } elseif ($val === 'M') {
-                    $this->applyShiftStyle($sheet, $col . $row, 'FF8E24AA', 'FFF3E8FD'); // Soft purple
+                
+                // Deteksi berdasarkan nama shift lengkap (termasuk shift ganda)
+                if (stripos($val, 'Pagi') !== false || stripos($val, 'Morning') !== false) {
+                    // Jika ada shift ganda dengan Pagi, gunakan warna campuran
+                    if (strpos($val, '+') !== false) {
+                        $this->applyShiftStyle($sheet, $col . $row, 'FF1E40AF', 'FFE0E7FF'); // Darker blue untuk shift ganda
+                    } else {
+                        $this->applyShiftStyle($sheet, $col . $row, 'FF3B82F6', 'FFDBEAFE'); // Blue - Pagi
+                    }
+                } elseif (stripos($val, 'Siang') !== false || stripos($val, 'Day') !== false || stripos($val, 'Afternoon') !== false) {
+                    if (strpos($val, '+') !== false) {
+                        $this->applyShiftStyle($sheet, $col . $row, 'FFB45309', 'FFFEF3C7'); // Darker yellow untuk shift ganda
+                    } else {
+                        $this->applyShiftStyle($sheet, $col . $row, 'FFEAB308', 'FFFEF3C7'); // Yellow - Siang
+                    }
+                } elseif (stripos($val, 'Malam') !== false || stripos($val, 'Night') !== false) {
+                    if (strpos($val, '+') !== false) {
+                        $this->applyShiftStyle($sheet, $col . $row, 'FF7C3AED', 'FFF3E8FF'); // Darker purple untuk shift ganda
+                    } else {
+                        $this->applyShiftStyle($sheet, $col . $row, 'FFA855F7', 'FFF3E8FF'); // Purple - Malam
+                    }
+                } elseif ($val !== '-' && $val !== '') {
+                    // Untuk shift ganda dengan kombinasi lain
+                    if (strpos($val, '+') !== false) {
+                        $this->applyShiftStyle($sheet, $col . $row, 'FF374151', 'FFF3F4F6'); // Dark gray untuk shift ganda lainnya
+                    } else {
+                        $this->applyShiftStyle($sheet, $col . $row, 'FF6B7280', 'FFF9FAFB'); // Gray - Shift lainnya
+                    }
                 }
             }
         }
@@ -244,8 +309,9 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
         // Total column styling
         $sheet->getStyle("{$highestCol}{$startRow}:{$highestCol}{$highestRow}")->applyFromArray([
             'font' => [
-                'name' => 'Geist',
+                'name' => 'Arial',
                 'bold' => true,
+                'size' => 10,
                 'color' => ['argb' => 'FF003087'], // Dark blue for totals
             ],
             'fill' => [

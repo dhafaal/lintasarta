@@ -17,6 +17,8 @@ return new class extends Migration
             $table->double('latitude');
             $table->double('longitude');
             $table->integer('radius')->default(500);
+            $table->enum('type', ['wfa', 'wfo'])->default('wfo');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
