@@ -26,11 +26,12 @@ class AttendancesController extends Controller
 
         $attendance = $schedule?->attendances->where('user_id', $user->id)->first();
 
-        // Check if user has permission for today
+        // Check if user has permission for today (only pending/approved, not rejected)
         $todayPermission = \App\Models\Permissions::where('user_id', $user->id)
             ->whereHas('schedule', function ($q) use ($today) {
                 $q->whereDate('schedule_date', $today);
             })
+            ->whereIn('status', ['pending', 'approved']) // Exclude rejected permissions
             ->first();
 
         $schedules = Schedules::with(['shift', 'permissions', 'attendances'])
@@ -50,12 +51,13 @@ class AttendancesController extends Controller
         ]);
 
         // Cek apakah user memiliki izin (pending/approved) untuk tanggal ini
+        // Jika izin ditolak (rejected), user harus bisa check-in
         $schedule = Schedules::findOrFail($request->schedule_id);
         $existingPermission = \App\Models\Permissions::where('user_id', Auth::id())
             ->whereHas('schedule', function ($q) use ($schedule) {
                 $q->whereDate('schedule_date', $schedule->schedule_date);
             })
-            ->whereIn('status', ['pending', 'approved'])
+            ->whereIn('status', ['pending', 'approved']) // Hanya cek pending dan approved, bukan rejected
             ->first();
 
         if ($existingPermission) {
@@ -77,30 +79,41 @@ class AttendancesController extends Controller
             return back()->with('error', $validation['message']);
         }
 
-        $attendance = Attendance::firstOrCreate(
-            ['schedule_id' => $request->schedule_id, 'user_id' => Auth::id()],
-            [
+        // Cek apakah sudah ada attendance record
+        $attendance = Attendance::where('schedule_id', $request->schedule_id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if ($attendance) {
+            // Jika sudah ada dan sudah check-in, tidak boleh check-in lagi
+            if ($attendance->check_in_time) {
+                return back()->with('error', 'Anda sudah check-in sebelumnya.');
+            }
+            
+            // Jika ada tapi belum check-in (status alpha dari rejected permission), update
+            $attendance->update([
                 'location_id' => $validLocation->id,
                 'status' => $validation['status'],
                 'is_late' => $validation['is_late'],
                 'late_minutes' => $validation['late_minutes'],
-                'check_in_time' => now()
-            ]
-        );
-
-        if ($attendance->wasRecentlyCreated === false) {
-            return back()->with('error', 'Anda sudah check-in sebelumnya.');
+                'check_in_time' => now(),
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+            ]);
+        } else {
+            // Buat attendance baru
+            $attendance = Attendance::create([
+                'schedule_id' => $request->schedule_id,
+                'user_id' => Auth::id(),
+                'location_id' => $validLocation->id,
+                'status' => $validation['status'],
+                'is_late' => $validation['is_late'],
+                'late_minutes' => $validation['late_minutes'],
+                'check_in_time' => now(),
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+            ]);
         }
-
-        $attendance->update([
-            'location_id' => $validLocation->id,
-            'status' => $validation['status'],
-            'is_late' => $validation['is_late'],
-            'late_minutes' => $validation['late_minutes'],
-            'check_in_time' => now(),
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude
-        ]);
 
         // Log user activity
         UserActivityLog::log(
@@ -433,5 +446,58 @@ class AttendancesController extends Controller
                     ? 'Check-in berhasil dalam batas toleransi 5 menit.' 
                     : 'Check-in berhasil tepat waktu.')
         ];
+    }
+
+    public function getUpcomingSchedules()
+    {
+        $user = Auth::user();
+        $today = now()->toDateString();
+
+        try {
+            // First, get all upcoming schedules for debugging
+            $allSchedules = Schedules::with(['shift', 'permissions'])
+                ->where('user_id', $user->id)
+                ->whereDate('schedule_date', '>=', $today)
+                ->orderBy('schedule_date')
+                ->limit(30)
+                ->get();
+
+            // Filter out schedules that have pending or approved permissions
+            $schedules = $allSchedules->filter(function ($schedule) {
+                $hasBlockingPermission = $schedule->permissions()
+                    ->whereIn('status', ['pending', 'approved'])
+                    ->exists();
+                return !$hasBlockingPermission;
+            });
+
+            \Log::info('Upcoming schedules query', [
+                'user_id' => $user->id,
+                'today' => $today,
+                'all_schedules_count' => $allSchedules->count(),
+                'filtered_schedules_count' => $schedules->count(),
+                'all_schedules' => $allSchedules->toArray(),
+                'filtered_schedules' => $schedules->values()->toArray()
+            ]);
+
+            return response()->json([
+                'schedules' => $schedules->values(), // Reset array keys
+                'debug' => [
+                    'user_id' => $user->id,
+                    'today' => $today,
+                    'all_count' => $allSchedules->count(),
+                    'filtered_count' => $schedules->count()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error loading upcoming schedules', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to load schedules',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

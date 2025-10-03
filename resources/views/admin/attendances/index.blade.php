@@ -52,8 +52,7 @@
                                         <i data-lucide="calendar" class="w-4 h-4 text-sky-600 mr-2"></i>
                                         <span class="text-sm font-semibold text-gray-700">Export Bulanan</span>
                                     </div>
-                                    <form method="POST" action="{{ route('admin.attendances.export.monthly') }}" class="flex items-center space-x-2">
-                                        @csrf
+                                    <form method="GET" action="{{ route('admin.attendances.export.monthly') }}" class="flex items-center space-x-2">
                                         <select name="month" class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
                                             @for($m=1;$m<=12;$m++)
                                                 <option value="{{ $m }}" {{ (int)date('n') === $m ? 'selected' : '' }}>{{ str_pad($m,2,'0',STR_PAD_LEFT) }}</option>
@@ -77,8 +76,7 @@
                                         <i data-lucide="calendar-range" class="w-4 h-4 text-sky-600 mr-2"></i>
                                         <span class="text-sm font-semibold text-gray-700">Export Tahunan</span>
                                     </div>
-                                    <form method="POST" action="{{ route('admin.attendances.export.yearly') }}" class="flex items-center space-x-2">
-                                        @csrf
+                                    <form method="GET" action="{{ route('admin.attendances.export.yearly') }}" class="flex items-center space-x-2">
                                         <select name="year" class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
                                             @for($y = now()->year; $y >= now()->year - 5; $y--)
                                                 <option value="{{ $y }}" {{ now()->year === $y ? 'selected' : '' }}>{{ $y }}</option>
@@ -97,8 +95,7 @@
                                         <i data-lucide="database" class="w-4 h-4 text-sky-600 mr-2"></i>
                                         <span class="text-sm font-semibold text-gray-700">Export Seluruh Data</span>
                                     </div>
-                                    <form method="POST" action="{{ route('admin.attendances.export.all') }}" class="flex items-center justify-between">
-                                        @csrf
+                                    <form method="GET" action="{{ route('admin.attendances.export.all') }}" class="flex items-center justify-between">
                                         <span class="text-xs text-gray-500">Semua karyawan, semua waktu</span>
                                         <button type="submit" class="inline-flex items-center px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg">
                                             <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1"></i>
@@ -113,8 +110,7 @@
                                         <i data-lucide="user-round" class="w-4 h-4 text-sky-600 mr-2"></i>
                                         <span class="text-sm font-semibold text-gray-700">Export per User</span>
                                     </div>
-                                    <form method="POST" action="{{ route('admin.attendances.export.user') }}" class="space-y-3">
-                                        @csrf
+                                    <form method="GET" action="{{ route('admin.attendances.export.per-user') }}" class="space-y-3">
 
                                         <!-- User Search Section -->
                                         <div class="relative">

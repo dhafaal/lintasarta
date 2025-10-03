@@ -12,6 +12,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendancesExport;
 
@@ -167,24 +168,22 @@ class AttendancesController extends Controller
 
         $attendanceAction = 'updated';
         if ($attendance) {
-            // Jika sebelumnya status izin dan belum check-in, kembalikan ke alpha
-            if ($attendance->status === 'izin' && !$attendance->check_in_time) {
-                $attendance->update([
-                    'status' => 'alpha',
-                    'is_late' => false,
-                    'late_minutes' => 0,
-                ]);
-            }
-        } else {
-            // Jika belum ada attendance record, buat dengan status alpha
-            Attendance::create([
-                'user_id' => $permission->user_id,
-                'schedule_id' => $permission->schedule_id,
-                'status' => 'alpha',
+            // Jika permission ditolak, reset attendance agar user bisa check-in
+            $attendance->update([
+                'status' => 'alpha', // Set ke alpha dulu, nanti bisa berubah saat check-in
                 'is_late' => false,
                 'late_minutes' => 0,
+                'check_in_time' => null, // Reset check-in time agar bisa check-in lagi
+                'check_out_time' => null, // Reset check-out time
+                'latitude' => null,
+                'longitude' => null,
+                'latitude_checkout' => null,
+                'longitude_checkout' => null,
             ]);
-            $attendanceAction = 'created';
+        } else {
+            // Jika belum ada attendance record, jangan buat dulu
+            // Biarkan kosong agar user bisa check-in normal
+            $attendanceAction = 'cleared - user can now check-in';
         }
 
         // Log admin permission activity
@@ -447,4 +446,311 @@ class AttendancesController extends Controller
         $filename = 'absensi-seluruh-data-' . now()->format('Y-m-d') . '.xlsx';
         return Excel::download(new AttendancesExport('all', null, null, null), $filename);
     }
+
+    /**
+     * Display leave requests management page
+     */
+    public function leaveRequests(Request $request)
+    {
+        $statusFilter = $request->input('status');
+        
+        // Group permissions by user and reason to get leave requests
+        $query = DB::table('permissions')
+            ->select([
+                'user_id',
+                'reason',
+                'type',
+                'status',
+                'created_at',
+                DB::raw('COUNT(*) as schedules_count'),
+                DB::raw('MIN(id) as first_permission_id'),
+                DB::raw('GROUP_CONCAT(id) as permission_ids')
+            ])
+            ->where('type', 'cuti')
+            ->groupBy(['user_id', 'reason', 'type', 'status', 'created_at'])
+            ->orderBy('created_at', 'desc');
+
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+
+        $leaveRequestsData = $query->paginate(15);
+
+        // Transform the data to include user information and date ranges
+        $leaveRequests = $leaveRequestsData->through(function ($item) {
+            $user = User::find($item->user_id);
+            $permissionIds = explode(',', $item->permission_ids);
+            
+            // Get date range for this leave request
+            $permissions = Permissions::with('schedule')
+                ->whereIn('id', $permissionIds)
+                ->get();
+            
+            $dates = $permissions->pluck('schedule.schedule_date')->sort();
+            $dateRange = $dates->count() > 1 
+                ? $dates->first() . ' - ' . $dates->last()
+                : $dates->first();
+
+            return (object) [
+                'id' => $item->first_permission_id,
+                'user' => $user,
+                'reason' => $item->reason,
+                'status' => $item->status,
+                'schedules_count' => $item->schedules_count,
+                'date_range' => $dateRange,
+                'created_at' => Carbon::parse($item->created_at),
+                'permission_ids' => $permissionIds
+            ];
+        });
+
+        return view('admin.attendances.leave-requests', compact('leaveRequests'));
+    }
+
+    /**
+     * Show leave request details
+     */
+    public function showLeaveRequest($id)
+    {
+        $permission = Permissions::with(['user', 'schedule.shift'])->findOrFail($id);
+        
+        // Get all permissions with same user, reason, and created_at (same leave request)
+        $permissions = Permissions::with(['schedule.shift'])
+            ->where('user_id', $permission->user_id)
+            ->where('reason', $permission->reason)
+            ->where('type', 'cuti')
+            ->whereDate('created_at', $permission->created_at->toDateString())
+            ->orderBy('schedule_id')
+            ->get();
+
+        $leaveRequest = (object) [
+            'id' => $id,
+            'user' => $permission->user,
+            'reason' => $permission->reason,
+            'status' => $permission->status,
+            'created_at' => $permission->created_at
+        ];
+
+        return view('admin.attendances.leave-request-detail', compact('leaveRequest', 'permissions'));
+    }
+
+    /**
+     * Process leave request schedules (approve/reject selected schedules)
+     */
+    public function processLeaveRequestSchedules(Request $request, $id)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'approved_permissions' => 'nullable|array',
+            'approved_permissions.*' => 'exists:permissions,id'
+        ]);
+
+        $permission = Permissions::findOrFail($id);
+        $action = $request->input('action');
+        
+        // Get all permissions for this leave request
+        $allPermissions = Permissions::where('user_id', $permission->user_id)
+            ->where('reason', $permission->reason)
+            ->where('type', 'cuti')
+            ->whereDate('created_at', $permission->created_at->toDateString())
+            ->get();
+
+        DB::beginTransaction();
+        
+        try {
+            if ($action === 'approve') {
+                $approvedIds = $request->input('approved_permissions', []);
+                
+                // Approve selected permissions
+                foreach ($allPermissions as $perm) {
+                    $newStatus = in_array($perm->id, $approvedIds) ? 'approved' : 'rejected';
+                    $perm->update(['status' => $newStatus]);
+                    
+                    // Log admin action
+                    AdminPermissionsLog::create([
+                        'user_id' => Auth::id(),
+                        'permission_id' => $perm->id,
+                        'action' => $newStatus,
+                        'notes' => "Leave request {$newStatus} by admin"
+                    ]);
+
+                    // Handle attendance based on status
+                    if ($newStatus === 'approved') {
+                        // Set attendance to izin
+                        Attendance::updateOrCreate(
+                            [
+                                'user_id' => $perm->user_id,
+                                'schedule_id' => $perm->schedule_id,
+                            ],
+                            [
+                                'status' => 'izin',
+                                'is_late' => false,
+                                'late_minutes' => 0,
+                                'check_in_time' => null,
+                                'check_out_time' => null,
+                                'latitude' => null,
+                                'longitude' => null,
+                                'latitude_checkout' => null,
+                                'longitude_checkout' => null,
+                            ]
+                        );
+                    } else {
+                        // Reset attendance for rejected permission
+                        $attendance = Attendance::where('user_id', $perm->user_id)
+                            ->where('schedule_id', $perm->schedule_id)
+                            ->first();
+
+                        if ($attendance) {
+                            $attendance->update([
+                                'status' => 'alpha',
+                                'check_in_time' => null,
+                                'check_out_time' => null,
+                                'latitude' => null,
+                                'longitude' => null,
+                                'latitude_checkout' => null,
+                                'longitude_checkout' => null,
+                            ]);
+                        }
+                    }
+                }
+                
+                $approvedCount = count($approvedIds);
+                $rejectedCount = $allPermissions->count() - $approvedCount;
+                
+                $message = "Leave request processed: {$approvedCount} schedules approved";
+                if ($rejectedCount > 0) {
+                    $message .= ", {$rejectedCount} schedules rejected";
+                }
+                
+            } else { // reject all
+                foreach ($allPermissions as $perm) {
+                    $perm->update(['status' => 'rejected']);
+                    
+                    AdminPermissionsLog::create([
+                        'user_id' => Auth::id(),
+                        'permission_id' => $perm->id,
+                        'action' => 'rejected',
+                        'notes' => 'Entire leave request rejected by admin'
+                    ]);
+
+                    // Reset attendance for rejected permission
+                    $attendance = Attendance::where('user_id', $perm->user_id)
+                        ->where('schedule_id', $perm->schedule_id)
+                        ->first();
+
+                    if ($attendance) {
+                        $attendance->update([
+                            'status' => 'alpha',
+                            'check_in_time' => null,
+                            'check_out_time' => null,
+                            'latitude' => null,
+                            'longitude' => null,
+                            'latitude_checkout' => null,
+                            'longitude_checkout' => null,
+                        ]);
+                    }
+                }
+                
+                $message = "Entire leave request rejected ({$allPermissions->count()} schedules)";
+            }
+
+            DB::commit();
+            
+            return redirect()->route('admin.attendances.leave-requests')
+                ->with('success', $message);
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Failed to process leave request: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Process leave request with simple approve/reject all
+     */
+    public function processLeaveRequest(Request $request, $id)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject'
+        ]);
+
+        $permission = Permissions::findOrFail($id);
+        $action = $request->input('action');
+        
+        // Get all permissions for this leave request (same user, reason, date)
+        $allPermissions = Permissions::where('user_id', $permission->user_id)
+            ->where('reason', $permission->reason)
+            ->where('type', 'cuti')
+            ->whereDate('created_at', $permission->created_at->toDateString())
+            ->get();
+
+        DB::beginTransaction();
+        
+        try {
+            $newStatus = $action === 'approve' ? 'approved' : 'rejected';
+            
+            foreach ($allPermissions as $perm) {
+                $perm->update(['status' => $newStatus]);
+                
+                // Log admin action
+                AdminPermissionsLog::create([
+                    'user_id' => Auth::id(),
+                    'permission_id' => $perm->id,
+                    'action' => $newStatus,
+                    'notes' => "Leave request {$newStatus} by admin"
+                ]);
+
+                // Handle attendance based on status
+                if ($newStatus === 'approved') {
+                    // Set attendance to izin
+                    Attendance::updateOrCreate(
+                        [
+                            'user_id' => $perm->user_id,
+                            'schedule_id' => $perm->schedule_id,
+                        ],
+                        [
+                            'status' => 'izin',
+                            'is_late' => false,
+                            'late_minutes' => 0,
+                            'check_in_time' => null,
+                            'check_out_time' => null,
+                            'latitude' => null,
+                            'longitude' => null,
+                            'latitude_checkout' => null,
+                            'longitude_checkout' => null,
+                        ]
+                    );
+                } else {
+                    // Reset attendance for rejected permission
+                    $attendance = Attendance::where('user_id', $perm->user_id)
+                        ->where('schedule_id', $perm->schedule_id)
+                        ->first();
+
+                    if ($attendance) {
+                        $attendance->update([
+                            'status' => 'alpha',
+                            'check_in_time' => null,
+                            'check_out_time' => null,
+                            'latitude' => null,
+                            'longitude' => null,
+                            'latitude_checkout' => null,
+                            'longitude_checkout' => null,
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            
+            $message = $action === 'approve' 
+                ? "Leave request approved ({$allPermissions->count()} schedules)"
+                : "Leave request rejected ({$allPermissions->count()} schedules)";
+
+            return response()->json(['success' => true, 'message' => $message]);
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['success' => false, 'message' => 'Failed to process leave request: ' . $e->getMessage()], 500);
+        }
+    }
+
 }

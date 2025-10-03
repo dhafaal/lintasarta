@@ -202,6 +202,7 @@
         usersExpanded: false,
         schedulesExpanded: false,
         shiftsExpanded: false,
+        attendancesExpanded: false,
         locationsExpanded: false,
         mobileMenuOpen: false,
         isMobile: false,
@@ -213,6 +214,7 @@
             this.usersExpanded = localStorage.getItem('usersExpanded') === 'true';
             this.schedulesExpanded = localStorage.getItem('schedulesExpanded') === 'true';
             this.shiftsExpanded = localStorage.getItem('shiftsExpanded') === 'true';
+            this.attendancesExpanded = localStorage.getItem('attendancesExpanded') === 'true';
             this.locationsExpanded = localStorage.getItem('locationsExpanded') === 'true';
             
             // Auto-collapse on mobile with debounce
@@ -267,6 +269,10 @@
         toggleShifts() {
             this.shiftsExpanded = !this.shiftsExpanded;
             localStorage.setItem('shiftsExpanded', this.shiftsExpanded);
+        },
+        toggleAttendances() {
+            this.attendancesExpanded = !this.attendancesExpanded;
+            localStorage.setItem('attendancesExpanded', this.attendancesExpanded);
         },
         toggleLocations() {
             this.locationsExpanded = !this.locationsExpanded;
@@ -448,7 +454,7 @@
                             class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.schedules.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
                             <i data-lucide="calendar-plus"
                                 class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Add Schedule</span>
+                            <span>Add Schedules</span>
                         </a>
                         <a href="{{ route('admin.calendar.view') }}"
                             @click="closeMobileMenu()"
@@ -503,7 +509,57 @@
                             class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.shifts.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
                             <i data-lucide="plus-circle"
                                 class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Create Shifts</span>
+                            <span>Add Shift</span>
+                        </a>
+                    </div>
+                </div>
+
+
+                <!-- Attendances -->
+                <div class="space-y-1 relative">
+                    <button
+                        @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.attendances.index') }}' : toggleAttendances()"
+                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
+                        class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
+                {{ request()->routeIs('admin.attendances.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
+                        :aria-label="sidebarCollapsed ? 'Attendances' : ''">
+                        <i data-lucide="user-check"
+                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.attendances.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
+                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
+                        <span x-show="!sidebarCollapsed || isMobile" class="flex-1 text-left" x-transition>Attendances</span>
+                        <i x-show="(!sidebarCollapsed || isMobile)" data-lucide="chevron-right"
+                            :class="attendancesExpanded ? 'rotate-90' : 'rotate-0'"
+                            class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
+
+                        <div x-show="sidebarCollapsed"
+                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Attendance Management
+                            <div
+                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
+                            </div>
+                        </div>
+                    </button>
+
+                    <div x-show="attendancesExpanded && ((!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen))"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-2"
+                        class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
+                        <a href="{{ route('admin.attendances.index') }}"
+                            @click="closeMobileMenu()"
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.attendances.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="users" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>View Attendances</span>
+                        </a>
+                        <a href="{{ route('admin.attendances.leave-requests') }}"
+                            @click="closeMobileMenu()"
+                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.attendances.leave-requests') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
+                            <i data-lucide="calendar-days"
+                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
+                            <span>Leave Requests</span>
                         </a>
                     </div>
                 </div>
@@ -559,33 +615,6 @@
 
                 <!-- Divider -->
                 <div class="my-4 border-t border-sky-200 border-opacity-30"></div>
-
-                <!-- Attendance -->
-                <div class="space-y-1 relative">
-                    <a href="{{ route('admin.attendances.index') }}"
-                        @click="closeMobileMenu()"
-                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
-                        class="menu-item group flex items-center text-sm font-semibold rounded-xl menu-item-transition
-            {{ request()->routeIs('admin.attendances.*')
-                ? 'bg-sky-100 text-sky-700 border border-sky-200'
-                : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                        :aria-label="sidebarCollapsed ? 'Attendance' : ''">
-                        <i data-lucide="user-check"
-                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.attendances.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed || isMobile" x-transition>Attendances</span>
-
-                        <div x-show="sidebarCollapsed"
-                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                            Attendance Records
-                            <div
-                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
-                            </div>
-                        </div>
-                    </a>
-
-                    <!-- Calendar -->
-
             </nav>
 
             <!-- Sidebar Footer -->

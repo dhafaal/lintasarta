@@ -112,6 +112,67 @@
         </div>
     </div>
 
+    <!-- Permissions Summary -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <i data-lucide="file-text" class="w-5 h-5 text-purple-600 mr-2"></i>
+            Permissions & Leave Requests
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <!-- Pending Permissions -->
+            <div class="bg-white rounded-xl border border-amber-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs sm:text-sm font-medium text-amber-600">Pending</p>
+                        <p class="text-xl sm:text-2xl font-bold text-amber-700">{{ $pendingPermissions ?? 0 }}</p>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-amber-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
+                        <i data-lucide="clock" class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved Permissions -->
+            <div class="bg-white rounded-xl border border-green-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs sm:text-sm font-medium text-green-600">Approved</p>
+                        <p class="text-xl sm:text-2xl font-bold text-green-700">{{ $approvedPermissions ?? 0 }}</p>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-green-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
+                        <i data-lucide="check-circle" class="w-5 h-5 sm:w-6 sm:h-6 text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leave Requests -->
+            <div class="bg-white rounded-xl border border-purple-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs sm:text-sm font-medium text-purple-600">Leave Requests</p>
+                        <p class="text-xl sm:text-2xl font-bold text-purple-700">{{ $leaveRequests ?? 0 }}</p>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-purple-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
+                        <i data-lucide="calendar-x" class="w-5 h-5 sm:w-6 sm:h-6 text-purple-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rejected Permissions -->
+            <div class="bg-white rounded-xl border border-red-200 p-4 sm:p-6 hover:shadow-md transition-shadow">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs sm:text-sm font-medium text-red-600">Rejected</p>
+                        <p class="text-xl sm:text-2xl font-bold text-red-700">{{ $rejectedPermissions ?? 0 }}</p>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-red-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
+                        <i data-lucide="x-circle" class="w-5 h-5 sm:w-6 sm:h-6 text-red-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Monthly Attendance Chart -->
     <div class="mb-6 sm:mb-8">
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">

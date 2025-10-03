@@ -72,24 +72,27 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
             Route::get('/export', [ScheduleController::class, 'exportReport'])->name('export');
         });
 
-        // Baru panggil resource (paling bawah supaya route di atas tidak ketimpa)
         Route::resource('schedules', ScheduleController::class);
 
         // Attendances
         Route::prefix('attendances')->name('attendances.')->group(function () {
             Route::get('/', [AdminAttendanceController::class, 'index'])->name('index');
             Route::get('/history', [AdminAttendanceController::class, 'history'])->name('history');
-            // Export routes
-            Route::post('/export/monthly', [AdminAttendanceController::class, 'exportMonthly'])->name('export.monthly');
-            Route::post('/export/yearly', [AdminAttendanceController::class, 'exportYearly'])->name('export.yearly');
-            Route::post('/export/user', [AdminAttendanceController::class, 'exportPerUser'])->name('export.user');
-            Route::post('/export/all', [AdminAttendanceController::class, 'exportAll'])->name('export.all');
-            Route::post('/permissions/{permission}/approve', [AdminAttendanceController::class, 'approvePermission'])
-                ->name('permission.approve');
-            Route::post('/permissions/{permission}/reject', [AdminAttendanceController::class, 'rejectPermission'])
-                ->name('permission.reject');
-            Route::get('/{user}', [AdminAttendanceController::class, 'show'])->name('show');
-            Route::delete('/{attendance}', [AdminAttendanceController::class, 'destroy'])->name('destroy');
+            Route::get('/export', [AdminAttendanceController::class, 'export'])->name('export');
+            Route::get('/export-monthly', [AdminAttendanceController::class, 'exportMonthly'])->name('export.monthly');
+            Route::get('/export-yearly', [AdminAttendanceController::class, 'exportYearly'])->name('export.yearly');
+            Route::get('/export-per-user', [AdminAttendanceController::class, 'exportPerUser'])->name('export.per-user');
+            Route::get('/export-all', [AdminAttendanceController::class, 'exportAll'])->name('export.all');
+            
+            // Leave Requests Management
+            Route::get('/leave-requests', [AdminAttendanceController::class, 'leaveRequests'])->name('leave-requests');
+            Route::get('/leave-requests/{id}', [AdminAttendanceController::class, 'showLeaveRequest'])->name('leave-requests.show');
+            Route::post('/leave-requests/{id}/process', [AdminAttendanceController::class, 'processLeaveRequestSchedules'])->name('leave-requests.process');
+            Route::post('/leave-requests/{id}/process-simple', [AdminAttendanceController::class, 'processLeaveRequest'])->name('leave-requests.process-simple');
+            
+            // Permission Actions
+            Route::post('/permission/{permission}/approve', [AdminAttendanceController::class, 'approvePermission'])->name('permission.approve');
+            Route::post('/permission/{permission}/reject', [AdminAttendanceController::class, 'rejectPermission'])->name('permission.reject');
         });
 
         // Permissions (Admin)
@@ -153,8 +156,12 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':User'])
             Route::get('/', [UsersPermissionController::class, 'index'])->name('index');
             Route::get('/create', [UsersPermissionController::class, 'create'])->name('create');
             Route::post('/', [UsersPermissionController::class, 'store'])->name('store');
+            Route::post('/store-leave', [UsersPermissionController::class, 'storeLeave'])->name('store-leave');
             Route::delete('/{schedule}', [UsersPermissionController::class, 'cancel'])->name('cancel');
         });
+
+        // Schedules
+        Route::get('/schedules/upcoming', [UsersAttendanceController::class, 'getUpcomingSchedules'])->name('schedules.upcoming');
 
         // Profile Management
         Route::prefix('profile')->name('profile.')->group(function () {

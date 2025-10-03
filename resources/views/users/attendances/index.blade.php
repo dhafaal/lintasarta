@@ -137,17 +137,76 @@
                 </div>
             @endif
 
-            {{-- Status Izin Hari Ini --}}
+            {{-- Status Permission Hari Ini --}}
             @if($todayPermission)
-                <div class="mb-6 p-6 bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-2xl">
+                @if($todayPermission->status === 'pending')
+                    <div class="mb-6 p-6 bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-2xl">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center">
+                                <i data-lucide="clock" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-amber-900">
+                                    {{ $todayPermission->type === 'cuti' ? 'Pengajuan Cuti' : 'Pengajuan Izin' }} Menunggu Persetujuan
+                                </h3>
+                                <p class="text-sm text-amber-700">Status: <span class="font-medium">Menunggu Persetujuan</span></p>
+                                <p class="text-sm text-amber-600 mt-1">Alasan: {{ $todayPermission->reason }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @elseif($todayPermission->status === 'approved')
+                    @if($todayPermission->type === 'cuti')
+                        <div class="mb-6 p-6 bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-2xl">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="calendar-x" class="w-5 h-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-purple-900">Cuti Disetujui</h3>
+                                    <p class="text-sm text-purple-700">Anda sedang dalam status <span class="font-medium">Cuti</span></p>
+                                    <p class="text-sm text-purple-600 mt-1">Alasan: {{ $todayPermission->reason }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="mb-6 p-6 bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-2xl">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="check-circle" class="w-5 h-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-green-900">
+                                        {{ ucfirst($todayPermission->type) }} Disetujui
+                                    </h3>
+                                    <p class="text-sm text-green-700">Anda sedang dalam status <span class="font-medium">{{ ucfirst($todayPermission->type) }}</span></p>
+                                    <p class="text-sm text-green-600 mt-1">Alasan: {{ $todayPermission->reason }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endif
+            @endif
+
+            {{-- Check for rejected permissions to show info --}}
+            @php
+                $rejectedPermission = \App\Models\Permissions::where('user_id', Auth::id())
+                    ->whereHas('schedule', function ($q) {
+                        $q->whereDate('schedule_date', now()->toDateString());
+                    })
+                    ->where('status', 'rejected')
+                    ->first();
+            @endphp
+            
+            @if ($rejectedPermission)
+                <div class="mb-6 p-6 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-2xl">
                     <div class="flex items-center space-x-4">
-                        <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center">
-                            <i data-lucide="file-check" class="w-5 h-5 text-white"></i>
+                        <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                            <i data-lucide="info" class="w-5 h-5 text-white"></i>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold text-amber-900">Pengajuan Izin Terkirim</h3>
-                            <p class="text-sm text-amber-700">Status: <span class="font-medium">{{ ucfirst($todayPermission->status) }}</span></p>
-                            <p class="text-sm text-amber-600 mt-1">Alasan: {{ $todayPermission->reason }}</p>
+                            <h3 class="text-lg font-semibold text-blue-900">Izin Ditolak</h3>
+                            <p class="text-sm text-blue-700">Izin Anda telah ditolak. Silakan lakukan check-in untuk masuk kerja.</p>
+                            <p class="text-sm text-blue-600 mt-1">Alasan izin: {{ $rejectedPermission->reason }}</p>
                         </div>
                     </div>
                 </div>
@@ -197,6 +256,15 @@
                             </button>
                         @endif
 
+                        {{-- Request Leave Button --}}
+                        <button type="button"
+                                onclick="document.getElementById('cuti-modal').classList.remove('hidden'); loadUserSchedules()"
+                                class="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
+                            <i data-lucide="calendar-x" class="w-4 h-4"></i>
+                            <span>Ajukan Cuti</span>
+                        </button>
+
+
                         {{-- View History Button --}}
                         <a href="{{ route('user.attendances.history') }}"
                            class="w-full bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
@@ -207,11 +275,33 @@
                 @else
                     {{-- Pesan saat aksi dinonaktifkan --}}
                     <div class="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-6 text-center">
-                        <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i data-lucide="x-circle" class="w-6 h-6 text-gray-600"></i>
-                        </div>
-                        <h4 class="text-lg font-semibold text-gray-900 mb-2">Aksi Dinonaktifkan</h4>
-                        <p class="text-gray-600">Check-in dan check-out dinonaktifkan karena Anda telah mengajukan izin untuk hari ini.</p>
+                        @if($todayPermission->status === 'pending')
+                            <div class="w-16 h-16 bg-amber-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="clock" class="w-6 h-6 text-amber-700"></i>
+                            </div>
+                            <h4 class="text-lg font-semibold text-gray-900 mb-2">Menunggu Persetujuan</h4>
+                            <p class="text-gray-600">
+                                Check-in dan check-out dinonaktifkan karena {{ $todayPermission->type === 'cuti' ? 'pengajuan cuti' : 'pengajuan izin' }} Anda sedang menunggu persetujuan.
+                            </p>
+                        @elseif($todayPermission->status === 'approved')
+                            @if($todayPermission->type === 'cuti')
+                                <div class="w-16 h-16 bg-purple-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i data-lucide="calendar-x" class="w-6 h-6 text-purple-700"></i>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-900 mb-2">Sedang Cuti</h4>
+                                <p class="text-gray-600">
+                                    Anda sedang dalam status cuti. Check-in dan check-out tidak diperlukan.
+                                </p>
+                            @else
+                                <div class="w-16 h-16 bg-green-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i data-lucide="check-circle" class="w-6 h-6 text-green-700"></i>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-900 mb-2">Sedang {{ ucfirst($todayPermission->type) }}</h4>
+                                <p class="text-gray-600">
+                                    Anda sedang dalam status {{ $todayPermission->type }}. Check-in dan check-out tidak diperlukan.
+                                </p>
+                            @endif
+                        @endif
                         
                         <div class="mt-4">
                             <a href="{{ route('user.attendances.history') }}"
@@ -320,6 +410,100 @@
     </div>
 </div>
 
+{{-- Modal Form Request Leave (Cuti) --}}
+<div id="cuti-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative transform transition-all border border-gray-100 max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-purple-100 rounded-t-2xl sticky top-0">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
+                    <i data-lucide="calendar-x" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">Pengajuan Cuti</h2>
+                    <p class="text-sm text-purple-600">Pilih jadwal yang ingin dicuti</p>
+                </div>
+            </div>
+            <button type="button"
+                    onclick="document.getElementById('cuti-modal').classList.add('hidden')"
+                    class="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-white/50 transition-all duration-200">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Form -->
+        <form action="{{ route('user.permissions.store-leave') }}" method="POST" class="p-6 space-y-6">
+            @csrf
+            <input type="hidden" name="type" value="cuti">
+
+            <!-- Schedule Selection -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <label class="block text-sm font-semibold text-gray-900">
+                        Pilih Jadwal untuk Cuti
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="selectAllSchedules()" class="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors">
+                            Pilih Semua
+                        </button>
+                        <button type="button" onclick="clearAllSchedules()" class="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                            Batal Semua
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="schedules-loading" class="text-center py-8">
+                    <div class="inline-flex items-center space-x-2 text-gray-500">
+                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                        <span class="text-sm">Memuat jadwal...</span>
+                    </div>
+                </div>
+
+                <div id="schedules-container" class="hidden space-y-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                    <!-- Schedules will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Alasan Cuti -->
+            <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-900">
+                    Alasan Cuti
+                    <span class="text-red-500">*</span>
+                </label>
+                <textarea name="reason" 
+                          class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors resize-none" 
+                          rows="4" 
+                          placeholder="Tuliskan alasan cuti Anda secara jelas..."
+                          required></textarea>
+                <p class="text-xs text-gray-500">Minimal 10 karakter</p>
+            </div>
+
+            <!-- Selected Schedules Summary -->
+            <div id="selected-summary" class="hidden bg-purple-50 rounded-lg p-4 border border-purple-200">
+                <h4 class="text-sm font-semibold text-purple-900 mb-2">Jadwal yang Dipilih:</h4>
+                <div id="selected-list" class="text-sm text-purple-700"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                <button type="button"
+                        onclick="document.getElementById('cuti-modal').classList.add('hidden')"
+                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    Batal
+                </button>
+                <button type="submit" 
+                        class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-sm">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>Kirim Permohonan</span>
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     const geoOptions = {
         enableHighAccuracy: true,
@@ -360,5 +544,152 @@
         e.preventDefault();
         handleLocationAndSubmit(this, 'checkout-latitude', 'checkout-longitude');
     });
+
+    // Leave Modal Functions
+    let userSchedules = [];
+    let selectedSchedules = [];
+
+
+    async function loadUserSchedules() {
+        const loadingDiv = document.getElementById('schedules-loading');
+        const containerDiv = document.getElementById('schedules-container');
+        
+        try {
+            loadingDiv.classList.remove('hidden');
+            containerDiv.classList.add('hidden');
+
+            console.log('Loading schedules from:', '{{ route("user.schedules.upcoming") }}');
+            
+            const response = await fetch('{{ route("user.schedules.upcoming") }}', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Response error:', errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            const data = await response.json();
+            console.log('Received data:', data);
+            
+            userSchedules = data.schedules || [];
+            console.log('User schedules:', userSchedules);
+            
+            renderSchedules();
+
+        } catch (error) {
+            console.error('Error loading schedules:', error);
+            containerDiv.innerHTML = `<div class="text-center text-red-500 py-4">Gagal memuat jadwal: ${error.message}</div>`;
+        } finally {
+            loadingDiv.classList.add('hidden');
+            containerDiv.classList.remove('hidden');
+        }
+    }
+
+    function renderSchedules() {
+        const container = document.getElementById('schedules-container');
+        
+        console.log('Rendering schedules:', userSchedules);
+        
+        if (userSchedules.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-4">Tidak ada jadwal yang tersedia untuk cuti.</div>';
+            return;
+        }
+
+        const schedulesHtml = userSchedules.map(schedule => {
+            console.log('Processing schedule:', schedule);
+            
+            const date = new Date(schedule.schedule_date);
+            const formattedDate = date.toLocaleDateString('id-ID', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            // Handle missing shift data
+            const shiftName = schedule.shift ? schedule.shift.shift_name : 'No Shift';
+            const startTime = schedule.shift ? schedule.shift.start_time : '--:--';
+            const endTime = schedule.shift ? schedule.shift.end_time : '--:--';
+
+            return `
+                <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <input type="checkbox" 
+                           name="schedule_ids[]" 
+                           value="${schedule.id}" 
+                           id="schedule_${schedule.id}"
+                           onchange="updateSelectedSchedules()"
+                           class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                    <label for="schedule_${schedule.id}" class="flex-1 cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
+                                <i data-lucide="calendar" class="w-4 h-4 text-purple-600"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${formattedDate}</div>
+                                <div class="text-xs text-gray-500">${shiftName} • ${startTime} - ${endTime}</div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = schedulesHtml;
+        
+        // Re-initialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    function selectAllSchedules() {
+        const checkboxes = document.querySelectorAll('input[name="schedule_ids[]"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        updateSelectedSchedules();
+    }
+
+    function clearAllSchedules() {
+        const checkboxes = document.querySelectorAll('input[name="schedule_ids[]"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        updateSelectedSchedules();
+    }
+
+    function updateSelectedSchedules() {
+        const checkboxes = document.querySelectorAll('input[name="schedule_ids[]"]:checked');
+        const summaryDiv = document.getElementById('selected-summary');
+        const listDiv = document.getElementById('selected-list');
+        
+        selectedSchedules = Array.from(checkboxes).map(cb => {
+            const scheduleId = parseInt(cb.value);
+            return userSchedules.find(s => s.id === scheduleId);
+        }).filter(Boolean);
+
+        if (selectedSchedules.length > 0) {
+            summaryDiv.classList.remove('hidden');
+            const summaryText = selectedSchedules.map(schedule => {
+                const date = new Date(schedule.schedule_date);
+                const formattedDate = date.toLocaleDateString('id-ID', { 
+                    weekday: 'short', 
+                    day: 'numeric', 
+                    month: 'short' 
+                });
+                return `${formattedDate} (${schedule.shift.shift_name})`;
+            }).join(', ');
+            listDiv.textContent = summaryText;
+        } else {
+            summaryDiv.classList.add('hidden');
+        }
+    }
 </script>
 @endsection

@@ -74,7 +74,7 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
             $date = Carbon::createFromDate($this->year, $this->month, $day)->format('Y-m-d');
             
             // Ambil semua schedule untuk hari ini (bisa ada shift 1 dan shift 2)
-            $schedules = Schedules::with(['shift', 'attendances'])
+            $schedules = Schedules::with(['shift', 'attendances', 'permissions'])
                 ->where('user_id', $user->id)
                 ->whereDate('schedule_date', $date)
                 ->orderBy('id') // Gunakan id untuk ordering
@@ -86,17 +86,38 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
 
             foreach ($schedules as $schedule) {
                 if ($schedule->shift) {
+                    // Cek attendance untuk schedule ini
+                    $attendance = $schedule->attendances->where('user_id', $user->id)->first();
+                    
+                    // Cek permission untuk schedule ini
+                    $permission = $schedule->permissions->where('user_id', $user->id)
+                        ->whereIn('status', ['approved'])
+                        ->first();
+                    
                     $start = Carbon::parse($schedule->shift->start_time);
                     $end   = Carbon::parse($schedule->shift->end_time);
                     if ($end->lt($start)) $end->addDay();
 
                     $minutes = $start->diffInMinutes($end);
-                    $dayMinutes += $minutes;
-                    $shiftCount++;
                     
-                    // Tambahkan nama shift dengan penanda jika lebih dari satu shift
-                    $position = $shiftCount > 1 ? '' : '';
-                    $shiftNames[] = $schedule->shift->shift_name . $position;
+                    // Priority: Permission > Attendance > Normal
+                    if ($permission) {
+                        // Jika ada permission yang approved, jam kerja = 0
+                        $minutes = 0;
+                        $permissionType = ucfirst($permission->type);
+                        $shiftNames[] = $schedule->shift->shift_name . " ({$permissionType})";
+                    } elseif ($attendance && $attendance->status === 'alpha') {
+                        // Jika status alpha, jam kerja = 0
+                        $minutes = 0;
+                        $shiftNames[] = $schedule->shift->shift_name . ' (Alpha)';
+                    } else {
+                        $dayMinutes += $minutes;
+                        $shiftCount++;
+                        
+                        // Tambahkan nama shift dengan penanda jika lebih dari satu shift
+                        $position = $shiftCount > 1 ? '' : '';
+                        $shiftNames[] = $schedule->shift->shift_name . $position;
+                    }
                 }
             }
 
@@ -295,6 +316,15 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
                     } else {
                         $this->applyShiftStyle($sheet, $col . $row, 'FFA855F7', 'FFF3E8FF'); // Purple - Malam
                     }
+                } elseif (stripos($val, 'Alpha') !== false) {
+                    // Status Alpha - warna merah
+                    $this->applyShiftStyle($sheet, $col . $row, 'FFDC2626', 'FFFEF2F2'); // Red - Alpha
+                } elseif (stripos($val, 'Cuti') !== false) {
+                    // Status Cuti - warna purple
+                    $this->applyShiftStyle($sheet, $col . $row, 'FF7C3AED', 'FFF3E8FF'); // Purple - Cuti
+                } elseif (stripos($val, 'Izin') !== false || stripos($val, 'Sakit') !== false) {
+                    // Status Izin/Sakit - warna amber
+                    $this->applyShiftStyle($sheet, $col . $row, 'FFEAB308', 'FFFEF3C7'); // Amber - Izin/Sakit
                 } elseif ($val !== '-' && $val !== '') {
                     // Untuk shift ganda dengan kombinasi lain
                     if (strpos($val, '+') !== false) {
