@@ -208,6 +208,14 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
                             $fillColor = 'FFFECACA'; // red-200
                             $textColor = 'FF991B1B'; // red-700
                             break;
+                        case 'early_checkout':
+                            $fillColor = 'FFFDE68A'; // yellow-300
+                            $textColor = 'FF92400E'; // amber-600
+                            break;
+                        case 'forgot_checkout':
+                            $fillColor = 'FFFDA4AF'; // rose-300
+                            $textColor = 'FF9F1239'; // rose-700
+                            break;
                     }
 
                     if ($fillColor) {

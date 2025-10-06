@@ -271,6 +271,8 @@
                                     <option value="hadir" {{ request('status') == 'hadir' ? 'selected' : '' }}>Hadir</option>
                                     <option value="telat" {{ request('status') == 'telat' ? 'selected' : '' }}>Telat</option>
                                     <option value="izin" {{ request('status') == 'izin' ? 'selected' : '' }}>Izin</option>
+                                    <option value="early_checkout" {{ request('status') == 'early_checkout' ? 'selected' : '' }}>Early Checkout</option>
+                                    <option value="forgot_checkout" {{ request('status') == 'forgot_checkout' ? 'selected' : '' }}>Forgot Checkout</option>
                                     <option value="alpha" {{ request('status') == 'alpha' ? 'selected' : '' }}>Alpha</option>
                                 </select>
 
@@ -371,17 +373,21 @@
                                     $checkInTime = optional($attGroup->whereNotNull('check_in_time')->sortBy('check_in_time')->first())->check_in_time;
                                     $checkOutTime = optional($attGroup->whereNotNull('check_out_time')->sortByDesc('check_out_time')->first())->check_out_time;
 
-                                    // Status priority: izin > telat > hadir > alpha
+                                    // Status priority: izin > early_checkout > telat > hadir > forgot_checkout > alpha
                                     $statusText = '-';
                                     if ($attGroup->where('status','izin')->isNotEmpty()) { $statusText = 'izin'; }
+                                    elseif ($attGroup->where('status','early_checkout')->isNotEmpty()) { $statusText = 'early_checkout'; }
                                     elseif ($attGroup->where('status','telat')->isNotEmpty()) { $statusText = 'telat'; }
                                     elseif ($attGroup->where('status','hadir')->isNotEmpty()) { $statusText = 'hadir'; }
+                                    elseif ($attGroup->where('status','forgot_checkout')->isNotEmpty()) { $statusText = 'forgot_checkout'; }
                                     elseif ($attGroup->isNotEmpty()) { $statusText = optional($attGroup->first())->status ?: '-'; }
 
                                     $statusColor = 'bg-gray-100 text-gray-700';
                                     if($statusText === 'hadir') { $statusColor = 'bg-green-100 text-green-800'; }
                                     if($statusText === 'telat') { $statusColor = 'bg-orange-100 text-orange-800'; }
                                     if($statusText === 'izin') { $statusColor = 'bg-yellow-100 text-yellow-800'; }
+                                    if($statusText === 'early_checkout') { $statusColor = 'bg-amber-100 text-amber-800'; }
+                                    if($statusText === 'forgot_checkout') { $statusColor = 'bg-rose-100 text-rose-800'; }
                                     if($statusText === 'alpha') { $statusColor = 'bg-red-100 text-red-800'; }
 
                                     // Shifts sorted Pagi -> Siang -> Malam
@@ -471,7 +477,7 @@
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap">
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $statusColor }}">
-                                            {{ ucfirst($statusText) }}
+                                            {{ ucwords(str_replace('_',' ', $statusText)) }}
                                         </span>
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-sm text-gray-700">

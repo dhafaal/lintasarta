@@ -12,8 +12,8 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('schedule_id')->constrained('schedules')->cascadeOnDelete();
-            $table->unsignedBigInteger('location_id')->nullable();
-            $table->enum('status', ['hadir', 'izin', 'telat', 'cuti', 'alpha'])->default('alpha');
+            $table->foreignId('location_id')->nullable()->constrained('locations')->nullOnDelete();
+            $table->enum('status', ['hadir', 'izin', 'telat', 'cuti', 'alpha', 'forgot_checkout', 'early_checkout'])->default('alpha');
             $table->boolean('is_late')->default(false);
             $table->integer('late_minutes')->nullable();
             $table->timestamp('check_in_time')->nullable();
@@ -28,6 +28,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('attendances');    
+        Schema::dropIfExists('attendances');
     }
 };

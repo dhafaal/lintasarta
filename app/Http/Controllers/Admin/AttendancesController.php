@@ -60,7 +60,9 @@ class AttendancesController extends Controller
         $totalHadir = $attendances->where('status', 'hadir')->count();
         $totalTelat = $attendances->where('status', 'telat')->count();
         $totalIzin = $attendances->where('status', 'izin')->count();
-        $totalAlpha = max(0, $totalSchedules - ($totalHadir + $totalTelat + $totalIzin));
+        $totalEarlyCheckout = $attendances->where('status', 'early_checkout')->count();
+        $totalForgotCheckout = $attendances->where('status', 'forgot_checkout')->count();
+        $totalAlpha = max(0, $totalSchedules - ($totalHadir + $totalTelat + $totalIzin + $totalEarlyCheckout + $totalForgotCheckout));
 
         // Users for per-user export selector
         $users = User::orderBy('name')->get(['id','name']);
@@ -78,7 +80,10 @@ class AttendancesController extends Controller
             'totalAlpha',
             'search',
             'statusFilter',
-            'users'
+            'users',
+            // expose for future UI usage
+            'totalEarlyCheckout',
+            'totalForgotCheckout'
         ));
     }
 
@@ -117,18 +122,39 @@ class AttendancesController extends Controller
                     ->pluck('id');
 
                 // Update all open attendances (checked-in, not checked-out)
-                $affected = Attendance::whereIn('schedule_id', $sameDayScheduleIds)
+                $openAttendances = Attendance::whereIn('schedule_id', $sameDayScheduleIds)
                     ->where('user_id', $permission->user_id)
                     ->whereNotNull('check_in_time')
                     ->whereNull('check_out_time')
-                    ->update(['check_out_time' => $requested]);
+                    ->get();
+
+                $affected = 0;
+                foreach ($openAttendances as $att) {
+                    // Clamp to not precede check-in
+                    $checkoutTime = $requested;
+                    if ($att->check_in_time && $checkoutTime->lt(Carbon::parse($att->check_in_time))) {
+                        $checkoutTime = Carbon::parse($att->check_in_time);
+                    }
+                    $att->update([
+                        'check_out_time' => $checkoutTime,
+                        'status' => 'early_checkout',
+                    ]);
+                    $affected++;
+                }
 
                 // Fallback: also update single attendance if needed
                 $attendance = Attendance::where('user_id', $permission->user_id)
                     ->where('schedule_id', $permission->schedule_id)
                     ->first();
                 if ($attendance && !$attendance->check_out_time) {
-                    $attendance->update(['check_out_time' => $requested]);
+                    $checkoutTime = $requested;
+                    if ($attendance->check_in_time && $checkoutTime->lt(Carbon::parse($attendance->check_in_time))) {
+                        $checkoutTime = Carbon::parse($attendance->check_in_time);
+                    }
+                    $attendance->update([
+                        'check_out_time' => $checkoutTime,
+                        'status' => 'early_checkout',
+                    ]);
                 }
             }
         } else {

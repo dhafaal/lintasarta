@@ -148,6 +148,9 @@ class AttendancesController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
+        // Before processing a new check-in, auto-close any missed checkouts from previous shifts
+        $this->autoCheckoutMissedShifts(Auth::id());
+
         // Cek apakah user memiliki izin (pending/approved) untuk tanggal ini
         // Jika izin ditolak (rejected), user harus bisa check-in
         $schedule = Schedules::findOrFail($request->schedule_id);
@@ -432,7 +435,7 @@ class AttendancesController extends Controller
             ->whereHas('schedule', function ($q) use ($today) {
                 $q->whereDate('schedule_date', '<=', $today);
             })
-            ->whereIn('status', ['hadir', 'telat', 'alpha', 'izin']);
+            ->whereIn('status', ['hadir', 'telat', 'alpha', 'izin', 'forgot_checkout', 'early_checkout']);
 
         $permissionQuery = \App\Models\Permissions::with('schedule')
             ->where('user_id', $user->id)
@@ -546,6 +549,58 @@ class AttendancesController extends Controller
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
         return round($earthRadius * $c);
+    }
+
+    private function autoCheckoutMissedShifts(int $userId): int
+    {
+        $now = Carbon::now();
+        $open = Attendance::with(['schedule.shift'])
+            ->where('user_id', $userId)
+            ->whereNotNull('check_in_time')
+            ->whereNull('check_out_time')
+            ->get();
+
+        $count = 0;
+        foreach ($open as $att) {
+            $sch = $att->schedule;
+            if (!$sch || !$sch->shift) { continue; }
+
+            $date = Carbon::parse($sch->schedule_date);
+            $st = Carbon::parse($sch->shift->start_time);
+            $et = Carbon::parse($sch->shift->end_time);
+            $startDT = $date->copy()->setTimeFrom($st);
+            $endDT   = $date->copy()->setTimeFrom($et);
+            if ($endDT->lt($startDT)) { $endDT->addDay(); }
+
+            // If the shift should have ended already, auto set checkout at scheduled end
+            if ($now->gt($endDT)) {
+                // Ensure we don't set checkout earlier than check-in
+                $checkoutAt = Carbon::parse($att->check_in_time)->gt($endDT) ? Carbon::parse($att->check_in_time) : $endDT;
+
+                $att->update([
+                    // keep location_id from check-in; no GPS for auto checkout
+                    'check_out_time' => $checkoutAt,
+                    'status' => 'forgot_checkout',
+                ]);
+                $count++;
+
+                // Log user activity for auto checkout
+                UserActivityLog::log(
+                    'auto_checkout',
+                    'attendances',
+                    $att->id,
+                    'Auto Check Out (Missed Checkout)',
+                    [
+                        'schedule_id' => $sch->id,
+                        'scheduled_end' => $endDT->toDateTimeString(),
+                        'auto_checkout_time' => $checkoutAt->toDateTimeString(),
+                    ],
+                    'Sistem menutup otomatis attendance yang belum di-checkout'
+                );
+            }
+        }
+
+        return $count;
     }
 
     /**
