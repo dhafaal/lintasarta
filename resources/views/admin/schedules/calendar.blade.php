@@ -1,11 +1,11 @@
 @extends('layouts.admin')
 
-@section('title', 'Kalender Jadwal')
+@section('title', 'Schedules Table  ')
 
 @section('content')
     <div class="min-h-screen bg-white">
         {{-- Header Section --}}
-        <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="bg-white px-6 py-4">
             <div class="max-w-[1600px] mx-auto">
                 <div class="flex items-center space-x-3">
                     <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
@@ -303,144 +303,5 @@
                     </table>
                 </div>
             </div>
-
-            {{-- Kalender --}}
-            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h2 class="text-lg font-bold text-gray-800">Kalender Jadwal</h2>
-                            <p class="text-sm text-gray-500">Visualisasi kalender interaktif</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <div class="flex items-center gap-2 mb-3">
-                        <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <p class="text-sm font-semibold text-gray-700">Keterangan Shift:</p>
-                    </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
-                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                            <span class="text-sm font-medium text-blue-800">Shift Pagi</span>
-                        </div>
-                        <div class="flex items-center gap-2 px-4 py-2 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
-                            <span class="text-sm font-medium text-yellow-800">Shift Siang</span>
-                        </div>
-                        <div class="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-lg border border-purple-200">
-                            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                            <span class="text-sm font-medium text-purple-800">Shift Malam</span>
-                        </div>
-                        <div class="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-300">
-                            <span class="w-2.5 h-2.5 rounded-full bg-gray-500"></span>
-                            <span class="text-sm font-medium text-gray-700">Shift Lainnya</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-6">
-                    <div id="calendar"></div>
-                </div>
-            </div>
-
-        </div>
     </div>
 @endsection
-
-@push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
-    <style>
-        /* Custom FullCalendar Styling */
-        .fc {
-            font-family: inherit;
-        }
-        .fc .fc-button-primary {
-            background-color: #0ea5e9;
-            border-color: #0ea5e9;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-        }
-        .fc .fc-button-primary:hover {
-            background-color: #0284c7;
-            border-color: #0284c7;
-        }
-        .fc .fc-button-primary:not(:disabled):active,
-        .fc .fc-button-primary:not(:disabled).fc-button-active {
-            background-color: #0369a1;
-            border-color: #0369a1;
-        }
-        .fc-theme-standard td,
-        .fc-theme-standard th {
-            border-color: #e5e7eb;
-        }
-        .fc .fc-daygrid-day-number {
-            padding: 0.5rem;
-            font-weight: 600;
-        }
-        .fc .fc-col-header-cell {
-            background-color: #f9fafb;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-            padding: 0.75rem 0;
-        }
-        .fc .fc-daygrid-day.fc-day-today {
-            background-color: #dbeafe !important;
-        }
-    </style>
-@endpush
-
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const calendarEl = document.getElementById('calendar');
-            const calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,listWeek'
-                },
-                events: "{{ route('admin.calendar.data') }}",
-                height: 700,
-                editable: false,
-                selectable: true,
-                dayMaxEvents: true,
-                locale: 'id',
-                eventDidMount: function(info) {
-                    const shift = info.event.extendedProps.shift || '';
-                    const startTime = info.event.extendedProps.start_time || '';
-                    const endTime = info.event.extendedProps.end_time || '';
-                    
-                    info.el.setAttribute('title', `${shift} | ${startTime} - ${endTime}`);
-
-                    let bg = '#6B7280';
-                    if (shift === 'Pagi') bg = '#3B82F6';
-                    else if (shift === 'Siang') bg = '#EAB308';
-                    else if (shift === 'Malam') bg = '#A855F7';
-
-                    info.el.style.backgroundColor = bg;
-                    info.el.style.color = '#fff';
-                    info.el.style.border = 'none';
-                    info.el.style.borderRadius = '0.375rem';
-                    info.el.style.padding = '2px 6px';
-                    info.el.style.fontWeight = '600';
-                    info.el.style.fontSize = '0.75rem';
-                }
-            });
-            calendar.render();
-        });
-    </script>
-@endpush

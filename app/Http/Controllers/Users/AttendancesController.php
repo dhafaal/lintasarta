@@ -18,19 +18,26 @@ class AttendancesController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $today = now()->toDateString();
+        $now = now();
+        $today = $now->toDateString();
 
-        $schedule = Schedules::with(['shift', 'permissions', 'attendances'])
+        // Resolve the active schedule considering cross-midnight night shifts
+        $activeSchedule = $this->getActiveScheduleForNow($user->id);
+
+        // If an active schedule is found, use its date as the reference for queries; otherwise fall back to today
+        $refDate = $activeSchedule?->schedule_date ?? $today;
+
+        $schedule = $activeSchedule ?: Schedules::with(['shift', 'permissions', 'attendances'])
             ->where('user_id', $user->id)
-            ->whereDate('schedule_date', $today)
+            ->whereDate('schedule_date', $refDate)
             ->first();
 
         $attendance = $schedule?->attendances->where('user_id', $user->id)->first();
 
-        // Check if user has permission for today (only pending/approved, not rejected)
+        // Check if user has permission for the reference date (only pending/approved, not rejected)
         $todayPermission = \App\Models\Permissions::where('user_id', $user->id)
-            ->whereHas('schedule', function ($q) use ($today) {
-                $q->whereDate('schedule_date', $today);
+            ->whereHas('schedule', function ($q) use ($refDate) {
+                $q->whereDate('schedule_date', $refDate);
             })
             ->whereIn('status', ['pending', 'approved']) // Exclude rejected permissions
             ->first();
@@ -91,7 +98,7 @@ class AttendancesController extends Controller
         }
 
         $now = now();
-        if ($lastEnd && $now->gte($lastEnd)) {
+        if ($lastEnd && $now->gte($lastEnd)) {  
             return back()->with('error', 'Waktu shift sudah selesai, lakukan check-out biasa.');
         }
 
@@ -539,6 +546,52 @@ class AttendancesController extends Controller
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
         return round($earthRadius * $c);
+    }
+
+    /**
+     * Determine the active schedule for the current time, including cross-midnight (night) shifts.
+     * Returns a Schedules model with relations loaded, or null if none applies.
+     */
+    private function getActiveScheduleForNow(int $userId)
+    {
+        $now = Carbon::now();
+        $today = $now->toDateString();
+        $yesterday = $now->copy()->subDay()->toDateString();
+
+        // Load schedules for today and yesterday with shifts
+        $candidates = Schedules::with(['shift', 'permissions', 'attendances'])
+            ->where('user_id', $userId)
+            ->whereDate('schedule_date', '>=', $yesterday)
+            ->whereDate('schedule_date', '<=', $today)
+            ->get();
+
+        $active = null;
+        $activeEnd = null;
+
+        foreach ($candidates as $sch) {
+            if (!$sch->shift) { continue; }
+            $date = Carbon::parse($sch->schedule_date);
+            $startT = Carbon::parse($sch->shift->start_time);
+            $endT   = Carbon::parse($sch->shift->end_time);
+
+            $startDT = $date->copy()->setTimeFrom($startT);
+            $endDT   = $date->copy()->setTimeFrom($endT);
+
+            // Cross-midnight handling: if end earlier than start, it ends next day
+            if ($endDT->lt($startDT)) {
+                $endDT->addDay();
+            }
+
+            if ($now->betweenIncluded($startDT, $endDT)) {
+                // Choose the one that ends latest if multiple contain now
+                if (!$activeEnd || $endDT->gt($activeEnd)) {
+                    $active = $sch;
+                    $activeEnd = $endDT->copy();
+                }
+            }
+        }
+
+        return $active;
     }
 
     private function validateCheckInTime($scheduleId, $checkInTime = null)

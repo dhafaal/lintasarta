@@ -461,7 +461,7 @@
                             class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.calendar.view') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
                             <i data-lucide="calendar-range"
                                 class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Calendar</span>
+                            <span>Schedules Table</span>
                         </a>
                     </div>
                 </div>
