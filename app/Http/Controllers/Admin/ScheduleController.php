@@ -267,42 +267,107 @@ class ScheduleController extends Controller
                     $dayShifts = [$dayShifts];
                 }
 
-                // Remove existing schedules for this user and date first
-                $existingSchedules = Schedules::where('user_id', $userId)
+                // Non-destructive merge with existing schedules on that date
+                $existingSchedules = Schedules::with(['shift', 'attendances' => function($q) use ($userId){
+                        $q->where('user_id', $userId);
+                    }])
+                    ->where('user_id', $userId)
                     ->whereDate('schedule_date', $date)
                     ->get();
-                    
-                // Log deletion of existing schedules
-                foreach ($existingSchedules as $existingSchedule) {
-                    $shift = $existingSchedule->shift;
-                    AdminSchedulesLog::log(
-                        'delete',
-                        $existingSchedule->id,
-                        $user->id,
-                        $user->name,
-                        $shift->id ?? null,
-                        $shift->shift_name ?? 'Unknown',
-                        $date,
-                        $existingSchedule->toArray(),
-                        null,
-                        "Menghapus jadwal lama untuk {$user->name} pada {$date} (bulk monthly update)"
-                    );
-                }
-                
-                Schedules::where('user_id', $userId)
-                    ->whereDate('schedule_date', $date)
-                    ->delete();
 
-                // Create new schedules for each shift
-                foreach ($dayShifts as $shiftId) {
-                    if (!empty($shiftId)) {
+                $existingByShift = $existingSchedules->keyBy('shift_id');
+                $desiredShiftIds = collect($dayShifts)->filter(fn($id) => !empty($id))->map(fn($id) => (int)$id)->values();
+
+                // Create missing schedules for desired shifts
+                foreach ($desiredShiftIds as $shiftId) {
+                    if (!$existingByShift->has($shiftId)) {
                         $schedule = Schedules::create([
                             'user_id'       => $userId,
                             'schedule_date' => $date,
                             'shift_id'      => $shiftId,
                         ]);
-                        
                         $createdSchedules[] = $schedule;
+
+                        // Log create
+                        $shiftModel = \App\Models\Shift::find($shiftId);
+                        AdminSchedulesLog::log(
+                            'create',
+                            $schedule->id,
+                            $user->id,
+                            $user->name,
+                            $shiftId,
+                            optional($shiftModel)->shift_name,
+                            $date,
+                            null,
+                            $schedule->toArray(),
+                            "Menambah jadwal baru (merge) untuk {$user->name} pada {$date}"
+                        );
+                    }
+                }
+
+                // Delete schedules not in desired shifts; if there's meaningful attendance and desired exists, migrate first
+                foreach ($existingSchedules as $existing) {
+                    if (!$desiredShiftIds->contains((int)$existing->shift_id)) {
+                        $att = $existing->attendances->first();
+                        $hasMeaningfulAttendance = $att && (
+                            !is_null($att->check_in_time) ||
+                            !is_null($att->check_out_time) ||
+                            ($att->status && $att->status !== 'alpha')
+                        );
+                        if ($hasMeaningfulAttendance) {
+                            // If there is at least one desired shift, migrate attendance to the first desired schedule
+                            if ($desiredShiftIds->isNotEmpty()) {
+                                $targetShiftId = (int) $desiredShiftIds->first();
+                                // Ensure target schedule exists
+                                $targetSchedule = Schedules::firstOrCreate([
+                                    'user_id' => $userId,
+                                    'schedule_date' => $date,
+                                    'shift_id' => $targetShiftId,
+                                ]);
+
+                                // Move all user's attendances on old schedule to target schedule
+                                $migratedCount = Attendance::where('user_id', $userId)
+                                    ->where('schedule_id', $existing->id)
+                                    ->update(['schedule_id' => $targetSchedule->id]);
+
+                                // Log migration
+                                AdminSchedulesLog::log(
+                                    'migrate_attendance',
+                                    $existing->id,
+                                    $user->id,
+                                    $user->name,
+                                    $existing->shift_id,
+                                    optional($existing->shift)->shift_name,
+                                    $date,
+                                    ['from_schedule' => $existing->toArray(), 'migrated_count' => $migratedCount],
+                                    ['to_schedule' => $targetSchedule->toArray()],
+                                    "Memigrasikan attendance ({$migratedCount}) ke shift tujuan pada {$date}"
+                                );
+
+                                // After migration, it's safe to delete old schedule
+                            } else {
+                                // No desired shift to migrate into; keep old schedule
+                                continue;
+                            }
+                        }
+
+                        // Safe to delete (either no meaningful attendance or already migrated)
+                        $old = $existing->toArray();
+                        $shift = $existing->shift;
+                        $existing->delete();
+
+                        AdminSchedulesLog::log(
+                            'delete',
+                            $old['id'] ?? null,
+                            $user->id,
+                            $user->name,
+                            $shift->id ?? null,
+                            $shift->shift_name ?? 'Unknown',
+                            $date,
+                            $old,
+                            null,
+                            "Menghapus jadwal tanpa attendance untuk {$user->name} pada {$date} (merge)"
+                        );
                     }
                 }
             }
@@ -487,8 +552,9 @@ class ScheduleController extends Controller
     {
         // Check if this is a bulk monthly update or single schedule update
         $formType = $request->input('form_type');
-        
-        if ($formType === 'bulk_monthly' || $schedule === 'bulk') {
+        // Robust detection: if form_type missing but monthly fields exist, treat as bulk monthly
+        $isMonthlyEdit = ($formType === 'bulk_monthly') || ($schedule === 'bulk') || $request->has('month') || $request->has('shifts');
+        if ($isMonthlyEdit) {
             return $this->updateMonthly($request, null);
         }
         
@@ -560,42 +626,75 @@ class ScheduleController extends Controller
                     $dayShifts = [$dayShifts];
                 }
 
-                // Remove existing schedules for this user and date first
-                $existingSchedules = Schedules::where('user_id', $userId)
+                // Non-destructive merge with existing schedules on that date
+                $existingSchedules = Schedules::with(['shift', 'attendances' => function($q) use ($userId){
+                        $q->where('user_id', $userId);
+                    }])
+                    ->where('user_id', $userId)
                     ->whereDate('schedule_date', $date)
                     ->get();
-                    
-                // Log deletion of existing schedules
-                foreach ($existingSchedules as $existingSchedule) {
-                    $shift = $existingSchedule->shift;
-                    AdminSchedulesLog::log(
-                        'delete',
-                        $existingSchedule->id,
-                        $user->id,
-                        $user->name,
-                        $shift->id ?? null,
-                        $shift->shift_name ?? 'Unknown',
-                        $date,
-                        $existingSchedule->toArray(),
-                        null,
-                        "Menghapus jadwal lama untuk {$user->name} pada {$date} (bulk monthly update)"
-                    );
-                }
-                
-                Schedules::where('user_id', $userId)
-                    ->whereDate('schedule_date', $date)
-                    ->delete();
 
-                // Create new schedules for each shift
-                foreach ($dayShifts as $shiftId) {
-                    if (!empty($shiftId)) {
+                $existingByShift = $existingSchedules->keyBy('shift_id');
+                $desiredShiftIds = collect($dayShifts)->filter(fn($id) => !empty($id))->map(fn($id) => (int)$id)->values();
+
+                // Create missing schedules for desired shifts
+                foreach ($desiredShiftIds as $shiftId) {
+                    if (!$existingByShift->has($shiftId)) {
                         $newSchedule = Schedules::create([
                             'user_id'       => $userId,
                             'schedule_date' => $date,
                             'shift_id'      => $shiftId,
                         ]);
-                        
                         $updatedSchedules[] = $newSchedule;
+
+                        // Log create
+                        $shiftModel = \App\Models\Shift::find($shiftId);
+                        AdminSchedulesLog::log(
+                            'create',
+                            $newSchedule->id,
+                            $user->id,
+                            $user->name,
+                            $shiftId,
+                            optional($shiftModel)->shift_name,
+                            $date,
+                            null,
+                            $newSchedule->toArray(),
+                            "Menambah jadwal baru (merge) untuk {$user->name} pada {$date}"
+                        );
+                    }
+                }
+
+                // Delete schedules not in desired shifts ONLY if safe (no meaningful attendance)
+                foreach ($existingSchedules as $existing) {
+                    if (!$desiredShiftIds->contains((int)$existing->shift_id)) {
+                        $att = $existing->attendances->first();
+                        $hasMeaningfulAttendance = $att && (
+                            !is_null($att->check_in_time) ||
+                            !is_null($att->check_out_time) ||
+                            ($att->status && $att->status !== 'alpha')
+                        );
+                        if ($hasMeaningfulAttendance) {
+                            // Keep schedule to preserve attendance
+                            continue;
+                        }
+
+                        // Safe to delete
+                        $old = $existing->toArray();
+                        $shift = $existing->shift;
+                        $existing->delete();
+
+                        AdminSchedulesLog::log(
+                            'delete',
+                            $old['id'] ?? null,
+                            $user->id,
+                            $user->name,
+                            $shift->id ?? null,
+                            $shift->shift_name ?? 'Unknown',
+                            $date,
+                            $old,
+                            null,
+                            "Menghapus jadwal tanpa attendance untuk {$user->name} pada {$date} (merge)"
+                        );
                     }
                 }
             }
