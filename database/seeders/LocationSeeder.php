@@ -16,25 +16,9 @@ class LocationSeeder extends Seeder
         $locations = [
             [
                 'name' => 'Kantor Pusat Jakarta',
-                'latitude' => -6.2087634,
-                'longitude' => 106.845599,
+                'latitude' => -6.291279019274493,
+                'longitude' => 106.78518762684719,
                 'radius' => 500,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Kantor Cabang Bandung',
-                'latitude' => -6.9174639,
-                'longitude' => 107.6191228,
-                'radius' => 300,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Kantor Cabang Surabaya',
-                'latitude' => -7.2574719,
-                'longitude' => 112.7520883,
-                'radius' => 400,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

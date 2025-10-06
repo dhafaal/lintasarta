@@ -199,22 +199,56 @@ class ScheduleController extends Controller
             'single_schedule_date' => 'required|date',
         ]);
 
-        $exists = Schedules::where('user_id', $request->single_user_id)
-            ->whereDate('schedule_date', $request->single_schedule_date)
-            ->where('shift_id', $request->single_shift_id)
-            ->exists();
+        // Non-destructive merge: on the same date, prefer updating an empty schedule over creating duplicates
+        $user = User::find($request->single_user_id);
+        $shift = Shift::find($request->single_shift_id);
+        $date = Carbon::parse($request->single_schedule_date)->format('Y-m-d');
 
-        if (!$exists) {
+        DB::transaction(function () use ($request, $user, $shift, $date) {
+            // Load all schedules for that user & date with attendances
+            $existing = Schedules::with(['attendances' => function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                }])
+                ->where('user_id', $user->id)
+                ->whereDate('schedule_date', $date)
+                ->get();
+
+            // If exact schedule exists, do nothing
+            if ($existing->firstWhere('shift_id', (int)$shift->id)) {
+                return;
+            }
+
+            // Try to reuse a schedule without meaningful attendance by updating its shift_id
+            $reusable = $existing->first(function ($s) use ($user) {
+                return !$this->hasMeaningfulAttendance($s, $user->id);
+            });
+
+            if ($reusable) {
+                $old = $reusable->toArray();
+                $reusable->update(['shift_id' => $shift->id]);
+
+                AdminSchedulesLog::log(
+                    'update',
+                    $reusable->id,
+                    $user->id,
+                    $user->name,
+                    $shift->id,
+                    $shift->shift_name,
+                    $date,
+                    $old,
+                    $reusable->fresh()->toArray(),
+                    "Mengubah shift jadwal (merge) untuk {$user->name} pada {$date}"
+                );
+                return;
+            }
+
+            // Otherwise, create a new schedule
             $schedule = Schedules::create([
-                'user_id'       => $request->single_user_id,
-                'schedule_date' => $request->single_schedule_date,
-                'shift_id'      => $request->single_shift_id,
+                'user_id'       => $user->id,
+                'schedule_date' => $date,
+                'shift_id'      => $shift->id,
             ]);
 
-            $user = User::find($request->single_user_id);
-            $shift = Shift::find($request->single_shift_id);
-
-            // Log admin schedule activity
             AdminSchedulesLog::log(
                 'create',
                 $schedule->id,
@@ -222,12 +256,12 @@ class ScheduleController extends Controller
                 $user->name,
                 $shift->id,
                 $shift->shift_name,
-                $request->single_schedule_date,
+                $date,
                 null,
                 $schedule->toArray(),
-                "Membuat jadwal untuk {$user->name} pada {$request->single_schedule_date}"
+                "Membuat jadwal untuk {$user->name} pada {$date}"
             );
-        }
+        });
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Jadwal berhasil disimpan.');
@@ -267,108 +301,17 @@ class ScheduleController extends Controller
                     $dayShifts = [$dayShifts];
                 }
 
-                // Non-destructive merge with existing schedules on that date
-                $existingSchedules = Schedules::with(['shift', 'attendances' => function($q) use ($userId){
-                        $q->where('user_id', $userId);
-                    }])
-                    ->where('user_id', $userId)
-                    ->whereDate('schedule_date', $date)
-                    ->get();
+                // Build desired list and perform safe merge for this date
+                $desiredShiftIds = collect($dayShifts)
+                    ->filter(fn($id) => !empty($id))
+                    ->map(fn($id) => (int)$id)
+                    ->values()
+                    ->toArray();
 
-                $existingByShift = $existingSchedules->keyBy('shift_id');
-                $desiredShiftIds = collect($dayShifts)->filter(fn($id) => !empty($id))->map(fn($id) => (int)$id)->values();
-
-                // Create missing schedules for desired shifts
-                foreach ($desiredShiftIds as $shiftId) {
-                    if (!$existingByShift->has($shiftId)) {
-                        $schedule = Schedules::create([
-                            'user_id'       => $userId,
-                            'schedule_date' => $date,
-                            'shift_id'      => $shiftId,
-                        ]);
-                        $createdSchedules[] = $schedule;
-
-                        // Log create
-                        $shiftModel = \App\Models\Shift::find($shiftId);
-                        AdminSchedulesLog::log(
-                            'create',
-                            $schedule->id,
-                            $user->id,
-                            $user->name,
-                            $shiftId,
-                            optional($shiftModel)->shift_name,
-                            $date,
-                            null,
-                            $schedule->toArray(),
-                            "Menambah jadwal baru (merge) untuk {$user->name} pada {$date}"
-                        );
-                    }
-                }
-
-                // Delete schedules not in desired shifts; if there's meaningful attendance and desired exists, migrate first
-                foreach ($existingSchedules as $existing) {
-                    if (!$desiredShiftIds->contains((int)$existing->shift_id)) {
-                        $att = $existing->attendances->first();
-                        $hasMeaningfulAttendance = $att && (
-                            !is_null($att->check_in_time) ||
-                            !is_null($att->check_out_time) ||
-                            ($att->status && $att->status !== 'alpha')
-                        );
-                        if ($hasMeaningfulAttendance) {
-                            // If there is at least one desired shift, migrate attendance to the first desired schedule
-                            if ($desiredShiftIds->isNotEmpty()) {
-                                $targetShiftId = (int) $desiredShiftIds->first();
-                                // Ensure target schedule exists
-                                $targetSchedule = Schedules::firstOrCreate([
-                                    'user_id' => $userId,
-                                    'schedule_date' => $date,
-                                    'shift_id' => $targetShiftId,
-                                ]);
-
-                                // Move all user's attendances on old schedule to target schedule
-                                $migratedCount = Attendance::where('user_id', $userId)
-                                    ->where('schedule_id', $existing->id)
-                                    ->update(['schedule_id' => $targetSchedule->id]);
-
-                                // Log migration
-                                AdminSchedulesLog::log(
-                                    'migrate_attendance',
-                                    $existing->id,
-                                    $user->id,
-                                    $user->name,
-                                    $existing->shift_id,
-                                    optional($existing->shift)->shift_name,
-                                    $date,
-                                    ['from_schedule' => $existing->toArray(), 'migrated_count' => $migratedCount],
-                                    ['to_schedule' => $targetSchedule->toArray()],
-                                    "Memigrasikan attendance ({$migratedCount}) ke shift tujuan pada {$date}"
-                                );
-
-                                // After migration, it's safe to delete old schedule
-                            } else {
-                                // No desired shift to migrate into; keep old schedule
-                                continue;
-                            }
-                        }
-
-                        // Safe to delete (either no meaningful attendance or already migrated)
-                        $old = $existing->toArray();
-                        $shift = $existing->shift;
-                        $existing->delete();
-
-                        AdminSchedulesLog::log(
-                            'delete',
-                            $old['id'] ?? null,
-                            $user->id,
-                            $user->name,
-                            $shift->id ?? null,
-                            $shift->shift_name ?? 'Unknown',
-                            $date,
-                            $old,
-                            null,
-                            "Menghapus jadwal tanpa attendance untuk {$user->name} pada {$date} (merge)"
-                        );
-                    }
+                $result = $this->mergeSchedulesForDate($user, $date, $desiredShiftIds);
+                // Collect created for summary logging
+                foreach ($result['created'] as $created) {
+                    $createdSchedules[] = $created;
                 }
             }
         });
@@ -416,22 +359,14 @@ class ScheduleController extends Controller
             foreach ($request->users as $userId) {
                 $user = User::find($userId);
                 foreach ($request->dates as $date) {
-                    $exists = Schedules::where('user_id', $userId)
-                        ->whereDate('schedule_date', $date)
-                        ->where('shift_id', $request->shift_id)
-                        ->exists();
-
-                    if (!$exists) {
-                        $schedule = Schedules::create([
-                            'user_id'       => $userId,
-                            'schedule_date' => $date,
-                            'shift_id'      => $request->shift_id,
-                        ]);
-                        
+                    $dateStr = Carbon::parse($date)->format('Y-m-d');
+                    // Use merge logic for single desired shift on this date
+                    $result = $this->mergeSchedulesForDate($user, $dateStr, [(int)$shift->id]);
+                    foreach ($result['created'] as $created) {
                         $createdSchedules[] = [
-                            'schedule' => $schedule,
+                            'schedule' => $created,
                             'user' => $user,
-                            'shift' => $shift
+                            'shift' => $shift,
                         ];
                     }
                 }
@@ -487,19 +422,10 @@ class ScheduleController extends Controller
 
             while ($currentDate->lte($endDate)) {
                 if (empty($selectedDays) || in_array($currentDate->dayOfWeek, $selectedDays)) {
-                    $exists = Schedules::where('user_id', $request->user_id)
-                        ->whereDate('schedule_date', $currentDate->format('Y-m-d'))
-                        ->where('shift_id', $request->shift_id)
-                        ->exists();
-
-                    if (!$exists) {
-                        $schedule = Schedules::create([
-                            'user_id'       => $request->user_id,
-                            'schedule_date' => $currentDate->format('Y-m-d'),
-                            'shift_id'      => $request->shift_id,
-                        ]);
-                        
-                        $createdSchedules[] = $schedule;
+                    $dateStr = $currentDate->format('Y-m-d');
+                    $result = $this->mergeSchedulesForDate($user, $dateStr, [(int)$shift->id]);
+                    foreach ($result['created'] as $created) {
+                        $createdSchedules[] = $created;
                     }
                 }
                 $currentDate->addDay();
@@ -626,76 +552,16 @@ class ScheduleController extends Controller
                     $dayShifts = [$dayShifts];
                 }
 
-                // Non-destructive merge with existing schedules on that date
-                $existingSchedules = Schedules::with(['shift', 'attendances' => function($q) use ($userId){
-                        $q->where('user_id', $userId);
-                    }])
-                    ->where('user_id', $userId)
-                    ->whereDate('schedule_date', $date)
-                    ->get();
+                // Build desired list and perform safe merge for this date
+                $desiredShiftIds = collect($dayShifts)
+                    ->filter(fn($id) => !empty($id))
+                    ->map(fn($id) => (int)$id)
+                    ->values()
+                    ->toArray();
 
-                $existingByShift = $existingSchedules->keyBy('shift_id');
-                $desiredShiftIds = collect($dayShifts)->filter(fn($id) => !empty($id))->map(fn($id) => (int)$id)->values();
-
-                // Create missing schedules for desired shifts
-                foreach ($desiredShiftIds as $shiftId) {
-                    if (!$existingByShift->has($shiftId)) {
-                        $newSchedule = Schedules::create([
-                            'user_id'       => $userId,
-                            'schedule_date' => $date,
-                            'shift_id'      => $shiftId,
-                        ]);
-                        $updatedSchedules[] = $newSchedule;
-
-                        // Log create
-                        $shiftModel = \App\Models\Shift::find($shiftId);
-                        AdminSchedulesLog::log(
-                            'create',
-                            $newSchedule->id,
-                            $user->id,
-                            $user->name,
-                            $shiftId,
-                            optional($shiftModel)->shift_name,
-                            $date,
-                            null,
-                            $newSchedule->toArray(),
-                            "Menambah jadwal baru (merge) untuk {$user->name} pada {$date}"
-                        );
-                    }
-                }
-
-                // Delete schedules not in desired shifts ONLY if safe (no meaningful attendance)
-                foreach ($existingSchedules as $existing) {
-                    if (!$desiredShiftIds->contains((int)$existing->shift_id)) {
-                        $att = $existing->attendances->first();
-                        $hasMeaningfulAttendance = $att && (
-                            !is_null($att->check_in_time) ||
-                            !is_null($att->check_out_time) ||
-                            ($att->status && $att->status !== 'alpha')
-                        );
-                        if ($hasMeaningfulAttendance) {
-                            // Keep schedule to preserve attendance
-                            continue;
-                        }
-
-                        // Safe to delete
-                        $old = $existing->toArray();
-                        $shift = $existing->shift;
-                        $existing->delete();
-
-                        AdminSchedulesLog::log(
-                            'delete',
-                            $old['id'] ?? null,
-                            $user->id,
-                            $user->name,
-                            $shift->id ?? null,
-                            $shift->shift_name ?? 'Unknown',
-                            $date,
-                            $old,
-                            null,
-                            "Menghapus jadwal tanpa attendance untuk {$user->name} pada {$date} (merge)"
-                        );
-                    }
+                $result = $this->mergeSchedulesForDate($user, $date, $desiredShiftIds);
+                foreach ($result['created'] as $created) {
+                    $updatedSchedules[] = $created;
                 }
             }
         });
@@ -728,8 +594,14 @@ class ScheduleController extends Controller
         $scheduleData = $schedule->toArray();
         $user = $schedule->user;
         $shift = $schedule->shift;
-        $scheduleName = "Jadwal {$user->name} - {$shift->shift_name}";
-        
+
+        // Guard: do not delete a schedule that has meaningful attendance
+        $hasMeaningful = $this->hasMeaningfulAttendance($schedule, $user->id);
+        if ($hasMeaningful) {
+            return redirect()->route('admin.schedules.index')
+                ->with('error', 'Tidak dapat menghapus jadwal yang memiliki attendance. Ubah shift saja jika diperlukan.');
+        }
+
         $schedule->delete();
 
         // Log admin schedule activity
@@ -834,6 +706,193 @@ class ScheduleController extends Controller
 
 
 
+
+    /**
+     * Determine if a schedule has meaningful attendance for the given user.
+     * Meaningful = has check-in/out or status not 'alpha'.
+     */
+    private function hasMeaningfulAttendance(Schedules $schedule, int $userId): bool
+    {
+        // Ensure attendance relation exists; filter by user_id for safety
+        $attendance = $schedule->relationLoaded('attendances')
+            ? ($schedule->attendances->firstWhere('user_id', $userId) ?? $schedule->attendances->first())
+            : Attendance::where('schedule_id', $schedule->id)->where('user_id', $userId)->first();
+
+        if (!$attendance) {
+            return false;
+        }
+
+        if (!is_null($attendance->check_in_time) || !is_null($attendance->check_out_time)) {
+            return true;
+        }
+
+        if ($attendance->status && $attendance->status !== 'alpha') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Merge desired shifts for one user and date into schedules non-destructively.
+     * Rules:
+     * - If desired shift exists: keep.
+     * - If desired missing: reuse an existing schedule without attendance by updating its shift_id, else create new.
+     * - Existing schedules not in desired and without attendance: delete.
+     * - Existing schedules not in desired but WITH attendance: keep; if possible map it to an unmet desired by updating shift_id.
+     * Returns arrays of created/updated/deleted for optional external logging.
+     */
+    private function mergeSchedulesForDate(User $user, string $date, array $desiredShiftIds): array
+    {
+        $created = [];
+        $updated = [];
+        $deleted = [];
+
+        // Normalize desired list (unique, ints)
+        $desired = collect($desiredShiftIds)->filter()->map(fn($id) => (int)$id)->unique()->values();
+
+        // Load all existing schedules for this user and date with shift and attendances
+        $existing = Schedules::with(['shift', 'attendances' => function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            }])
+            ->where('user_id', $user->id)
+            ->whereDate('schedule_date', $date)
+            ->get();
+
+        // Track which desired are already satisfied
+        $satisfied = collect();
+        foreach ($existing as $ex) {
+            if ($desired->contains((int)$ex->shift_id)) {
+                $satisfied->push((int)$ex->shift_id);
+            }
+        }
+
+        // 1) Satisfy missing desired shifts by reusing or creating
+        foreach ($desired as $shiftId) {
+            if ($satisfied->contains($shiftId)) {
+                continue; // already has this shift
+            }
+
+            // Try reuse an existing schedule WITHOUT meaningful attendance and not already earmarked
+            $reusable = $existing->first(function ($s) use ($user, $satisfied, $desired) {
+                return !$desired->contains((int)$s->shift_id) // currently not desired shift
+                    && !$this->hasMeaningfulAttendance($s, $user->id);
+            });
+
+            if ($reusable) {
+                $old = $reusable->toArray();
+                $reusable->update(['shift_id' => $shiftId]);
+
+                $satisfied->push($shiftId);
+
+                // Log update for reuse
+                $shiftModel = Shift::find($shiftId);
+                AdminSchedulesLog::log(
+                    'update',
+                    $reusable->id,
+                    $user->id,
+                    $user->name,
+                    $shiftId,
+                    optional($shiftModel)->shift_name,
+                    $date,
+                    $old,
+                    $reusable->fresh()->toArray(),
+                    "Mengubah shift jadwal (merge) untuk {$user->name} pada {$date}"
+                );
+
+                $updated[] = ['old' => $old, 'schedule' => $reusable];
+            } else {
+                // Create new schedule
+                $schedule = Schedules::create([
+                    'user_id'       => $user->id,
+                    'schedule_date' => $date,
+                    'shift_id'      => $shiftId,
+                ]);
+
+                // Log create
+                $shiftModel = Shift::find($shiftId);
+                AdminSchedulesLog::log(
+                    'create',
+                    $schedule->id,
+                    $user->id,
+                    $user->name,
+                    $shiftId,
+                    optional($shiftModel)->shift_name,
+                    $date,
+                    null,
+                    $schedule->toArray(),
+                    "Menambah jadwal (merge) untuk {$user->name} pada {$date}"
+                );
+
+                $created[] = $schedule;
+                $satisfied->push($shiftId);
+            }
+        }
+
+        // 2) Handle existing schedules not in desired
+        foreach ($existing as $ex) {
+            $isDesired = $desired->contains((int)$ex->shift_id);
+            if ($isDesired) {
+                continue; // keep
+            }
+
+            $hasAtt = $this->hasMeaningfulAttendance($ex, $user->id);
+            if ($hasAtt) {
+                // If there are still desired shifts unmet (shouldn't happen due to step 1), try map; otherwise keep
+                $unmet = $desired->reject(fn($sid) => $satisfied->contains($sid))->values();
+                if ($unmet->isNotEmpty()) {
+                    $targetSid = (int)$unmet->first();
+                    $old = $ex->toArray();
+                    $ex->update(['shift_id' => $targetSid]);
+                    $satisfied->push($targetSid);
+
+                    $shiftModel = Shift::find($targetSid);
+                    AdminSchedulesLog::log(
+                        'update',
+                        $ex->id,
+                        $user->id,
+                        $user->name,
+                        $targetSid,
+                        optional($shiftModel)->shift_name,
+                        $date,
+                        $old,
+                        $ex->fresh()->toArray(),
+                        "Menyesuaikan shift jadwal (merge-preserve) untuk {$user->name} pada {$date}"
+                    );
+
+                    $updated[] = ['old' => $old, 'schedule' => $ex];
+                }
+                // else: keep as is to preserve attendance
+                continue;
+            }
+
+            // Safe to delete schedule without attendance
+            $old = $ex->toArray();
+            $shift = $ex->shift;
+            $ex->delete();
+
+            AdminSchedulesLog::log(
+                'delete',
+                $old['id'] ?? null,
+                $user->id,
+                $user->name,
+                $shift->id ?? null,
+                $shift->shift_name ?? 'Unknown',
+                $date,
+                $old,
+                null,
+                "Menghapus jadwal tanpa attendance untuk {$user->name} pada {$date} (merge)"
+            );
+
+            $deleted[] = $old;
+        }
+
+        return [
+            'created' => $created,
+            'updated' => $updated,
+            'deleted' => $deleted,
+        ];
+    }
 
     public function report()
     {
