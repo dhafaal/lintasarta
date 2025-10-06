@@ -64,10 +64,35 @@
                 </div>
 
                 <div class="p-6">
+                    @if ($errors->any())
+                        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                            <ul class="list-disc ml-5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    @if ($errors->has('attendance_conflict'))
+                        <div class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                            <div class="font-semibold mb-2">Konfirmasi Diperlukan</div>
+                            <div class="mb-3">{{ $errors->first('attendance_conflict') }}</div>
+                            <div class="flex gap-2">
+                                <button type="button" id="confirmRemapBtn"
+                                    class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md">
+                                    Pindahkan attendance & simpan
+                                </button>
+                                <a href="{{ url()->current() }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md border border-gray-300">Batalkan</a>
+                            </div>
+                        </div>
+                    @endif
+
                     <form action="{{ isset($isBulkEdit) && $isBulkEdit ? route('admin.schedules.update', 'bulk') : route('admin.schedules.update', $schedule) }}" method="POST" class="space-y-6" id="scheduleForm">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="form_type" value="bulk_monthly">
+                        <input type="hidden" name="on_attendance_conflict" id="on_attendance_conflict" value="">
 
                         {{-- Bulan dan Tahun --}}
                         <div class="space-y-2">
@@ -293,6 +318,8 @@
             const yearSelect = document.getElementById("calendarYear");
             const userSelect = document.getElementById("user_id");
             const calendarContainer = document.getElementById("calendarDays");
+            const conflictInput = document.getElementById('on_attendance_conflict');
+            const confirmRemapBtn = document.getElementById('confirmRemapBtn');
             
             let currentCalendarData = null;
             let currentExistingSchedules = {};
@@ -421,6 +448,14 @@
             
             // Initial load
             loadCalendar();
+
+            // Attendance conflict confirmation
+            if (confirmRemapBtn) {
+                confirmRemapBtn.addEventListener('click', function () {
+                    if (conflictInput) conflictInput.value = 'remap';
+                    document.getElementById('scheduleForm').submit();
+                });
+            }
         });
 
         // Atur ID shift sesuai dengan ID shift yang ada di database
