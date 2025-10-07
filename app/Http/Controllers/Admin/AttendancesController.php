@@ -652,7 +652,7 @@ class AttendancesController extends Controller
                         permissionType: $perm->type,
                         permissionReason: $perm->reason,
                         permissionDate: optional($perm->schedule)->schedule_date,
-                        oldStatus: $perm->getOriginal('status'),
+                        oldStatus: $oldStatus,
                         newStatus: $newStatus,
                         additionalData: [
                             'schedule_id' => $perm->schedule_id,
@@ -664,7 +664,7 @@ class AttendancesController extends Controller
                             strtoupper($perm->type),
                             optional($perm->user)->name,
                             $perm->reason,
-                            optional($perm->schedule)?->schedule_date?->format('d M Y')
+                            (optional($perm->schedule)->schedule_date ? \Carbon\Carbon::parse(optional($perm->schedule)->schedule_date)->format('d M Y') : '-')
                         )
                     );
 
@@ -740,7 +740,7 @@ class AttendancesController extends Controller
                             strtoupper($perm->type),
                             optional($perm->user)->name,
                             $perm->reason,
-                            optional($perm->schedule)?->schedule_date?->format('d M Y')
+                            (optional($perm->schedule)->schedule_date ? \Carbon\Carbon::parse(optional($perm->schedule)->schedule_date)->format('d M Y') : '-')
                         )
                     );
 
@@ -801,6 +801,7 @@ class AttendancesController extends Controller
             $newStatus = $action === 'approve' ? 'approved' : 'rejected';
             
             foreach ($allPermissions as $perm) {
+                $oldStatus = $perm->status;
                 $perm->update(['status' => $newStatus]);
                 
                 // Log admin action with detailed fields
@@ -816,8 +817,7 @@ class AttendancesController extends Controller
                     newStatus: $newStatus,
                     additionalData: [
                         'schedule_id' => $perm->schedule_id,
-                        'affected_attendance' => $newStatus === 'approved' ? 'set_izin' : 'reset_alpha',
-                        'selection' => in_array($perm->id, $approvedIds) ? 'selected' : 'unselected'
+                        'affected_attendance' => $newStatus === 'approved' ? 'set_izin' : 'reset_alpha'
                     ],
                     description: sprintf(
                         '%s %s for %s (%s) on %s',
@@ -825,7 +825,7 @@ class AttendancesController extends Controller
                         strtoupper($perm->type),
                         optional($perm->user)->name,
                         $perm->reason,
-                        optional($perm->schedule)?->schedule_date?->format('d M Y')
+                        (optional($perm->schedule)->schedule_date ? \Carbon\Carbon::parse(optional($perm->schedule)->schedule_date)->format('d M Y') : '-')
                     )
                 );
 

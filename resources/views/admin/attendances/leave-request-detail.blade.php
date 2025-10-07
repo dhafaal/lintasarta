@@ -92,11 +92,13 @@
         </h4>
         @if($leaveRequest->status === 'pending')
             <div class="flex space-x-2">
-                <button type="button" onclick="selectAllSchedules()" 
+                <button type="button"
+                        onclick="document.querySelectorAll('input[name=\'approved_permissions[]\']').forEach(cb=>cb.checked=true)"
                         class="text-xs px-3 py-1.5 bg-sky-100 text-sky-700 rounded-lg hover:bg-sky-200 transition-colors font-medium">
                     Select All
                 </button>
-                <button type="button" onclick="clearAllSchedules()" 
+                <button type="button"
+                        onclick="document.querySelectorAll('input[name=\'approved_permissions[]\']').forEach(cb=>cb.checked=false)"
                         class="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
                     Clear All
                 </button>
@@ -104,8 +106,9 @@
         @endif
     </div>
 
-    <form id="schedule-approval-form" action="{{ route('admin.attendances.leave-requests.process', $leaveRequest->id) }}" method="POST">
+    <form id="schedule-approval-form" action="{{ route('admin.attendances.leave-requests.process', $leaveRequest->id) }}" method="POST" onsubmit="return validateLeaveFormSubmit(event)">
         @csrf
+        <input type="hidden" name="action" id="lr-action" value="">
         <div class="space-y-3 max-h-80 overflow-y-auto">
             @foreach($permissions as $permission)
                 <div class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -189,7 +192,7 @@
                 </button>
                 
                 <button type="button"
-                        onclick="processSelectedSchedules('reject')"
+                        onclick="(function(){const f=document.getElementById('schedule-approval-form');document.getElementById('lr-action').value='reject'; if(confirm('Reject ALL schedules in this leave request?')) f.submit();})();"
                         class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-sm">
                     <span class="flex items-center space-x-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -203,7 +206,13 @@
                 </button>
                 
                 <button type="button"
-                        onclick="processSelectedSchedules('approve')"
+                        onclick="(function(){
+                            const f=document.getElementById('schedule-approval-form');
+                            document.getElementById('lr-action').value='approve';
+                            const selected=[...document.querySelectorAll('input[name=\'approved_permissions[]\']:checked')];
+                            if(selected.length===0){ alert('Please select at least one schedule to approve.'); return; }
+                            if(confirm(`Approve ${selected.length} selected schedule(s)?`)) f.submit();
+                        })();"
                         class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 shadow-sm">
                     <span class="flex items-center space-x-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -220,60 +229,22 @@
 </div>
 
 <script>
-    function selectAllSchedules() {
-        const checkboxes = document.querySelectorAll('input[name="approved_permissions[]"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = true;
-        });
-    }
-
-    function clearAllSchedules() {
-        const checkboxes = document.querySelectorAll('input[name="approved_permissions[]"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = false;
-        });
-    }
-
-    async function processSelectedSchedules(action) {
-        const form = document.getElementById('schedule-approval-form');
-        const formData = new FormData(form);
-        
-        if (action === 'approve') {
-            const selectedSchedules = formData.getAll('approved_permissions[]');
-            if (selectedSchedules.length === 0) {
+    function validateLeaveFormSubmit(e){
+        // Kept for safety if form submit used elsewhere
+        const actionInput = document.getElementById('lr-action');
+        const action = actionInput ? actionInput.value : '';
+        if(action === 'approve'){
+            const selected = Array.from(document.querySelectorAll('input[name="approved_permissions[]"]:checked'));
+            if(selected.length === 0){
                 alert('Please select at least one schedule to approve.');
-                return;
+                e.preventDefault();
+                return false;
             }
-            
-            if (!confirm(`Are you sure you want to approve ${selectedSchedules.length} selected schedule(s)?`)) {
-                return;
-            }
-        } else {
-            if (!confirm('Are you sure you want to reject this entire leave request?')) {
-                return;
-            }
+            return confirm(`Approve ${selected.length} selected schedule(s)?`);
         }
-        
-        try {
-            formData.append('action', action);
-            
-            const response = await fetch(form.action, {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (response.ok) {
-                alert('Leave request processed successfully!');
-                closeLeaveDetailModal();
-                location.reload();
-            } else {
-                const errorText = await response.text();
-                console.error('Error response:', errorText);
-                alert('Failed to process leave request: ' + errorText);
-            }
-        } catch (error) {
-            console.error('Error processing schedules:', error);
-            alert('An error occurred while processing the schedules');
+        if(action === 'reject'){
+            return confirm('Reject ALL schedules in this leave request?');
         }
+        return true;
     }
 </script>
