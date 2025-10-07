@@ -24,7 +24,27 @@ class AttendancesController extends Controller
         // Resolve the active schedule considering cross-midnight night shifts
         $activeSchedule = $this->getActiveScheduleForNow($user->id);
 
-        // If an active schedule is found, use its date as the reference for queries; otherwise fall back to today
+        // If no active schedule window, try to find the latest open attendance (checked-in, not yet checked-out)
+        if (!$activeSchedule) {
+            $openAttendance = Attendance::with(['schedule.shift'])
+                ->where('user_id', $user->id)
+                ->whereNotNull('check_in_time')
+                ->whereNull('check_out_time')
+                ->whereHas('schedule', function ($q) use ($today) {
+                    // Limit search to yesterday and today for performance and correctness
+                    $q->whereDate('schedule_date', '>=', Carbon::parse($today)->subDay()->toDateString())
+                      ->whereDate('schedule_date', '<=', $today);
+                })
+                ->orderByDesc('check_in_time')
+                ->first();
+
+            if ($openAttendance && $openAttendance->schedule) {
+                // Treat the schedule owning this open attendance as the active one to allow checkout
+                $activeSchedule = $openAttendance->schedule;
+            }
+        }
+
+        // If an active schedule (or open attendance) is found, use its date as the reference; otherwise fall back to today
         $refDate = $activeSchedule?->schedule_date ?? $today;
 
         $schedule = $activeSchedule ?: Schedules::with(['shift', 'permissions', 'attendances'])

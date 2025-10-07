@@ -232,10 +232,20 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     @if($attendance?->check_out_time)
+                                        @php
+                                            $cout = \Carbon\Carbon::parse($attendance->check_out_time);
+                                            $schedDate = \Carbon\Carbon::parse($schedule->schedule_date);
+                                            $isNextDay = $cout->toDateString() > $schedDate->toDateString();
+                                        @endphp
                                         <span class="inline-flex items-center text-red-700">
-                                            <i data-lucide="x-circle" class="w-4 h-4 mr-1"></i>
-                                            {{ \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') }}
+                                            <i data-lucide="log-out" class="w-4 h-4 mr-1"></i>
+                                            {{ $cout->format('H:i') }}
                                         </span>
+                                        @if($isNextDay)
+                                            <span class="inline-flex items-center ml-2 px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-100 text-indigo-800" title="Checkout hari berikutnya">
+                                                +1 hari
+                                            </span>
+                                        @endif
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif

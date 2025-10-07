@@ -246,6 +246,54 @@
                 />
             </div>
 
+            @if(isset($overnightOpenAttendances) && $overnightOpenAttendances->isNotEmpty())
+            <!-- Overnight Open Attendances Alert -->
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+                <div class="flex items-start">
+                    <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center mr-4">
+                        <i data-lucide="moon" class="w-5 h-5 text-amber-700"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-base font-semibold text-amber-900">Overnight open check-ins dari kemarin</h3>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                {{ $overnightOpenAttendances->count() }} pengguna
+                            </span>
+                        </div>
+                        <p class="text-sm text-amber-800 mb-3">Pengguna berikut masih tercatat check-in kemarin tanpa check-out. Sistem mengizinkan checkout pada hari ini untuk shift malam.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            @foreach($overnightOpenAttendances as $oa)
+                                <div class="bg-white rounded-xl border border-amber-200 p-3">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <div class="text-sm font-semibold text-gray-900">{{ optional($oa->user)->name ?? '-' }}</div>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-100 text-indigo-800">
+                                            {{ optional($oa->schedule->shift)->shift_name ?? 'Shift' }}
+                                        </span>
+                                    </div>
+                                    <div class="text-xs text-gray-600 flex items-center space-x-2">
+                                        <span class="inline-flex items-center">
+                                            <i data-lucide="calendar" class="w-3 h-3 mr-1"></i>
+                                            {{ \Carbon\Carbon::parse(optional($oa->schedule)->schedule_date)->format('d M Y') }}
+                                        </span>
+                                        <span class="inline-flex items-center">
+                                            <i data-lucide="log-in" class="w-3 h-3 mr-1"></i>
+                                            Check-in: {{ \Carbon\Carbon::parse($oa->check_in_time)->format('H:i') }}
+                                        </span>
+                                        @if($oa->location)
+                                        <span class="inline-flex items-center">
+                                            <i data-lucide="map-pin" class="w-3 h-3 mr-1"></i>
+                                            {{ $oa->location->name }}
+                                        </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- Enhanced Table Card -->
             <div class="bg-white rounded-2xl border-2 border-sky-100 overflow-hidden shadow-xl">
                 <div class="px-8 py-6 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50">

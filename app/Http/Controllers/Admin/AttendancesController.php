@@ -50,6 +50,15 @@ class AttendancesController extends Controller
 
         $attendances = $attendancesQuery->get();
 
+        // Overnight open attendances (yesterday check-in without checkout)
+        $yesterday = Carbon::parse($today)->copy()->subDay()->toDateString();
+        $yesterdayScheduleIds = Schedules::whereDate('schedule_date', $yesterday)->pluck('id');
+        $overnightOpenAttendances = Attendance::with(['user', 'schedule.shift', 'location'])
+            ->whereIn('schedule_id', $yesterdayScheduleIds)
+            ->whereNotNull('check_in_time')
+            ->whereNull('check_out_time')
+            ->get();
+
         // permissions (izin) yang terkait schedule hari ini
         $permissions = Permissions::with(['user', 'schedule'])
             ->whereIn('schedule_id', $scheduleIds)
@@ -83,7 +92,8 @@ class AttendancesController extends Controller
             'users',
             // expose for future UI usage
             'totalEarlyCheckout',
-            'totalForgotCheckout'
+            'totalForgotCheckout',
+            'overnightOpenAttendances'
         ));
     }
 

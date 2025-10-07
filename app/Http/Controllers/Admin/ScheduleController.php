@@ -1686,3 +1686,4 @@ class ScheduleController extends Controller
         }
     }
 }
+ 
