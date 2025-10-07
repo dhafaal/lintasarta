@@ -18,6 +18,8 @@ class AttendancesController extends Controller
     public function index()
     {
         $user = Auth::user();
+        // Auto-close any open attendances that have passed the grace deadline
+        $this->autoCheckoutMissedShifts($user->id);
         $now = now();
         $today = $now->toDateString();
 
@@ -287,10 +289,34 @@ class AttendancesController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
+        // Before proceeding, auto-close if past deadline
+        $this->autoCheckoutMissedShifts(Auth::id());
+
         // Use transaction to ensure atomic multi-shift updates
         return DB::transaction(function () use ($request) {
             // Cek apakah user memiliki izin (pending/approved) untuk tanggal ini
             $schedule = Schedules::findOrFail($request->schedule_id);
+            // Block checkout if past final end + grace
+            $graceHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 1);
+            $sameDaySchedules = Schedules::with('shift')
+                ->where('user_id', Auth::id())
+                ->whereDate('schedule_date', $schedule->schedule_date)
+                ->get();
+            $finalEnd = null; $firstStart = null;
+            foreach ($sameDaySchedules as $sch) {
+                if (!$sch->shift) continue;
+                $date = Carbon::parse($sch->schedule_date);
+                $st = Carbon::parse($sch->shift->start_time);
+                $et = Carbon::parse($sch->shift->end_time);
+                $startDT = $date->copy()->setTimeFrom($st);
+                $endDT   = $date->copy()->setTimeFrom($et);
+                if ($endDT->lt($startDT)) { $endDT->addDay(); }
+                if (!$firstStart || $startDT->lt($firstStart)) { $firstStart = $startDT->copy(); }
+                if (!$finalEnd || $endDT->gt($finalEnd)) { $finalEnd = $endDT->copy(); }
+            }
+            if ($finalEnd && now()->gte($finalEnd->copy()->addHours($graceHours))) {
+                return back()->with('error', 'Batas waktu checkout (akhir shift + '.$graceHours.' jam) telah lewat. Attendance ditutup otomatis sebagai forgot checkout.');
+            }
             $existingPermission = \App\Models\Permissions::where('user_id', Auth::id())
                 ->whereHas('schedule', function ($q) use ($schedule) {
                     $q->whereDate('schedule_date', $schedule->schedule_date);
@@ -574,53 +600,81 @@ class AttendancesController extends Controller
     private function autoCheckoutMissedShifts(int $userId): int
     {
         $now = Carbon::now();
+        $graceHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 1);
         $open = Attendance::with(['schedule.shift'])
             ->where('user_id', $userId)
             ->whereNotNull('check_in_time')
             ->whereNull('check_out_time')
             ->get();
 
-        $count = 0;
-        foreach ($open as $att) {
-            $sch = $att->schedule;
-            if (!$sch || !$sch->shift) { continue; }
+        // Group open attendances by schedule_date
+        $grouped = $open->groupBy(function($att){
+            return optional($att->schedule)->schedule_date;
+        });
 
-            $date = Carbon::parse($sch->schedule_date);
-            $st = Carbon::parse($sch->shift->start_time);
-            $et = Carbon::parse($sch->shift->end_time);
-            $startDT = $date->copy()->setTimeFrom($st);
-            $endDT   = $date->copy()->setTimeFrom($et);
-            if ($endDT->lt($startDT)) { $endDT->addDay(); }
+        $totalAffected = 0;
 
-            // If the shift should have ended already, auto set checkout at scheduled end
-            if ($now->gt($endDT)) {
-                // Ensure we don't set checkout earlier than check-in
-                $checkoutAt = Carbon::parse($att->check_in_time)->gt($endDT) ? Carbon::parse($att->check_in_time) : $endDT;
+        foreach ($grouped as $scheduleDate => $atts) {
+            if (!$scheduleDate) { continue; }
+
+            // Compute FINAL end across all shifts for this user on this date (multi-shift, cross-midnight aware)
+            $sameDaySchedules = Schedules::with('shift')
+                ->where('user_id', $userId)
+                ->whereDate('schedule_date', $scheduleDate)
+                ->get();
+
+            $finalEnd = null;
+            foreach ($sameDaySchedules as $sch) {
+                if (!$sch->shift) continue;
+                $date = Carbon::parse($sch->schedule_date);
+                $st = Carbon::parse($sch->shift->start_time);
+                $et = Carbon::parse($sch->shift->end_time);
+                $startDT = $date->copy()->setTimeFrom($st);
+                $endDT   = $date->copy()->setTimeFrom($et);
+                if ($endDT->lt($startDT)) { $endDT->addDay(); }
+                if (!$finalEnd || $endDT->gt($finalEnd)) { $finalEnd = $endDT->copy(); }
+            }
+
+            if (!$finalEnd) { continue; }
+
+            // Apply grace for ALL categories, after the FINAL end (configurable)
+            $threshold = $finalEnd->copy()->addHours($graceHours);
+            if ($now->lt($threshold)) { continue; }
+
+            // Update all open attendances for this date
+            $affected = 0; $firstId = null;
+            foreach ($atts as $att) {
+                // Clamp to not precede check-in
+                $cin = Carbon::parse($att->check_in_time);
+                $checkoutAt = $cin->gt($finalEnd) ? $cin : $finalEnd;
 
                 $att->update([
-                    // keep location_id from check-in; no GPS for auto checkout
                     'check_out_time' => $checkoutAt,
                     'status' => 'forgot_checkout',
                 ]);
-                $count++;
+                $affected++; $totalAffected++; if (!$firstId) { $firstId = $att->id; }
+            }
 
-                // Log user activity for auto checkout
+            // Log once per user/date
+            if ($affected > 0) {
                 UserActivityLog::log(
-                    'auto_checkout',
+                    'auto_forgot_checkout',
                     'attendances',
-                    $att->id,
-                    'Auto Check Out (Missed Checkout)',
+                    $firstId,
+                    'Auto Forgot Checkout (final end + 6h)',
                     [
-                        'schedule_id' => $sch->id,
-                        'scheduled_end' => $endDT->toDateTimeString(),
-                        'auto_checkout_time' => $checkoutAt->toDateTimeString(),
+                        'user_id' => $userId,
+                        'schedule_date' => $scheduleDate,
+                        'final_shift_end' => $finalEnd->toDateTimeString(),
+                        'applied_after_hours' => $graceHours,
+                        'affected_attendances' => $affected,
                     ],
-                    'Sistem menutup otomatis attendance yang belum di-checkout'
+                    'Sistem menandai forgot checkout setelah grace dari akhir shift terakhir hari tersebut'
                 );
             }
         }
 
-        return $count;
+        return $totalAffected;
     }
 
     /**

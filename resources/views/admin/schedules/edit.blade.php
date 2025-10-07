@@ -323,6 +323,8 @@
             
             let currentCalendarData = null;
             let currentExistingSchedules = {};
+            // Preserve previous user selection after validation error
+            const OLD_SHIFTS = @json(old('shifts', []));
 
             async function loadCalendar() {
                 try {
@@ -394,10 +396,18 @@
                 }
 
                 while (day <= data.daysInMonth) {
-                    // Check if there are existing schedules for this day
-                    const existingSchedulesForDay = currentExistingSchedules[day] || [];
-                    const shift1Selected = existingSchedulesForDay[0] ? existingSchedulesForDay[0].shift_id : '';
-                    const shift2Selected = existingSchedulesForDay[1] ? existingSchedulesForDay[1].shift_id : '';
+                    // Determine selected shifts: prefer OLD_SHIFTS (from previous submit) then fallback to existing
+                    let shift1Selected = '';
+                    let shift2Selected = '';
+                    const oldForDay = OLD_SHIFTS && OLD_SHIFTS[day] ? OLD_SHIFTS[day] : null;
+                    if (oldForDay && Array.isArray(oldForDay) && (oldForDay[0] || oldForDay[1])) {
+                        shift1Selected = oldForDay[0] || '';
+                        shift2Selected = oldForDay[1] || '';
+                    } else {
+                        const existingSchedulesForDay = currentExistingSchedules[day] || [];
+                        shift1Selected = existingSchedulesForDay[0] ? existingSchedulesForDay[0].shift_id : '';
+                        shift2Selected = existingSchedulesForDay[1] ? existingSchedulesForDay[1].shift_id : '';
+                    }
                     
                     // Check if this day has any shifts assigned
                     const hasShifts = shift1Selected || shift2Selected;

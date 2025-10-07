@@ -117,6 +117,11 @@
                             </div>
                             <div>
                                 <p class="text-sm text-sky-600 font-medium">Working Hours</p>
+                                @php
+                                  // Grace hours for forgot checkout deadline (configurable via env)
+                                  // Default set to 1 for current testing
+                                  $forgotGraceHours = env('FORGOT_CHECKOUT_GRACE_HOURS', 1);
+                                @endphp
                                 @if($shiftCount > 1 && $firstStartDT && $lastEndDT)
                                   <p class="text-lg font-semibold text-sky-900">{{ $firstStartDT->format('H:i') }} - {{ $lastEndDT->format('H:i') }} <span class="ml-2 text-xs text-sky-700">(Planned {{ $plannedHoursText }})</span></p>
                                   <p class="text-xs text-sky-600 mt-1">
@@ -128,10 +133,28 @@
                                       Shift {{ $idx+1 }}: {{ $st->format('H:i') }} - {{ $et->format('H:i') }}@if(!$loop->last), @endif
                                     @endforeach
                                   </p>
-                                  <p class="text-xs text-sky-700 mt-1">Checkout normal di akhir Shift {{ $shiftCount }}: <span id="final-end-time">{{ $lastEndDT->format('H:i') }}</span> · <span id="final-end-countdown" class="font-medium"></span></p>
-                                  <div id="final-end-dataset" data-final-end="{{ $lastEndDT->toIso8601String() }}" class="hidden"></div>
+                                  @if($attendance && $attendance->check_in_time && !$attendance->check_out_time)
+                                    <p class="text-xs text-sky-700 mt-1">Checkout normal di akhir Shift {{ $shiftCount }}: <span id="final-end-time">{{ $lastEndDT->format('H:i') }}</span> · <span id="final-end-countdown" class="font-medium"></span></p>
+                                    @php $deadlineDT = $lastEndDT->copy()->addHours($forgotGraceHours); @endphp
+                                    <p class="text-xs text-rose-700 mt-1">Batas Forgot Checkout ({{ $forgotGraceHours }} jam setelah akhir shift terakhir): <span id="forgot-deadline-time">{{ $deadlineDT->format('d M Y H:i') }}</span> · <span id="forgot-deadline-countdown" class="font-semibold"></span></p>
+                                    <div id="final-end-dataset" data-final-end="{{ $lastEndDT->toIso8601String() }}" class="hidden"></div>
+                                    <div id="forgot-deadline-dataset" data-forgot-deadline="{{ $deadlineDT->toIso8601String() }}" class="hidden"></div>
+                                  @endif
                                 @else
+                                  @php
+                                    // Single shift day: compute end and deadline with cross-midnight handling
+                                    $singleStart = \Carbon\Carbon::parse($schedule->schedule_date.' '.$schedule->shift->start_time);
+                                    $singleEnd = \Carbon\Carbon::parse($schedule->schedule_date.' '.$schedule->shift->end_time);
+                                    if ($singleEnd->lt($singleStart)) { $singleEnd->addDay(); }
+                                    $singleDeadline = $singleEnd->copy()->addHours($forgotGraceHours);
+                                  @endphp
                                   <p class="text-lg font-semibold text-sky-900">{{ $schedule->shift->start_time }} - {{ $schedule->shift->end_time }}</p>
+                                  @if($attendance && $attendance->check_in_time && !$attendance->check_out_time)
+                                    <p class="text-xs text-sky-700 mt-1">Checkout normal: <span id="final-end-time">{{ $singleEnd->format('H:i') }}</span> · <span id="final-end-countdown" class="font-medium"></span></p>
+                                    <p class="text-xs text-rose-700 mt-1">Batas Forgot Checkout ({{ $forgotGraceHours }} jam setelah akhir shift): <span id="forgot-deadline-time">{{ $singleDeadline->format('d M Y H:i') }}</span> · <span id="forgot-deadline-countdown" class="font-semibold"></span></p>
+                                    <div id="final-end-dataset" data-final-end="{{ $singleEnd->toIso8601String() }}" class="hidden"></div>
+                                    <div id="forgot-deadline-dataset" data-forgot-deadline="{{ $singleDeadline->toIso8601String() }}" class="hidden"></div>
+                                  @endif
                                 @endif
                             </div>
                         </div>
@@ -159,7 +182,9 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-emerald-600 font-medium">Status</p>
-                                    <p class="text-lg font-semibold text-emerald-900">{{ ucfirst($attendance->status) }}</p>
+                                    <p class="text-lg font-semibold text-emerald-900">
+                                        {{ ucwords(str_replace('_',' ', $attendance->status)) }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -218,6 +243,20 @@
                             </div>
                         </div>
                     </div>
+                    @if($attendance && $attendance->status === 'forgot_checkout')
+                        <div class="md:col-span-3">
+                            <div class="mt-3 p-4 rounded-xl border border-rose-200 bg-rose-50 flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="bell-ring" class="w-4 h-4 text-rose-700"></i>
+                                </div>
+                                <div class="text-sm text-rose-800">
+                                    <div class="font-semibold">Forgot Checkout</div>
+                                    @php $forgotGraceHoursBanner = env('FORGOT_CHECKOUT_GRACE_HOURS', 1); @endphp
+                                    <div class="mt-0.5">Sistem menutup otomatis absensi Anda karena tidak melakukan checkout tepat waktu. Batas penutupan otomatis: akhir shift terakhir + {{ $forgotGraceHoursBanner }} jam.</div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 @endif
             </div>
 
@@ -366,16 +405,44 @@
 
                         {{-- Check Out Button --}}
                         @if ($attendance && $attendance->check_in_time && !$attendance->check_out_time)
-                            <form id="checkout-form" action="{{ route('user.attendances.checkout') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="schedule_id" value="{{ $schedule?->id }}">
-                                <input type="hidden" name="latitude" id="checkout-latitude">
-                                <input type="hidden" name="longitude" id="checkout-longitude">
-                                <button type="submit" class="w-full bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
-                                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                                    <span>Check Out</span>
+                            @php
+                                // Determine deadline passed or not (final end across multi-shift + grace hours)
+                                $graceUIHours = env('FORGOT_CHECKOUT_GRACE_HOURS', 1);
+                                $sameDay = \App\Models\Schedules::with('shift')
+                                    ->where('user_id', auth()->id())
+                                    ->whereDate('schedule_date', optional($schedule)->schedule_date)
+                                    ->get();
+                                $finalEndUI = null; $firstStartUI = null;
+                                foreach ($sameDay as $schUI) {
+                                    if (!$schUI->shift) continue;
+                                    $dUI = \Carbon\Carbon::parse($schUI->schedule_date);
+                                    $stUI = \Carbon\Carbon::parse($schUI->shift->start_time);
+                                    $etUI = \Carbon\Carbon::parse($schUI->shift->end_time);
+                                    $startDTUI = $dUI->copy()->setTimeFrom($stUI);
+                                    $endDTUI   = $dUI->copy()->setTimeFrom($etUI);
+                                    if ($endDTUI->lt($startDTUI)) { $endDTUI->addDay(); }
+                                    if (!$firstStartUI || $startDTUI->lt($firstStartUI)) { $firstStartUI = $startDTUI->copy(); }
+                                    if (!$finalEndUI || $endDTUI->gt($finalEndUI)) { $finalEndUI = $endDTUI->copy(); }
+                                }
+                                $pastDeadlineUI = $finalEndUI ? now()->gte($finalEndUI->copy()->addHours($graceUIHours)) : false;
+                            @endphp
+                            @if($pastDeadlineUI)
+                                <button type="button" disabled class="w-full bg-gray-200 text-gray-500 font-medium py-3 px-4 rounded-xl cursor-not-allowed flex items-center justify-center space-x-2">
+                                    <i data-lucide="lock" class="w-4 h-4"></i>
+                                    <span>Check Out Ditutup (Lewat Batas)</span>
                                 </button>
-                            </form>
+                            @else
+                                <form id="checkout-form" action="{{ route('user.attendances.checkout') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="schedule_id" value="{{ $schedule?->id }}">
+                                    <input type="hidden" name="latitude" id="checkout-latitude">
+                                    <input type="hidden" name="longitude" id="checkout-longitude">
+                                    <button type="submit" class="w-full bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
+                                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                                        <span>Check Out</span>
+                                    </button>
+                                </form>
+                            @endif
                         @endif
 
                         {{-- Request Permission Button --}}
@@ -514,6 +581,46 @@
     @if(session('warning') && strpos(session('warning'), 'checkout sebelum') !== false)
       document.getElementById('early-checkout-modal')?.classList.remove('hidden');
     @endif
+
+    // ===== Live countdowns for final end and forgot checkout deadline =====
+    function pad(n){ return n < 10 ? '0'+n : n; }
+    function formatDuration(ms) {
+      const sign = ms < 0 ? '-' : '';
+      ms = Math.abs(ms);
+      const totalSec = Math.floor(ms / 1000);
+      const days = Math.floor(totalSec / 86400);
+      const hrs = Math.floor((totalSec % 86400) / 3600);
+      const mins = Math.floor((totalSec % 3600) / 60);
+      const secs = totalSec % 60;
+      if (days > 0) return `${sign}${days}h ${pad(hrs)}j ${pad(mins)}m ${pad(secs)}d`;
+      if (hrs > 0) return `${sign}${hrs}j ${pad(mins)}m ${pad(secs)}d`;
+      return `${sign}${pad(mins)}m ${pad(secs)}d`;
+    }
+
+    const finalEndDs = document.getElementById('final-end-dataset');
+    const forgotDs   = document.getElementById('forgot-deadline-dataset');
+    const finalLbl   = document.getElementById('final-end-countdown');
+    const forgotLbl  = document.getElementById('forgot-deadline-countdown');
+
+    if (finalEndDs && finalLbl) {
+      const target = new Date(finalEndDs.getAttribute('data-final-end'));
+      const tick = () => {
+        const diff = target - new Date();
+        finalLbl.textContent = diff >= 0 ? `Tersisa ${formatDuration(diff)}` : `Lewat ${formatDuration(diff)}`;
+      };
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    if (forgotDs && forgotLbl) {
+      const target = new Date(forgotDs.getAttribute('data-forgot-deadline'));
+      const tick2 = () => {
+        const diff = target - new Date();
+        forgotLbl.textContent = diff >= 0 ? `Tersisa ${formatDuration(diff)}` : `Lewat ${formatDuration(diff)}`;
+      };
+      tick2();
+      setInterval(tick2, 1000);
+    }
   });
 </script>
 

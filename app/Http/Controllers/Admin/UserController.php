@@ -100,7 +100,7 @@ class UserController extends Controller
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
-            'password' => Hash::make($request->password ?: 'password123'), //password otomatis ke isi
+            'password' => Hash::make($request->password ?: 'password123'),
             'role'     => $request->role,
         ]);
 
