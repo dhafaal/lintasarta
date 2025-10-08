@@ -540,22 +540,22 @@
                                                 $primaryColor = $wasLate ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800';
                                             @endphp
                                             <div class="flex flex-col space-y-1">
-                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $primaryColor }}">
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $primaryColor }}">
                                                     {{ ucwords($primaryText) }}
                                                 </span>
                                                 @if($hasForgot)
-                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $forgotColor }}">
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $forgotColor }}">
                                                         Forgot Checkout
                                                     </span>
                                                 @endif
                                                 @if($hasEarly)
-                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $earlyColor }}">
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $earlyColor }}">
                                                         Early Checkout
                                                     </span>
                                                 @endif
                                             </div>
                                         @else
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $statusColor }}">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $statusColor }}">
                                                 {{ ucwords(str_replace('_',' ', $statusText)) }}
                                             </span>
                                         @endif
