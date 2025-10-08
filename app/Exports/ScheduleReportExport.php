@@ -85,49 +85,46 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
             $shiftCount = 0;
 
             foreach ($schedules as $schedule) {
-                if ($schedule->shift) {
-                    // Ambil attendance & permission terkait
-                    $attendance = $schedule->attendances->where('user_id', $user->id)->first();
-                    $permission = $schedule->permissions->where('user_id', $user->id)
-                        ->whereIn('status', ['approved'])
-                        ->first();
+                if (!$schedule->shift) { continue; }
 
-                    // Priority: Permission > Attendance-based duration > Default 0
-                    if ($permission) {
-                        // Approved permissions: 0 jam kerja dan beri label jenis permission
-                        $permissionType = ucfirst($permission->type);
+                // Ambil attendance & permission terkait
+                $attendance = $schedule->attendances->where('user_id', $user->id)->first();
+                $permissionApproved = $schedule->permissions
+                    ->where('user_id', $user->id)
+                    ->where('status', 'approved')
+                    ->first();
+                $permissionPending = $schedule->permissions
+                    ->where('user_id', $user->id)
+                    ->where('status', 'pending')
+                    ->first();
+
+                // Hitung durasi shift (handle lintas hari)
+                $startT = Carbon::parse($schedule->shift->start_time);
+                $endT   = Carbon::parse($schedule->shift->end_time);
+                if ($endT->lt($startT)) { $endT->addDay(); }
+                $shiftMinutes = $startT->diffInMinutes($endT);
+
+                // Aturan jam kerja ekspor (selaras kalender):
+                // - Jika attendance explicit alpha => 0 menit + label (Alpha)
+                // - Jika TIDAK ada attendance DAN TIDAK ada permission pending/approved => auto-0 (Alpha)
+                // - Selain itu (hadir/telat/izin/cuti/sakit) => gunakan durasi shift
+                if ($attendance && $attendance->status === 'alpha') {
+                    $shiftNames[] = $schedule->shift->shift_name . ' (Alpha)';
+                    // 0 menit
+                } elseif (!$attendance && !$permissionApproved && !$permissionPending) {
+                    $shiftNames[] = $schedule->shift->shift_name . ' (Alpha)';
+                    // 0 menit (auto-0)
+                } else {
+                    // Gunakan durasi shift; tambahkan label izin/cuti/sakit bila ada permission
+                    if ($permissionApproved || $permissionPending) {
+                        $perm = $permissionApproved ?: $permissionPending;
+                        $permissionType = ucfirst($perm->type);
                         $shiftNames[] = $schedule->shift->shift_name . " ({$permissionType})";
-                        // 0 minutes added
-                        continue;
-                    }
-
-                    // Jika ada attendance dan status alpha -> 0 menit dengan label Alpha
-                    if ($attendance && $attendance->status === 'alpha') {
-                        $shiftNames[] = $schedule->shift->shift_name . ' (Alpha)';
-                        continue;
-                    }
-
-                    // Hitung dari check-in/checkout jika tersedia
-                    $minutes = 0;
-                    if ($attendance && $attendance->check_in_time && $attendance->check_out_time) {
-                        // Gunakan schedule_date sebagai anchor untuk menangani lintas hari
-                        $scheduleDate = Carbon::parse($schedule->schedule_date)->startOfDay();
-                        $checkIn  = Carbon::parse($attendance->check_in_time);
-                        $checkOut = Carbon::parse($attendance->check_out_time);
-
-                        // Jika check-out < check-in, anggap checkout keesokan hari
-                        if ($checkOut->lt($checkIn)) {
-                            $checkOut->addDay();
-                        }
-                        $minutes = $checkIn->diffInMinutes($checkOut);
                     } else {
-                        // Tidak ada data lengkap check-in/out -> 0 menit
-                        $minutes = 0;
+                        $shiftNames[] = $schedule->shift->shift_name;
                     }
-
-                    $dayMinutes += $minutes;
+                    $dayMinutes += $shiftMinutes;
                     $shiftCount++;
-                    $shiftNames[] = $schedule->shift->shift_name;
                 }
             }
 

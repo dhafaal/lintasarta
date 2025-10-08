@@ -438,6 +438,16 @@
                                     if($statusText === 'forgot_checkout') { $statusColor = 'bg-rose-100 text-rose-800'; }
                                     if($statusText === 'alpha') { $statusColor = 'bg-red-100 text-red-800'; }
 
+                                    // Determine if we need stacked badges (e.g., Telat/Hadir + Forgot/Early Checkout)
+                                    $hasForgot = $attGroup->where('status','forgot_checkout')->isNotEmpty();
+                                    $hasEarly  = $attGroup->where('status','early_checkout')->isNotEmpty();
+                                    // Derive base presence/late from attendance fields (status may have been overwritten to forgot_checkout)
+                                    $wasLate   = $attGroup->filter(function($a){ return $a && $a->is_late; })->isNotEmpty() || $attGroup->where('status','telat')->isNotEmpty();
+                                    $wasPresent= $attGroup->filter(function($a){ return $a && !is_null($a->check_in_time); })->isNotEmpty() || $attGroup->where('status','hadir')->isNotEmpty();
+                                    $showStacked = ($hasForgot || $hasEarly) && ($wasLate || $wasPresent);
+                                    $forgotColor = 'bg-rose-100 text-rose-800';
+                                    $earlyColor  = 'bg-amber-100 text-amber-800';
+
                                     // Shifts sorted Pagi -> Siang -> Malam
                                     $order = ['Pagi' => 1, 'Siang' => 2, 'Malam' => 3];
                                     $sortedSchedules = $userSchedules->sortBy(function($s) use ($order){ return $order[$s->shift->category ?? ''] ?? 99; });
@@ -524,9 +534,31 @@
                                         @endif
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $statusColor }}">
-                                            {{ ucwords(str_replace('_',' ', $statusText)) }}
-                                        </span>
+                                        @if($showStacked)
+                                            @php
+                                                $primaryText = $wasLate ? 'telat' : 'hadir';
+                                                $primaryColor = $wasLate ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800';
+                                            @endphp
+                                            <div class="flex flex-col space-y-1">
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $primaryColor }}">
+                                                    {{ ucwords($primaryText) }}
+                                                </span>
+                                                @if($hasForgot)
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $forgotColor }}">
+                                                        Forgot Checkout
+                                                    </span>
+                                                @endif
+                                                @if($hasEarly)
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $earlyColor }}">
+                                                        Early Checkout
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $statusColor }}">
+                                                {{ ucwords(str_replace('_',' ', $statusText)) }}
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap text-sm text-gray-700">
                                         @if($latestPerm)

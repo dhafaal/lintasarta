@@ -65,22 +65,70 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
         }
 
         $schedules = $schedulesQuery->get();
-        $scheduleIds = $schedules->pluck('id');
-        $attendances = Attendance::whereIn('schedule_id', $scheduleIds)->get()->keyBy('schedule_id');
+        if ($schedules->isEmpty()) {
+            return collect();
+        }
 
-        $combinedData = $schedules->map(function ($schedule) use ($attendances) {
-            $attendance = $attendances->get($schedule->id);
-            return (object) [
-                'schedule' => $schedule,
-                'user' => $schedule->user,
-                'check_in_time' => $attendance->check_in_time ?? null,
-                'check_out_time' => $attendance->check_out_time ?? null,
-                'status' => $attendance->status ?? 'alpha',
-                'late_minutes' => $attendance->late_minutes ?? 0,
-            ];
+        $scheduleIds = $schedules->pluck('id');
+        $attendancesRaw = Attendance::whereIn('schedule_id', $scheduleIds)
+            ->with('schedule')
+            ->get();
+
+        // Group by user_id|schedule_date
+        $groups = $schedules->groupBy(function($s){
+            return ($s->user_id ?? '0') . '|' . ($s->schedule_date ?? '');
         });
 
-        return $combinedData->sortBy(fn($item) => $item->schedule->schedule_date ?? '9999-12-31')->values();
+        $rows = collect();
+        foreach ($groups as $key => $daySchedules) {
+            $firstSch = $daySchedules->first();
+            $user = $firstSch->user;
+            $date = $firstSch->schedule_date;
+
+            // Shift names & categories
+            $shiftNames = $daySchedules->map(fn($s) => optional($s->shift)->shift_name)->filter()->values()->all();
+            $categories = $daySchedules->map(fn($s) => optional($s->shift)->category)->filter()->values()->all();
+
+            // Attendances of the day for this user
+            $dayAtts = $attendancesRaw->filter(function($a) use ($daySchedules) {
+                return $daySchedules->pluck('id')->contains($a->schedule_id);
+            });
+
+            // Times
+            $firstCheckIn = $dayAtts->whereNotNull('check_in_time')->sortBy('check_in_time')->first();
+            $lastCheckOut = $dayAtts->whereNotNull('check_out_time')->sortByDesc('check_out_time')->first();
+
+            // Flags
+            $hasForgot = $dayAtts->where('status','forgot_checkout')->isNotEmpty();
+            $hasEarly  = $dayAtts->where('status','early_checkout')->isNotEmpty();
+            $hasIzin   = $dayAtts->where('status','izin')->isNotEmpty();
+            $wasLate   = $dayAtts->filter(fn($a) => $a && ($a->is_late || $a->status === 'telat'))->isNotEmpty();
+            $wasPresent= $dayAtts->filter(fn($a) => $a && $a->check_in_time)->isNotEmpty() || $dayAtts->whereIn('status',['hadir','telat'])->isNotEmpty();
+
+            // Status display
+            if ($hasIzin) {
+                $statusDisplay = 'Izin';
+            } else {
+                $parts = [];
+                if ($wasPresent) { $parts[] = $wasLate ? 'Telat' : 'Hadir'; }
+                if ($hasEarly)  { $parts[] = 'Early Checkout'; }
+                if ($hasForgot) { $parts[] = 'Forgot Checkout'; }
+                if (empty($parts)) { $parts[] = 'Alpha'; }
+                $statusDisplay = implode(', ', array_unique($parts));
+            }
+
+            $rows->push((object) [
+                'date' => $date,
+                'user_name' => $user->name ?? '-',
+                'shift_names' => implode(' ', $shiftNames),
+                'categories' => implode(' ', $categories),
+                'check_in_time' => optional($firstCheckIn)->check_in_time,
+                'check_out_time' => optional($lastCheckOut)->check_out_time,
+                'status_display' => $statusDisplay,
+            ]);
+        }
+
+        return $rows->sortBy(fn($it) => $it->date ?? '9999-12-31')->values();
     }
 
     public function headings(): array
@@ -90,18 +138,14 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
 
     public function map($item): array
     {
-        $schedule = $item->schedule;
-        $user = $item->user;
-        $shift = $schedule->shift;
-
         return [
-            $schedule->schedule_date ? Carbon::parse($schedule->schedule_date)->format('Y-m-d') : '',
-            $user->name ?? '-',
-            $shift->shift_name ?? '-',
-            $shift->category ?? '-',
+            $item->date ? Carbon::parse($item->date)->format('Y-m-d') : '',
+            $item->user_name ?? '-',
+            $item->shift_names ?: '-',
+            $item->categories ?: '-',
             $item->check_in_time ? Carbon::parse($item->check_in_time)->format('H:i:s') : '',
             $item->check_out_time ? Carbon::parse($item->check_out_time)->format('H:i:s') : '',
-            strtolower($item->status ?? 'alpha'),
+            $item->status_display ?? 'Alpha',
         ];
     }
 
@@ -187,35 +231,29 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
                 $rowCount = $sheet->getHighestRow();
 
                 for ($row = 2; $row <= $rowCount; $row++) {
-                    $status = strtolower($sheet->getCell("G{$row}")->getValue());
+                    $statusCell = strtolower((string)$sheet->getCell("G{$row}")->getValue());
                     $fillColor = null;
                     $textColor = null;
 
-                    switch ($status) {
-                        case 'hadir':
-                            $fillColor = 'FFBBF7D0'; // green-200
-                            $textColor = 'FF166534'; // green-800
-                            break;
-                        case 'telat':
-                            $fillColor = 'FFFED7AA'; // orange-200
-                            $textColor = 'FF9A3412'; // orange-800
-                            break;
-                        case 'izin':
-                            $fillColor = 'FFFEF08A'; // yellow-200
-                            $textColor = 'FFA16207'; // amber-700
-                            break;
-                        case 'alpha':
-                            $fillColor = 'FFFECACA'; // red-200
-                            $textColor = 'FF991B1B'; // red-700
-                            break;
-                        case 'early_checkout':
-                            $fillColor = 'FFFDE68A'; // yellow-300
-                            $textColor = 'FF92400E'; // amber-600
-                            break;
-                        case 'forgot_checkout':
-                            $fillColor = 'FFFDA4AF'; // rose-300
-                            $textColor = 'FF9F1239'; // rose-700
-                            break;
+                    // Detect keywords in combined status
+                    if (strpos($statusCell, 'forgot checkout') !== false) {
+                        $fillColor = 'FFFDA4AF'; // rose-300
+                        $textColor = 'FF9F1239'; // rose-700
+                    } elseif (strpos($statusCell, 'early checkout') !== false) {
+                        $fillColor = 'FFFDE68A'; // yellow-300
+                        $textColor = 'FF92400E'; // amber-600
+                    } elseif (strpos($statusCell, 'telat') !== false) {
+                        $fillColor = 'FFFED7AA'; // orange-200
+                        $textColor = 'FF9A3412'; // orange-800
+                    } elseif (strpos($statusCell, 'hadir') !== false) {
+                        $fillColor = 'FFBBF7D0'; // green-200
+                        $textColor = 'FF166534'; // green-800
+                    } elseif (strpos($statusCell, 'izin') !== false) {
+                        $fillColor = 'FFFEF08A'; // yellow-200
+                        $textColor = 'FFA16207'; // amber-700
+                    } elseif (strpos($statusCell, 'alpha') !== false) {
+                        $fillColor = 'FFFECACA'; // red-200
+                        $textColor = 'FF991B1B'; // red-700
                     }
 
                     if ($fillColor) {

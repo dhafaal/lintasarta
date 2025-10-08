@@ -1364,7 +1364,7 @@ class ScheduleController extends Controller
 
             for ($day = 1; $day <= $daysInMonth; $day++) {
                 $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
-                // Load shift + attendance(s) + permissions for accurate hours
+                // Load shift + attendance(s) + permissions; hours use SHIFT DURATION (not actual checkin/checkout)
                 $schedules = Schedules::with(['shift', 'attendances', 'permissions'])
                     ->where('user_id', $user->id)
                     ->whereDate('schedule_date', $date)
@@ -1378,43 +1378,53 @@ class ScheduleController extends Controller
 
                     foreach ($schedules as $schedule) {
                         if (!$schedule->shift) continue;
-                        // Determine minutes from actual attendance & permissions
-                        $minutes = 0;
-                        // Find attendance record for this schedule (may be hasMany)
+                        // Determine minutes based on SHIFT DURATION by default
+                        // Then apply business rules: alpha => 0, approved permission => 0
                         $attendance = null;
                         if (isset($schedule->attendances) && $schedule->attendances) {
                             $attendance = $schedule->attendances->firstWhere('user_id', $user->id) ?? $schedule->attendances->first();
                         } elseif (isset($schedule->attendance)) { // backward compatibility
                             $attendance = $schedule->attendance;
                         }
-                        // Find approved permission for this schedule
-                        $permission = null;
+
+                        // Permissions presence for this schedule (to avoid auto-alpha for izin/cuti)
+                        $permissionApproved = null;
+                        $permissionPending = null;
                         if (isset($schedule->permissions) && $schedule->permissions) {
-                            $permission = $schedule->permissions->firstWhere('status', 'approved');
+                            $permissionApproved = $schedule->permissions->firstWhere('status', 'approved');
+                            $permissionPending = $schedule->permissions->firstWhere('status', 'pending');
                         }
 
-                        if ($permission) {
-                            $minutes = 0; // approved izin/cuti -> 0
-                        } elseif ($attendance && $attendance->status === 'alpha') {
-                            $minutes = 0; // alpha -> 0
-                        } elseif ($attendance && $attendance->check_in_time && $attendance->check_out_time) {
-                            $cin = Carbon::parse($attendance->check_in_time);
-                            $cout = Carbon::parse($attendance->check_out_time);
-                            if ($cout->lt($cin)) { $cout->addDay(); }
-                            $minutes = $cin->diffInMinutes($cout);
+                        // Compute shift duration in minutes (handle crossing midnight)
+                        $start = Carbon::parse($schedule->shift->start_time);
+                        $end = Carbon::parse($schedule->shift->end_time);
+                        if ($end->lt($start)) { $end->addDay(); }
+                        $shiftMinutes = $start->diffInMinutes($end);
+
+                        // Apply rules:
+                        // - If explicit alpha attendance: 0
+                        // - Else if NO attendance AND NO pending/approved permission: auto-alpha => 0
+                        // - Else: use shift duration (izin/cuti tetap pakai durasi shift)
+                        if ($attendance && $attendance->status === 'alpha') {
+                            $minutes = 0; // explicit alpha
+                            $forcedAlpha = true;
+                        } elseif (!$attendance && !$permissionApproved && !$permissionPending) {
+                            $minutes = 0; // auto-alpha when truly absent without izin/cuti
+                            $forcedAlpha = true;
                         } else {
-                            $minutes = 0;
+                            $minutes = $shiftMinutes; // use shift duration
+                            $forcedAlpha = false;
                         }
 
                         $totalMinutes += $minutes;
 
                         $shiftLetters[] = strtoupper(substr($schedule->shift->shift_name, 0, 1));
-                        // Collect full shift names for table rendering
-                        $shiftNames[] = $schedule->shift->shift_name;
+                        $shiftNames[] = $schedule->shift->shift_name; // full shift names
                         $hoursList[] = round($minutes / 60, 1) . 'j';
-                        
-                        // Get attendance status for this schedule for coloring
-                        $attendanceStatus = $attendance->status ?? ($permission ? 'izin' : null);
+
+                        // Determine primary attendance status for coloring
+                        $attendanceStatus = $attendance->status ?? (($permissionApproved || $permissionPending) ? 'izin' : null);
+                        if ($forcedAlpha && !$attendanceStatus) { $attendanceStatus = 'alpha'; }
                         $attendanceStatuses[] = $attendanceStatus;
                     }
 
