@@ -120,7 +120,7 @@
                                 @php
                                   // Grace hours for forgot checkout deadline (configurable via env)
                                   // Default set to 1 for current testing
-                                  $forgotGraceHours = env('FORGOT_CHECKOUT_GRACE_HOURS', 1);
+                                  $forgotGraceHours = env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
                                 @endphp
                                 @if($shiftCount > 1 && $firstStartDT && $lastEndDT)
                                   <p class="text-lg font-semibold text-sky-900">{{ $firstStartDT->format('H:i') }} - {{ $lastEndDT->format('H:i') }} <span class="ml-2 text-xs text-sky-700">(Planned {{ $plannedHoursText }})</span></p>
@@ -251,7 +251,7 @@
                                 </div>
                                 <div class="text-sm text-rose-800">
                                     <div class="font-semibold">Forgot Checkout</div>
-                                    @php $forgotGraceHoursBanner = env('FORGOT_CHECKOUT_GRACE_HOURS', 1); @endphp
+                                    @php $forgotGraceHoursBanner = env('FORGOT_CHECKOUT_GRACE_HOURS', 6); @endphp
                                     <div class="mt-0.5">Sistem menutup otomatis absensi Anda karena tidak melakukan checkout tepat waktu. Batas penutupan otomatis: akhir shift terakhir + {{ $forgotGraceHoursBanner }} jam.</div>
                                 </div>
                             </div>
@@ -407,7 +407,7 @@
                         @if ($attendance && $attendance->check_in_time && !$attendance->check_out_time)
                             @php
                                 // Determine deadline passed or not (final end across multi-shift + grace hours)
-                                $graceUIHours = env('FORGOT_CHECKOUT_GRACE_HOURS', 1);
+                                $graceUIHours = env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
                                 $sameDay = \App\Models\Schedules::with('shift')
                                     ->where('user_id', auth()->id())
                                     ->whereDate('schedule_date', optional($schedule)->schedule_date)

@@ -297,7 +297,7 @@ class AttendancesController extends Controller
             // Cek apakah user memiliki izin (pending/approved) untuk tanggal ini
             $schedule = Schedules::findOrFail($request->schedule_id);
             // Block checkout if past final end + grace
-            $graceHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 1);
+            $graceHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
             $sameDaySchedules = Schedules::with('shift')
                 ->where('user_id', Auth::id())
                 ->whereDate('schedule_date', $schedule->schedule_date)
@@ -600,7 +600,7 @@ class AttendancesController extends Controller
     private function autoCheckoutMissedShifts(int $userId): int
     {
         $now = Carbon::now();
-        $graceHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 1);
+        $graceHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
         $open = Attendance::with(['schedule.shift'])
             ->where('user_id', $userId)
             ->whereNotNull('check_in_time')

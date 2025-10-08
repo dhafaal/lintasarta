@@ -193,6 +193,40 @@
             backface-visibility: hidden;
             will-change: transform;
         }
+
+        /* Global responsive helpers for all admin pages */
+        @media (max-width: 768px) {
+            /* Make any table within admin content scroll horizontally instead of breaking layout */
+            .admin-content table {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .admin-content thead,
+            .admin-content tbody,
+            .admin-content th,
+            .admin-content td,
+            .admin-content tr {
+                white-space: nowrap;
+            }
+
+            /* Prevent large blocks from causing side scroll */
+            .admin-content img,
+            .admin-content video,
+            .admin-content canvas,
+            .admin-content iframe {
+                max-width: 100%;
+                height: auto;
+            }
+
+            /* Utility to keep cards and sections nicely spaced on mobile */
+            .admin-content .card,
+            .admin-content .panel,
+            .admin-content .section {
+                border-radius: 0.75rem;
+            }
+        }
     </style>
 </head>
 
@@ -874,7 +908,7 @@
 
             <!-- Main Content -->
             <main class="flex-1 bg-white overflow-auto">
-                <div class="p-8 sm:p-6 lg:p-8 min-h-full m-0">
+                <div class="admin-content p-4 sm:p-6 lg:p-8 min-h-full m-0">
                     @yield('content')
                 </div>
             </main>
