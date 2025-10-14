@@ -48,10 +48,10 @@
         {{-- Main Content --}}
         @if ($schedule)
             @php
-                // Load all today's schedules for current user to detect multi-shift
+                // Load all schedules for the active schedule date (could be yesterday for night shifts)
                 $todaySchedules = \App\Models\Schedules::with('shift')
                     ->where('user_id', Auth::id())
-                    ->whereDate('schedule_date', now()->toDateString())
+                    ->whereDate('schedule_date', $schedule->schedule_date)
                     ->orderBy('id')
                     ->get();
 
@@ -319,16 +319,16 @@
             {{-- Check for rejected permissions to show info --}}
             @php
                 $rejectedPermission = \App\Models\Permissions::where('user_id', Auth::id())
-                    ->whereHas('schedule', function ($q) {
-                        $q->whereDate('schedule_date', now()->toDateString());
+                    ->whereHas('schedule', function ($q) use ($schedule) {
+                        $q->whereDate('schedule_date', $schedule->schedule_date);
                     })
                     ->where('status', 'rejected')
                     ->first();
 
                 // Pending Early Checkout permission (type izin with special prefix)
                 $earlyCheckoutPermission = \App\Models\Permissions::where('user_id', Auth::id())
-                    ->whereHas('schedule', function ($q) {
-                        $q->whereDate('schedule_date', now()->toDateString());
+                    ->whereHas('schedule', function ($q) use ($schedule) {
+                        $q->whereDate('schedule_date', $schedule->schedule_date);
                     })
                     ->where('status', 'pending')
                     ->where('type', 'izin')

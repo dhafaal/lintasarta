@@ -679,6 +679,7 @@ class AttendancesController extends Controller
 
     /**
      * Determine the active schedule for the current time, including cross-midnight (night) shifts.
+     * For night shifts, the schedule remains active until end_time is reached, not until midnight.
      * Returns a Schedules model with relations loaded, or null if none applies.
      */
     private function getActiveScheduleForNow(int $userId)
@@ -711,11 +712,45 @@ class AttendancesController extends Controller
                 $endDT->addDay();
             }
 
+            // Check if current time is within this shift's window
             if ($now->betweenIncluded($startDT, $endDT)) {
-                // Choose the one that ends latest if multiple contain now
+                // Prioritize shift that ends latest (for overlapping shifts)
+                // This ensures night shift stays active until its end_time
                 if (!$activeEnd || $endDT->gt($activeEnd)) {
                     $active = $sch;
                     $activeEnd = $endDT->copy();
+                }
+            }
+        }
+
+        // If no active schedule found in today/yesterday, check if there's an ongoing night shift
+        // from yesterday that hasn't ended yet (for shifts that cross midnight)
+        if (!$active) {
+            $twoDaysAgo = $now->copy()->subDays(2)->toDateString();
+            $oldCandidates = Schedules::with(['shift', 'permissions', 'attendances'])
+                ->where('user_id', $userId)
+                ->whereDate('schedule_date', $twoDaysAgo)
+                ->get();
+
+            foreach ($oldCandidates as $sch) {
+                if (!$sch->shift) { continue; }
+                $date = Carbon::parse($sch->schedule_date);
+                $startT = Carbon::parse($sch->shift->start_time);
+                $endT   = Carbon::parse($sch->shift->end_time);
+
+                $startDT = $date->copy()->setTimeFrom($startT);
+                $endDT   = $date->copy()->setTimeFrom($endT);
+
+                if ($endDT->lt($startDT)) {
+                    $endDT->addDay();
+                }
+
+                // Check if this old shift is still active (hasn't reached end_time)
+                if ($now->betweenIncluded($startDT, $endDT)) {
+                    if (!$activeEnd || $endDT->gt($activeEnd)) {
+                        $active = $sch;
+                        $activeEnd = $endDT->copy();
+                    }
                 }
             }
         }

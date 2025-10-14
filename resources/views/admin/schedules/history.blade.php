@@ -226,20 +226,29 @@
                                                 <polyline points="12 6 12 12 16 14"/>
                                             </svg>
                                             @php
-                                                $minutes = 0;
-                                                // Permission approved => 0 menit
-                                                if ($permission && $permission->status === 'approved') {
-                                                    $minutes = 0;
-                                                } elseif ($attendance && $attendance->status === 'alpha') {
-                                                    // Alpha => 0 menit
-                                                    $minutes = 0;
-                                                } elseif ($attendance && $attendance->check_in_time && $attendance->check_out_time) {
-                                                    $cin = \Carbon\Carbon::parse($attendance->check_in_time);
-                                                    $cout = \Carbon\Carbon::parse($attendance->check_out_time);
-                                                    if ($cout->lt($cin)) { $cout->addDay(); }
-                                                    $minutes = $cin->diffInMinutes($cout);
+                                                // Hitung jam kerja harian berbasis durasi shift (dengan potong 1 jam per hari)
+                                                $daySchedules = $schedules->where('schedule_date', $schedule->schedule_date)->where('user_id', $schedule->user_id);
+                                                $dayMinutesAcc = 0;
+                                                foreach ($daySchedules as $ds) {
+                                                    if (!$ds->shift) { continue; }
+                                                    $att = $attendances->firstWhere('schedule_id', $ds->id);
+                                                    $perm = $permissions->firstWhere('schedule_id', $ds->id);
+                                                    $start = \Carbon\Carbon::parse($ds->shift->start_time);
+                                                    $end = \Carbon\Carbon::parse($ds->shift->end_time);
+                                                    if ($end->lt($start)) { $end->addDay(); }
+                                                    $shiftMinutes = $start->diffInMinutes($end);
+                                                    if ($att && $att->status === 'alpha') {
+                                                        $m = 0;
+                                                    } elseif (!$att && !$perm) {
+                                                        // Absent tanpa izin/cuti (auto-alpha)
+                                                        $m = 0;
+                                                    } else {
+                                                        $m = $shiftMinutes;
+                                                    }
+                                                    $dayMinutesAcc += $m;
                                                 }
-                                                $hours = $minutes / 60;
+                                                $dayMinutesAfterBreak = $dayMinutesAcc > 0 ? max(0, $dayMinutesAcc - 60) : 0;
+                                                $hours = $dayMinutesAfterBreak / 60;
                                             @endphp
                                             {{ $hours == floor($hours) ? floor($hours).' jam' : number_format($hours, 1).' jam' }}
                                         </div>
@@ -266,51 +275,54 @@
                                     </div>
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap">
+                                    @php
+                                        $statusBase = $attendance->status ?? ($permission ? 'izin' : 'alpha');
+                                        $hasForgot = ($statusBase === 'forgot_checkout');
+                                        $hasEarly  = ($statusBase === 'early_checkout');
+                                        $wasLate   = ($statusBase === 'telat') || ($attendance && $attendance->is_late);
+                                        $wasPresent= ($statusBase === 'hadir') || ($attendance && $attendance->check_in_time);
+                                        // Priority like index
+                                        $statusText = $statusBase;
+                                        if ($statusBase !== 'izin') {
+                                            if ($hasEarly) { $statusText = 'early_checkout'; }
+                                            elseif ($wasLate) { $statusText = 'telat'; }
+                                            elseif ($wasPresent) { $statusText = 'hadir'; }
+                                            elseif ($hasForgot) { $statusText = 'forgot_checkout'; }
+                                            else { $statusText = 'alpha'; }
+                                        }
+                                        $statusColor = 'bg-gray-100 text-gray-700';
+                                        if($statusText === 'hadir') { $statusColor = 'bg-green-100 text-green-800'; }
+                                        if($statusText === 'telat') { $statusColor = 'bg-orange-100 text-orange-800'; }
+                                        if($statusText === 'izin') { $statusColor = 'bg-yellow-100 text-yellow-800'; }
+                                        if($statusText === 'early_checkout') { $statusColor = 'bg-amber-100 text-amber-800'; }
+                                        if($statusText === 'forgot_checkout') { $statusColor = 'bg-rose-100 text-rose-800'; }
+                                        if($statusText === 'alpha') { $statusColor = 'bg-red-100 text-red-800'; }
+                                        $showStacked = ($hasForgot || $hasEarly) && ($wasLate || $wasPresent);
+                                        $primaryText = $wasLate ? 'telat' : 'hadir';
+                                        $primaryColor = $wasLate ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800';
+                                    @endphp
                                     <div class="flex flex-col space-y-2">
-                                        @if($status === 'hadir')
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle mr-1">
-                                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                                    <polyline points="22 4 12 14.01 9 11.01"/>
-                                                </svg>
-                                                Hadir
-                                                @if($attendance && $attendance->is_late)
-                                                    <span class="ml-1 text-xs">({{ $attendance->late_minutes }} mnt)</span>
+                                        @if($showStacked)
+                                            <div class="flex flex-col space-y-1">
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $primaryColor }}">
+                                                    {{ ucwords($primaryText) }}
+                                                </span>
+                                                @if($hasForgot)
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-rose-100 text-rose-800">
+                                                        Forgot Checkout
+                                                    </span>
                                                 @endif
-                                            </span>
-                                        @elseif($status === 'telat')
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock-alert mr-1">
-                                                    <circle cx="12" cy="12" r="10"/>
-                                                    <polyline points="12 6 12 12 16 14"/>
-                                                    <path d="M12 2v4"/>
-                                                    <path d="M12 18v4"/>
-                                                </svg>
-                                                Telat
-                                                @if($attendance && $attendance->late_minutes)
-                                                    <span class="ml-1 text-xs">({{ $attendance->late_minutes }} mnt)</span>
+                                                @if($hasEarly)
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+                                                        Early Checkout
+                                                    </span>
                                                 @endif
-                                            </span>
-                                        @elseif($status === 'izin')
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-check mr-1">
-                                                    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/>
-                                                    <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
-                                                    <path d="m9 15 2 2 4-4"/>
-                                                </svg>
-                                                Izin
-                                            </span>
+                                            </div>
                                         @else
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle mr-1">
-                                                    <circle cx="12" cy="12" r="10"/>
-                                                    <path d="M15 9l-6 6"/>
-                                                    <path d="M9 9l6 6"/>
-                                                </svg>
-                                                Alpha
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $statusColor }}">
+                                                {{ ucwords(str_replace('_',' ', $statusText)) }}
                                             </span>
                                         @endif
-                                        
                                         @if($permission && $permission->reason)
                                             <div class="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded max-w-xs truncate" title="{{ $permission->reason }}">
                                                 <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 8 8">

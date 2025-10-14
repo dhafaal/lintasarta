@@ -137,30 +137,53 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex flex-col space-y-1">
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-                                                @if ($status === 'hadir') bg-green-100 text-green-800
-                                                @elseif ($status === 'izin') bg-blue-100 text-blue-800
-                                                @elseif ($status === 'telat') bg-yellow-100 text-yellow-800
-                                                @elseif ($status === 'alpha') bg-red-100 text-red-800 @endif">
-                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
-                                                    <circle cx="4" cy="4" r="3"/>
-                                                </svg>
-                                                {{ ucfirst($status) }}
-                                            </span>
-                                            @if($permission && $permission->status)
-                                                <span class="text-xs text-gray-500">
-                                                    Izin: 
-                                                    @if($permission->status === 'pending')
-                                                        <span class="text-amber-600">Menunggu</span>
-                                                    @elseif($permission->status === 'approved')
-                                                        <span class="text-green-600">Disetujui</span>
-                                                    @elseif($permission->status === 'rejected')
-                                                        <span class="text-red-600">Ditolak</span>
-                                                    @endif
+                                        @php
+                                            $statusBase = $attendance->status ?? ($permission ? 'izin' : 'alpha');
+                                            $hasForgot = ($statusBase === 'forgot_checkout');
+                                            $hasEarly  = ($statusBase === 'early_checkout');
+                                            $wasLate   = ($statusBase === 'telat') || ($attendance && $attendance->is_late);
+                                            $wasPresent= ($statusBase === 'hadir') || ($attendance && $attendance->check_in_time);
+                                            // Priority like admin index
+                                            $statusText = $statusBase;
+                                            if ($statusBase !== 'izin') {
+                                                if ($hasEarly) { $statusText = 'early_checkout'; }
+                                                elseif ($wasLate) { $statusText = 'telat'; }
+                                                elseif ($wasPresent) { $statusText = 'hadir'; }
+                                                elseif ($hasForgot) { $statusText = 'forgot_checkout'; }
+                                                else { $statusText = 'alpha'; }
+                                            }
+                                            $statusColor = 'bg-gray-100 text-gray-700';
+                                            if($statusText === 'hadir') { $statusColor = 'bg-green-100 text-green-800'; }
+                                            if($statusText === 'telat') { $statusColor = 'bg-yellow-100 text-yellow-800'; }
+                                            if($statusText === 'izin') { $statusColor = 'bg-blue-100 text-blue-800'; }
+                                            if($statusText === 'early_checkout') { $statusColor = 'bg-amber-100 text-amber-800'; }
+                                            if($statusText === 'forgot_checkout') { $statusColor = 'bg-rose-100 text-rose-800'; }
+                                            if($statusText === 'alpha') { $statusColor = 'bg-red-100 text-red-800'; }
+                                            $showStacked = ($hasForgot || $hasEarly) && ($wasLate || $wasPresent);
+                                            $primaryText = $wasLate ? 'telat' : 'hadir';
+                                            $primaryColor = $wasLate ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800';
+                                        @endphp
+                                        @if($showStacked)
+                                            <div class="flex flex-col space-y-1">
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $primaryColor }}">
+                                                    {{ ucwords($primaryText) }}
                                                 </span>
-                                            @endif
-                                        </div>
+                                                @if($hasForgot)
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
+                                                        Forgot Checkout
+                                                    </span>
+                                                @endif
+                                                @if($hasEarly)
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                        Early Checkout
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $statusColor }}">
+                                                {{ ucwords(str_replace('_',' ', $statusText)) }}
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $attendance && $attendance->check_in_time ? \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') : '-' }}
@@ -170,18 +193,28 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         @php
-                                            $minutes = 0;
-                                            if ($permission && $permission->status === 'approved') {
-                                                $minutes = 0;
-                                            } elseif ($attendance && $attendance->status === 'alpha') {
-                                                $minutes = 0;
-                                            } elseif ($attendance && $attendance->check_in_time && $attendance->check_out_time) {
-                                                $cin = \Carbon\Carbon::parse($attendance->check_in_time);
-                                                $cout = \Carbon\Carbon::parse($attendance->check_out_time);
-                                                if ($cout->lt($cin)) { $cout->addDay(); }
-                                                $minutes = $cin->diffInMinutes($cout);
+                                            // Daily work based on total shift durations for this date/user, minus 1 hour if any
+                                            $daySchedules = $schedules->where('schedule_date', $schedule->schedule_date)->where('user_id', $schedule->user_id);
+                                            $dayMinutesAcc = 0;
+                                            foreach ($daySchedules as $ds) {
+                                                if (!$ds->shift) { continue; }
+                                                $att = $attendances->firstWhere('schedule_id', $ds->id);
+                                                $perm = $permissions->firstWhere('schedule_id', $ds->id);
+                                                $start = \Carbon\Carbon::parse($ds->shift->start_time);
+                                                $end = \Carbon\Carbon::parse($ds->shift->end_time);
+                                                if ($end->lt($start)) { $end->addDay(); }
+                                                $shiftMinutes = $start->diffInMinutes($end);
+                                                if ($att && $att->status === 'alpha') {
+                                                    $m = 0;
+                                                } elseif (!$att && !$perm) {
+                                                    $m = 0; // auto-alpha
+                                                } else {
+                                                    $m = $shiftMinutes;
+                                                }
+                                                $dayMinutesAcc += $m;
                                             }
-                                            $hours = $minutes / 60;
+                                            $dayMinutesAfterBreak = $dayMinutesAcc > 0 ? max(0, $dayMinutesAcc - 60) : 0;
+                                            $hours = $dayMinutesAfterBreak / 60;
                                         @endphp
                                         {{ $hours == floor($hours) ? floor($hours).' h' : number_format($hours, 1).' h' }}
                                     </td>

@@ -148,6 +148,10 @@
                                 Nama
                             </th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
+                                Tanggal
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 <i data-lucide="clock" class="w-4 h-4 inline mr-1"></i>
                                 Shift
                             </th>
@@ -156,8 +160,8 @@
                                 Lokasi
                             </th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
-                                Tanggal
+                                <i data-lucide="activity" class="w-4 h-4 inline mr-1"></i>
+                                Status
                             </th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 <i data-lucide="log-in" class="w-4 h-4 inline mr-1"></i>
@@ -170,10 +174,6 @@
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 <i data-lucide="clock" class="w-4 h-4 inline mr-1"></i>
                                 Jam Kerja
-                            </th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                <i data-lucide="activity" class="w-4 h-4 inline mr-1"></i>
-                                Status
                             </th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 <i data-lucide="message-circle" class="w-4 h-4 inline mr-1"></i>
@@ -252,44 +252,82 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     @php
-                                        $minutes = 0;
-                                        if ($permission && $permission->status === 'approved') {
-                                            $minutes = 0;
-                                        } elseif ($attendance && $attendance->status === 'alpha') {
-                                            $minutes = 0;
-                                        } elseif ($attendance && $attendance->check_in_time && $attendance->check_out_time) {
-                                            $cin = \Carbon\Carbon::parse($attendance->check_in_time);
-                                            $cout = \Carbon\Carbon::parse($attendance->check_out_time);
-                                            if ($cout->lt($cin)) { $cout->addDay(); }
-                                            $minutes = $cin->diffInMinutes($cout);
+                                        if ((($attendance && $attendance->status === 'alpha') || (!$attendance && !$permission))) {
+                                            $hours = 0;
+                                        } else {
+                                            // Daily work hours based on shift durations across all schedules that day, minus 1 hour if any
+                                            $daySchedules = $schedules->where('schedule_date', $schedule->schedule_date)->where('user_id', $schedule->user_id);
+                                            $dayMinutesAcc = 0;
+                                            foreach ($daySchedules as $ds) {
+                                                if (!$ds->shift) { continue; }
+                                                $att = $attendances->firstWhere('schedule_id', $ds->id);
+                                                $perm = $permissions->firstWhere('schedule_id', $ds->id);
+                                                $start = \Carbon\Carbon::parse($ds->shift->start_time);
+                                                $end = \Carbon\Carbon::parse($ds->shift->end_time);
+                                                if ($end->lt($start)) { $end->addDay(); }
+                                                $shiftMinutes = $start->diffInMinutes($end);
+                                                if ($att && $att->status === 'alpha') {
+                                                    $m = 0;
+                                                } elseif (!$att && !$perm) {
+                                                    $m = 0; // auto-alpha when absent without permission
+                                                } else {
+                                                    $m = $shiftMinutes;
+                                                }
+                                                $dayMinutesAcc += $m;
+                                            }
+                                            $dayMinutesAfterBreak = $dayMinutesAcc > 0 ? max(0, $dayMinutesAcc - 60) : 0;
+                                            $hours = $dayMinutesAfterBreak / 60;
                                         }
-                                        $hours = $minutes / 60;
                                     @endphp
                                     {{ $hours == floor($hours) ? floor($hours).' jam' : number_format($hours, 1).' jam' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($attendance?->status === 'hadir')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
-                                            Hadir
-                                        </span>
-                                    @elseif($attendance?->status === 'telat')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                            <i data-lucide="clock-alert" class="w-3 h-3 mr-1"></i>
-                                            Telat
-                                            @if($attendance && $attendance->late_minutes)
-                                                <span class="ml-1 text-xs">({{ $attendance->late_minutes }} mnt)</span>
+                                    @php
+                                        // Gather statuses on this schedule (single schedule context)
+                                        $statusBase = $attendance->status ?? ($permission ? 'izin' : 'alpha');
+                                        $hasForgot = ($statusBase === 'forgot_checkout');
+                                        $hasEarly  = ($statusBase === 'early_checkout');
+                                        $wasLate   = ($statusBase === 'telat') || ($attendance && $attendance->is_late);
+                                        $wasPresent= ($statusBase === 'hadir') || ($attendance && $attendance->check_in_time);
+                                        // Priority like index: izin > early_checkout > telat > hadir > forgot_checkout > alpha
+                                        $statusText = $statusBase;
+                                        if ($statusBase !== 'izin') {
+                                            if ($hasEarly) { $statusText = 'early_checkout'; }
+                                            elseif ($wasLate) { $statusText = 'telat'; }
+                                            elseif ($wasPresent) { $statusText = 'hadir'; }
+                                            elseif ($hasForgot) { $statusText = 'forgot_checkout'; }
+                                            else { $statusText = 'alpha'; }
+                                        }
+                                        $statusColor = 'bg-gray-100 text-gray-700';
+                                        if($statusText === 'hadir') { $statusColor = 'bg-green-100 text-green-800'; }
+                                        if($statusText === 'telat') { $statusColor = 'bg-orange-100 text-orange-800'; }
+                                        if($statusText === 'izin') { $statusColor = 'bg-yellow-100 text-yellow-800'; }
+                                        if($statusText === 'early_checkout') { $statusColor = 'bg-amber-100 text-amber-800'; }
+                                        if($statusText === 'forgot_checkout') { $statusColor = 'bg-rose-100 text-rose-800'; }
+                                        if($statusText === 'alpha') { $statusColor = 'bg-red-100 text-red-800'; }
+                                        $showStacked = ($hasForgot || $hasEarly) && ($wasLate || $wasPresent);
+                                        $primaryText = $wasLate ? 'telat' : 'hadir';
+                                        $primaryColor = $wasLate ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800';
+                                    @endphp
+                                    @if($showStacked)
+                                        <div class="flex flex-col space-y-1">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $primaryColor }}">
+                                                {{ ucwords($primaryText) }}
+                                            </span>
+                                            @if($hasForgot)
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
+                                                    Forgot Checkout
+                                                </span>
                                             @endif
-                                        </span>
-                                    @elseif($attendance?->status === 'izin')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
-                                            Izin
-                                        </span>
+                                            @if($hasEarly)
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                    Early Checkout
+                                                </span>
+                                            @endif
+                                        </div>
                                     @else
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            <i data-lucide="x-circle" class="w-3 h-3 mr-1"></i>
-                                            Alpha
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $statusColor }}">
+                                            {{ ucwords(str_replace('_',' ', $statusText)) }}
                                         </span>
                                     @endif
                                 </td>

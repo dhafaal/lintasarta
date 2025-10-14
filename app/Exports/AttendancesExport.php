@@ -73,6 +73,7 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
         $attendancesRaw = Attendance::whereIn('schedule_id', $scheduleIds)
             ->with('schedule')
             ->get();
+        $permissionsRaw = \App\Models\Permissions::whereIn('schedule_id', $scheduleIds)->get();
 
         // Group by user_id|schedule_date
         $groups = $schedules->groupBy(function($s){
@@ -105,6 +106,33 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
             $wasLate   = $dayAtts->filter(fn($a) => $a && ($a->is_late || $a->status === 'telat'))->isNotEmpty();
             $wasPresent= $dayAtts->filter(fn($a) => $a && $a->check_in_time)->isNotEmpty() || $dayAtts->whereIn('status',['hadir','telat'])->isNotEmpty();
 
+            // Work minutes (calendar rules) per day
+            $dayWorkMinutesAcc = 0;
+            foreach ($daySchedules as $schedule) {
+                if (!$schedule->shift) { continue; }
+                $attendance = $dayAtts->first(function($a) use ($schedule, $user){ return $a->schedule_id == $schedule->id && $a->user_id == $user->id; });
+                $permApproved = $permissionsRaw->first(function($p) use ($schedule, $user){ return $p->schedule_id == $schedule->id && $p->user_id == $user->id && $p->status === 'approved'; });
+                $permPending  = $permissionsRaw->first(function($p) use ($schedule, $user){ return $p->schedule_id == $schedule->id && $p->user_id == $user->id && $p->status === 'pending'; });
+
+                // Shift duration (handle cross midnight)
+                $startT = Carbon::parse($schedule->shift->start_time);
+                $endT   = Carbon::parse($schedule->shift->end_time);
+                if ($endT->lt($startT)) { $endT->addDay(); }
+                $shiftMinutes = $startT->diffInMinutes($endT);
+
+                // Rules align with calendar
+                if ($attendance && $attendance->status === 'alpha') {
+                    $m = 0;
+                } elseif (!$attendance && !$permApproved && !$permPending) {
+                    $m = 0;
+                } else {
+                    $m = $shiftMinutes;
+                }
+                $dayWorkMinutesAcc += $m;
+            }
+            $dayWorkMinutesAfterBreak = $dayWorkMinutesAcc > 0 ? max(0, $dayWorkMinutesAcc - 60) : 0;
+            $workHoursDisplay = (function($m){ $h=$m/60; return ($h==floor($h))? floor($h).'j' : number_format($h,1).'j'; })($dayWorkMinutesAfterBreak);
+
             // Status display
             if ($hasIzin) {
                 $statusDisplay = 'Izin';
@@ -124,6 +152,8 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
                 'categories' => implode(' ', $categories),
                 'check_in_time' => optional($firstCheckIn)->check_in_time,
                 'check_out_time' => optional($lastCheckOut)->check_out_time,
+                'work_minutes' => $dayWorkMinutesAfterBreak,
+                'work_hours_display' => $workHoursDisplay,
                 'status_display' => $statusDisplay,
             ]);
         }
@@ -133,7 +163,7 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
 
     public function headings(): array
     {
-        return ['Tanggal', 'Nama', 'Shift', 'Kategori Shift', 'Check In', 'Check Out', 'Status'];
+        return ['Tanggal', 'Nama', 'Shift', 'Kategori Shift', 'Check In', 'Check Out', 'Jam Kerja', 'Status'];
     }
 
     public function map($item): array
@@ -145,6 +175,7 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
             $item->categories ?: '-',
             $item->check_in_time ? Carbon::parse($item->check_in_time)->format('H:i:s') : '',
             $item->check_out_time ? Carbon::parse($item->check_out_time)->format('H:i:s') : '',
+            $item->work_hours_display ?? '-',
             $item->status_display ?? 'Alpha',
         ];
     }
@@ -154,7 +185,7 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
     $rowCount = $sheet->getHighestRow();
 
     // ===== HEADER STYLE =====
-    $sheet->getStyle('A1:G1')->applyFromArray([
+    $sheet->getStyle('A1:H1')->applyFromArray([
         'font' => [
             'bold' => true,
             'size' => 12,
@@ -181,7 +212,7 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
 
     // ===== BODY STYLE =====
     for ($row = 2; $row <= $rowCount; $row++) {
-        $sheet->getStyle("A{$row}:G{$row}")->applyFromArray([
+        $sheet->getStyle("A{$row}:H{$row}")->applyFromArray([
             'font' => [
                 'size' => 11,
                 'color' => ['argb' => 'FF1E293B'], // Slate-800
@@ -199,14 +230,14 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
 
         // Zebra stripes minimalis (hanya background tipis)
         if ($row % 2 === 0) {
-            $sheet->getStyle("A{$row}:G{$row}")
+            $sheet->getStyle("A{$row}:H{$row}")
                 ->getFill()->setFillType(Fill::FILL_SOLID)
                 ->getStartColor()->setARGB('FFFAFAFA'); // Soft gray
         }
     }
 
     // Lebarkan semua kolom biar lebih "lapang"
-    foreach (range('A', 'G') as $col) {
+    foreach (range('A', 'H') as $col) {
         $sheet->getColumnDimension($col)->setAutoSize(true);
     }
 
@@ -231,7 +262,7 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
                 $rowCount = $sheet->getHighestRow();
 
                 for ($row = 2; $row <= $rowCount; $row++) {
-                    $statusCell = strtolower((string)$sheet->getCell("G{$row}")->getValue());
+                    $statusCell = strtolower((string)$sheet->getCell("H{$row}")->getValue());
                     $fillColor = null;
                     $textColor = null;
 
@@ -257,7 +288,7 @@ class AttendancesExport implements FromCollection, WithHeadings, WithMapping, Sh
                     }
 
                     if ($fillColor) {
-                        $style = $sheet->getStyle("G{$row}");
+                        $style = $sheet->getStyle("H{$row}");
                         $style->getFill()->setFillType(Fill::FILL_SOLID)
                             ->getStartColor()->setARGB($fillColor);
                         $style->getFont()->getColor()->setARGB($textColor);

@@ -429,6 +429,10 @@
                                     elseif ($attGroup->where('status','hadir')->isNotEmpty()) { $statusText = 'hadir'; }
                                     elseif ($attGroup->where('status','forgot_checkout')->isNotEmpty()) { $statusText = 'forgot_checkout'; }
                                     elseif ($attGroup->isNotEmpty()) { $statusText = optional($attGroup->first())->status ?: '-'; }
+                                    // Fallback: if there are schedules but absolutely no attendance and no permissions, mark as alpha (covers night shift users who didn't show up)
+                                    if ($statusText === '-' && $userSchedules->isNotEmpty() && $attGroup->isEmpty() && $permGroup->isEmpty()) {
+                                        $statusText = 'alpha';
+                                    }
 
                                     $statusColor = 'bg-gray-100 text-gray-700';
                                     if($statusText === 'hadir') { $statusColor = 'bg-green-100 text-green-800'; }

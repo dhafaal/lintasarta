@@ -1373,8 +1373,8 @@ class ScheduleController extends Controller
                 if ($schedules->isNotEmpty()) {
                     $shiftLetters = [];
                     $shiftNames = [];
-                    $hoursList = [];
                     $attendanceStatuses = [];
+                    $dayMinutesAcc = 0; // accumulate minutes for the whole day
 
                     foreach ($schedules as $schedule) {
                         if (!$schedule->shift) continue;
@@ -1416,7 +1416,8 @@ class ScheduleController extends Controller
                             $forcedAlpha = false;
                         }
 
-                        $totalMinutes += $minutes;
+                        // accumulate per-day; total will be added after day-level break deduction
+                        $dayMinutesAcc += $minutes;
 
                         $shiftLetters[] = strtoupper(substr($schedule->shift->shift_name, 0, 1));
                         $shiftNames[] = $schedule->shift->shift_name; // full shift names
@@ -1428,10 +1429,15 @@ class ScheduleController extends Controller
                         $attendanceStatuses[] = $attendanceStatus;
                     }
 
+                    // Deduct 1 hour (60 minutes) for lunch if there is any work time this day
+                    $dayMinutesAfterBreak = $dayMinutesAcc > 0 ? max(0, $dayMinutesAcc - 60) : 0;
+                    // Add to monthly total after deduction
+                    $totalMinutes += $dayMinutesAfterBreak;
+
                     $row['shifts'][$day] = [
                         'shift' => implode(',', $shiftLetters), // contoh: "P,M"
                         'shift_name' => implode(' + ', $shiftNames), // contoh: "Pagi + Malam"
-                        'hours' => implode(' + ', $hoursList), // contoh: "8j + 8j"
+                        'hours' => (function($m){ $h = $m/60; return ($h==floor($h)) ? floor($h).'j' : number_format($h,1).'j'; })($dayMinutesAfterBreak),
                         'attendance_statuses' => $attendanceStatuses, // array of attendance statuses for each shift
                         'primary_attendance' => $attendanceStatuses[0] ?? null, // primary attendance status for coloring
                     ];

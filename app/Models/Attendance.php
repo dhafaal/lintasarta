@@ -23,4 +23,9 @@ class Attendance extends Model
     {
         return $this->belongsTo(Location::class);
     }
+    
+    public function shift()
+    {
+        return $this->belongsTo(Location::class);
+    }
 }

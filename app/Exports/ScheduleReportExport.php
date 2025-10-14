@@ -128,14 +128,17 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
                 }
             }
 
-            $totalMinutes += $dayMinutes;
+            // Deduct 1 hour break per day if there is any work time
+            $dayMinutesAfterBreak = $dayMinutes > 0 ? max(0, $dayMinutes - 60) : 0;
+
+            $totalMinutes += $dayMinutesAfterBreak;
 
             if (!empty($shiftNames)) {
                 // Gabungkan shift jika ada lebih dari satu
                 $rowShift[$day] = implode(' + ', $shiftNames);
                 
                 // Format jam kerja
-                $hours = $dayMinutes / 60;
+                $hours = $dayMinutesAfterBreak / 60;
                 if ($hours == floor($hours)) {
                     $rowHours[$day] = floor($hours) . 'j';
                 } else {
