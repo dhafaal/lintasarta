@@ -510,31 +510,34 @@
                                             <span class="text-gray-400 text-sm">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap text-base font-semibold text-gray-700">
+                                    <td class="px-8 py-6 whitespace-nowrap">
                                         @if($checkInTime)
-                                            <span class="inline-flex items-center text-green-700">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle mr-1">
-                                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                                    <polyline points="22 4 12 14.01 9 11.01"/>
-                                                </svg>
-                                                {{ \Carbon\Carbon::parse($checkInTime)->format('H:i') }}
-                                            </span>
+                                            <div class="flex items-start">
+                                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                                    <i data-lucide="log-in" class="w-4 h-4 text-green-600"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($checkInTime)->format('H:i') }}</div>
+                                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($checkInTime)->format('d M Y') }}</div>
+                                                </div>
+                                            </div>
                                         @else
-                                            -
+                                            <span class="text-gray-400 text-sm">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap text-base font-semibold text-gray-700">
+                                    <td class="px-8 py-6 whitespace-nowrap">
                                         @if($checkOutTime)
-                                            <span class="inline-flex items-center text-red-700">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle mr-1">
-                                                    <circle cx="12" cy="12" r="10"/>
-                                                    <path d="M15 9l-6 6"/>
-                                                    <path d="M9 9l6 6"/>
-                                                </svg>
-                                                {{ \Carbon\Carbon::parse($checkOutTime)->format('H:i') }}
-                                            </span>
+                                            <div class="flex items-start">
+                                                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                                    <i data-lucide="log-out" class="w-4 h-4 text-red-600"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($checkOutTime)->format('H:i') }}</div>
+                                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($checkOutTime)->format('d M Y') }}</div>
+                                                </div>
+                                            </div>
                                         @else
-                                            -
+                                            <span class="text-gray-400 text-sm">-</span>
                                         @endif
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap">

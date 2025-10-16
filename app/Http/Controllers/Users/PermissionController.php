@@ -11,6 +11,16 @@ use Illuminate\Support\Facades\Auth;
 
 class PermissionController extends Controller
 {
+    public function index()
+    {
+        $permissions = Permissions::with(['schedule.shift', 'user'])
+            ->where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('users.attendances.permissions', compact('permissions'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([

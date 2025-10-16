@@ -40,6 +40,7 @@ class DashboardController extends Controller
 
         $events = $schedules->map(function ($schedule) {
             $shiftName = $schedule->shift->shift_name ?? 'Shift';
+            $shiftCategory = $schedule->shift->category ?? 'Other';
             $startTime = Carbon::parse($schedule->shift->start_time)->format('H:i');
             $endTime   = Carbon::parse($schedule->shift->end_time)->format('H:i');
 
@@ -62,6 +63,7 @@ class DashboardController extends Controller
                 'end'         => $endDate,
                 'allDay'      => false,
                 'shift'       => $shiftName,
+                'category'    => $shiftCategory,
                 'start_time'  => $startTime,
                 'end_time'    => $endTime,
             ];

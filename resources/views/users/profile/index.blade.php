@@ -3,31 +3,25 @@
 @section('title', 'Profile')
 
 @section('content')
-<div class=" mx-auto space-y-6">
+<div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center space-x-4">
-            <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="lucide lucide-circle-user-icon lucide-circle-user text-sky-600 w-6 h-6">
-                    <circle cx="12" cy="12" r="10" />
-                    <circle cx="12" cy="10" r="3" />
-                    <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
-                </svg>
-            </div>
-            <div>
-                <h1 class="text-3xl font-bold text-gray-700 tracking-tight">Profile User</h1>
-                <p class="text-gray-500 mt-1">Manage your profile information and account settings</p>
-            </div>
+    <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-sky-500 rounded-xl flex items-center justify-center">
+            <i data-lucide="user" class="w-6 h-6 text-white"></i>
         </div>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Profile</h1>
+            <p class="text-sm text-gray-600">Manage your account settings</p>
+        </div>
+    </div>
 
     <!-- Profile Card -->
-    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <!-- Profile Header -->
-        <div class="relative bg-gradient-to-r from-sky-500 to-sky-600 h-32">
-            <div class="absolute -bottom-12 left-6">
-                <div class="w-24 h-24 rounded-full bg-sky-200 backdrop-blur-sm flex items-center justify-center border-4 border-white shadow-lg">
-                    <span class="text-2xl font-bold text-sky-600">
+        <div class="relative bg-sky-500 h-24">
+            <div class="absolute -bottom-10 left-5">
+                <div class="w-20 h-20 rounded-xl bg-white flex items-center justify-center border-2 border-gray-200 shadow-sm">
+                    <span class="text-xl font-bold text-sky-600">
                         {{ App\Http\Controllers\Users\ProfileController::getUserInitials($user->name) }}
                     </span>
                 </div>
@@ -35,66 +29,58 @@
         </div>
 
         <!-- Profile Content -->
-        <div class="pt-16 pb-6 px-6">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-900">{{ $user->name }}</h2>
-                    <div class="flex items-center mt-1">
-                        <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                        <span class="text-sm text-gray-600">Employee</span>
-                    </div>
+        <div class="pt-14 pb-5 px-5">
+            <div class="mb-6">
+                <h2 class="text-lg font-bold text-gray-900">{{ $user->name }}</h2>
+                <div class="flex items-center mt-1">
+                    <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span class="text-sm text-gray-600">Employee</span>
                 </div>
             </div>
 
             <!-- Profile Fields -->
-            <div class="space-y-6">
+            <div class="space-y-4">
                 <!-- Username/Name -->
-                <div class="flex items-center justify-between py-4 border-b border-gray-100">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
-                            Nama Lengkap
-                        </label>
-                        <div class="text-gray-900 font-medium">{{ $user->name }}</div>
-                    </div>
+                <div class="py-3 border-b border-gray-200">
+                    <label class="block text-xs font-medium text-gray-500 uppercase mb-1">
+                        Nama Lengkap
+                    </label>
+                    <div class="text-gray-900 font-medium">{{ $user->name }}</div>
                 </div>
 
                 <!-- Email -->
-                <div class="flex items-center justify-between py-4 border-b border-gray-100">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
-                            Email Address
-                        </label>
-                        <div class="text-gray-900 font-medium">{{ $user->email }}</div>
-                    </div>
+                <div class="py-3 border-b border-gray-200">
+                    <label class="block text-xs font-medium text-gray-500 uppercase mb-1">
+                        Email Address
+                    </label>
+                    <div class="text-gray-900 font-medium">{{ $user->email }}</div>
                 </div>
 
                 <!-- Role -->
-                <div class="flex items-center justify-between py-4 border-b border-gray-100">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
-                            Role
-                        </label>
-                        <div class="text-gray-900 font-medium">{{ $user->role }}</div>
-                    </div>
+                <div class="py-3 border-b border-gray-200">
+                    <label class="block text-xs font-medium text-gray-500 uppercase mb-1">
+                        Role
+                    </label>
+                    <div class="text-gray-900 font-medium">{{ $user->role }}</div>
                 </div>
 
                 <!-- Password -->
-                <div class="flex items-center justify-between py-4">
+                <div class="flex items-center justify-between py-3">
                     <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1">
                             Password
                         </label>
                         <div class="text-gray-900 font-medium">••••••••••••</div>
                     </div>
                     <button type="button" onclick="openChangePasswordModal()"
-                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors duration-200">
-                        Edit
+                        class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm font-medium rounded-lg transition-colors">
+                        Change
                     </button>
                 </div>
             </div>
 
             <!-- Account Info -->
-            <div class="mt-8 pt-6 border-t border-gray-100">
+            <div class="mt-6 pt-4 border-t border-gray-200">
                 <div class="text-xs text-gray-500 space-y-1">
                     <p>Account created: {{ $user->created_at->format('M d, Y') }}</p>
                     <p>Last updated: {{ $user->updated_at->format('M d, Y') }}</p>
@@ -105,33 +91,33 @@
 </div>
 
 <!-- Change Password Modal -->
-<div id="changePasswordModal" class="fixed inset-0 bg-gray-600/50 overflow-y-auto h-full w-full z-50 hidden">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-3xl bg-white">
-        <div class="mt-3">
+<div id="changePasswordModal" class="fixed inset-0 bg-black/50 overflow-y-auto h-full w-full z-50 hidden">
+    <div class="relative top-20 mx-auto p-5 w-full max-w-md">
+        <div class="bg-white rounded-xl shadow-lg">
             <!-- Modal Header -->
-            <div class="flex items-center justify-between pb-4 border-b border-gray-200">
-                <h3 class="text-xl font-semibold text-gray-900 flex items-center">
-                    <i data-lucide="key" class="w-5 h-5 mr-3 text-sky-600"></i>
+            <div class="flex items-center justify-between p-5 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <i data-lucide="key" class="w-5 h-5 text-sky-600"></i>
                     Change Password
                 </h3>
                 <button type="button" onclick="closeChangePasswordModal()" 
-                    class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    class="text-gray-400 hover:text-gray-600">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
             <!-- Modal Body -->
-            <form action="{{ route('user.profile.change-password') }}" method="POST" class="mt-6 space-y-4">
+            <form action="{{ route('user.profile.change-password') }}" method="POST" class="p-5 space-y-4">
                 @csrf
                 
                 <!-- Current Password -->
-                <div class="space-y-2">
-                    <label for="current_password" class="text-sm font-semibold text-gray-700">
+                <div>
+                    <label for="current_password" class="block text-sm font-medium text-gray-700 mb-1">
                         Current Password
                     </label>
                     <div class="relative">
                         <input type="password" id="current_password" name="current_password" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                         <button type="button" onclick="togglePassword('current_password')"
                             class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600">
                             <i data-lucide="eye" class="w-4 h-4"></i>
@@ -140,13 +126,13 @@
                 </div>
 
                 <!-- New Password -->
-                <div class="space-y-2">
-                    <label for="new_password" class="text-sm font-semibold text-gray-700">
+                <div>
+                    <label for="new_password" class="block text-sm font-medium text-gray-700 mb-1">
                         New Password
                     </label>
                     <div class="relative">
                         <input type="password" id="new_password" name="new_password" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                         <button type="button" onclick="togglePassword('new_password')"
                             class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600">
                             <i data-lucide="eye" class="w-4 h-4"></i>
@@ -155,13 +141,13 @@
                 </div>
 
                 <!-- Confirm New Password -->
-                <div class="space-y-2">
-                    <label for="new_password_confirmation" class="text-sm font-semibold text-gray-700">
+                <div>
+                    <label for="new_password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">
                         Confirm New Password
                     </label>
                     <div class="relative">
                         <input type="password" id="new_password_confirmation" name="new_password_confirmation" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors duration-200">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                         <button type="button" onclick="togglePassword('new_password_confirmation')"
                             class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600">
                             <i data-lucide="eye" class="w-4 h-4"></i>
@@ -170,8 +156,8 @@
                 </div>
 
                 <!-- Password Requirements -->
-                <div class="bg-gray-50 rounded-xl p-3 text-xs text-gray-600">
-                    <p class="font-semibold mb-1">Password harus:</p>
+                <div class="bg-sky-50 rounded-lg p-3 text-xs text-gray-700">
+                    <p class="font-medium mb-1">Password requirements:</p>
                     <ul class="space-y-1">
                         <li>• Minimal 8 karakter</li>
                         <li>• Mengandung huruf dan angka</li>
@@ -180,13 +166,13 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="flex space-x-3 pt-4">
+                <div class="flex gap-3">
                     <button type="button" onclick="closeChangePasswordModal()"
-                        class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors duration-200 font-semibold">
+                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="flex-1 px-4 py-3 bg-sky-600 text-white rounded-xl hover:bg-sky-700 transition-colors duration-200 font-semibold">
+                        class="flex-1 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors font-medium">
                         Change Password
                     </button>
                 </div>

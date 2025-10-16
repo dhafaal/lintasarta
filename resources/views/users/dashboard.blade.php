@@ -38,114 +38,129 @@
 
 @section('content')
 <div class="min-h-screen bg-white">
-    <div class="container mx-auto px-4 py-8 space-y-8">
+    <div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {{-- Hero Welcome Section --}}
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-sky-500 to-sky-600 rounded-3xl shadow-lg mb-6">
-                <i data-lucide="home" class="w-8 h-8 text-white"></i>
+        <div class="mb-6">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 bg-sky-500 rounded-xl flex items-center justify-center">
+                    <i data-lucide="home" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Welcome back, {{ Auth::user()->name }}!</h1>
+                    <p class="text-sm text-gray-600">Manage your attendance and schedule</p>
+                </div>
             </div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-3">Welcome back, {{ Auth::user()->name }}!</h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">Manage your attendance, view your schedule, and stay on top of your work commitments with ease.</p>
         </div>
 
         {{-- Quick Stats Cards --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">This Month</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ now()->format('M Y') }}</p>
+                        <p class="text-xs font-medium text-gray-600 mb-1">This Month</p>
+                        <p class="text-xl font-bold text-gray-900">{{ now()->format('M Y') }}</p>
                     </div>
-                    <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
                         <i data-lucide="calendar" class="w-5 h-5 text-sky-600"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Today</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ now()->format('d') }}</p>
+                        <p class="text-xs font-medium text-gray-600 mb-1">Today</p>
+                        <p class="text-xl font-bold text-gray-900">{{ now()->format('d') }}</p>
                     </div>
-                    <div class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center">
-                        <i data-lucide="calendar-check" class="w-5 h-5 text-emerald-600"></i>
+                    <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="calendar-check" class="w-5 h-5 text-sky-600"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Week</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ now()->weekOfYear }}</p>
+                        <p class="text-xs font-medium text-gray-600 mb-1">Week</p>
+                        <p class="text-xl font-bold text-gray-900">{{ now()->weekOfYear }}</p>
                     </div>
-                    <div class="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
-                        <i data-lucide="calendar-days" class="w-5 h-5 text-purple-600"></i>
+                    <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="calendar-days" class="w-5 h-5 text-sky-600"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Days in Month</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ now()->daysInMonth }}</p>
+                        <p class="text-xs font-medium text-gray-600 mb-1">Days in Month</p>
+                        <p class="text-xl font-bold text-gray-900">{{ now()->daysInMonth }}</p>
                     </div>
-                    <div class="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center">
-                        <i data-lucide="hash" class="w-5 h-5 text-amber-600"></i>
+                    <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="hash" class="w-5 h-5 text-sky-600"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Shift Legend --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div class="flex items-center space-x-3 mb-6">
-                <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center">
-                    <i data-lucide="sun" class="w-4 h-4 text-sky-600"></i>
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
+                    <i data-lucide="clock" class="w-4 h-4 text-sky-600"></i>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900">Shift Legend</h3>
+                <h3 class="text-base font-bold text-gray-900">Shift Types</h3>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="flex items-center space-x-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                    <span class="w-4 h-4 rounded-full bg-blue-500 shadow-sm"></span>
-                    <span class="text-sm font-medium text-blue-700">Morning</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div class="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="sunrise" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-blue-900">Pagi</div>
+                        <div class="text-xs text-blue-700">Morning Shift</div>
+                    </div>
                 </div>
-                <div class="flex items-center space-x-3 p-3 bg-yellow-50 rounded-xl border border-yellow-100">
-                    <span class="w-4 h-4 rounded-full bg-yellow-500 shadow-sm"></span>
-                    <span class="text-sm font-medium text-yellow-700">Afternoon</span>
+                <div class="flex items-center gap-3 p-3 bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg border border-amber-200">
+                    <div class="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="sun" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-amber-900">Siang</div>
+                        <div class="text-xs text-amber-700">Afternoon Shift</div>
+                    </div>
                 </div>
-                <div class="flex items-center space-x-3 p-3 bg-purple-50 rounded-xl border border-purple-100">
-                    <span class="w-4 h-4 rounded-full bg-purple-500 shadow-sm"></span>
-                    <span class="text-sm font-medium text-purple-700">Night</span>
-                </div>
-                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <span class="w-4 h-4 rounded-full bg-gray-500 shadow-sm"></span>
-                    <span class="text-sm font-medium text-gray-700">Other</span>
+                <div class="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+                    <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="moon" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-purple-900">Malam</div>
+                        <div class="text-xs text-purple-700">Night Shift</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         {{-- Calendar Section --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 bg-gradient-to-r from-sky-50 to-sky-100 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center">
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-5 py-4 bg-sky-50 border-b border-gray-200">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
                             <i data-lucide="calendar" class="w-4 h-4 text-white"></i>
                         </div>
-                        <h2 class="text-xl font-semibold text-gray-900">Work Schedule</h2>
+                        <h2 class="text-base font-bold text-gray-900">Work Schedule</h2>
                     </div>
-                    <div class="flex items-center space-x-3">
-                        <select id="monthSelect" class="border border-gray-300 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors bg-white">
+                    <div class="flex items-center gap-2">
+                        <select id="monthSelect" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white">
                             @for ($m = 1; $m <= 12; $m++)
                                 <option value="{{ $m }}" {{ $m == now()->month ? 'selected' : '' }}>
                                     {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
                                 </option>
                             @endfor
                         </select>
-                        <select id="yearSelect" class="border border-gray-300 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors bg-white">
+                        <select id="yearSelect" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white">
                             @for ($y = now()->year - 3; $y <= now()->year + 3; $y++)
                                 <option value="{{ $y }}" {{ $y == now()->year ? 'selected' : '' }}>{{ $y }}</option>
                             @endfor
@@ -153,7 +168,7 @@
                     </div>
                 </div>
             </div>
-            <div class="p-6">
+            <div class="p-5">
                 <div id="calendar" class="w-full"></div>
             </div>
         </div>
@@ -196,17 +211,30 @@
 
                 eventDidMount: function(info) {
                     const shift = info.event.extendedProps.shift || '';
+                    const category = info.event.extendedProps.category || '';
+                    
+                    // Debug log untuk melihat data yang diterima
+                    console.log('Event:', shift, 'Category:', category);
+                    
                     info.el.setAttribute(
                         'title',
                         `${shift} | ${info.event.extendedProps.start_time} - ${info.event.extendedProps.end_time}`
                     );
 
-                    // Warna berdasarkan shift
-                    if (shift === 'Pagi') info.el.style.backgroundColor = '#0ea5e9';
-                    else if (shift === 'Siang') info.el.style.backgroundColor = '#facc15';
-                    else if (shift === 'Malam') info.el.style.backgroundColor = '#9333ea';
-                    else info.el.style.backgroundColor = '#6b7280';
-
+                    // Warna berdasarkan kategori shift (sesuai dengan legend)
+                    let backgroundColor = '#6b7280'; // Default gray
+                    
+                    if (category === 'Pagi') {
+                        backgroundColor = '#3b82f6'; // Blue-500
+                    } else if (category === 'Siang') {
+                        backgroundColor = '#f59e0b'; // Amber-500
+                    } else if (category === 'Malam') {
+                        backgroundColor = '#a855f7'; // Purple-500
+                    }
+                    
+                    console.log('Applied color:', backgroundColor, 'for category:', category);
+                    
+                    info.el.style.backgroundColor = backgroundColor;
                     info.el.style.color = '#fff';
                     info.el.style.border = 'none';
                 },

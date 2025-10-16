@@ -10,240 +10,236 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
     <style>
-        /* Enhanced Animations */
+        /* Smooth Animations */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
         @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
+            from { opacity: 0; transform: translateX(-10px); }
             to { opacity: 1; transform: translateX(0); }
         }
         
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        /* Minimalist Transitions */
+        .smooth-transition {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        /* Enhanced Transitions */
-        .menu-item-transition {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Subtle Hover Effects */
+        .hover-scale:hover {
+            transform: scale(1.02);
         }
         
-        .hover-lift {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Mobile Menu Slide */
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
         }
         
-        .hover-lift:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.15);
+        .mobile-menu-enter {
+            animation: slideInLeft 0.3s ease-out;
         }
         
-        /* Live Clock Styles */
-        .live-clock {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 1px solid rgba(14, 165, 233, 0.2);
-            animation: clockPulse 3s ease-in-out infinite;
-        }
-        
-        @keyframes clockPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); }
-            50% { box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); }
-        }
-        
-        /* Sidebar Enhancements */
-        .sidebar-item {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .sidebar-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.1), transparent);
-            transition: left 0.5s ease-in-out;
-        }
-        
-        .sidebar-item:hover::before {
-            left: 100%;
+        /* Backdrop Blur Support */
+        @supports (backdrop-filter: blur(10px)) {
+            .backdrop-blur-custom {
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
         }
     </style>
 </head>
 
-<body class="bg-gradient-to-br from-sky-50 via-white to-sky-50 min-h-screen antialiased text-gray-800">
-    <div class="flex min-h-screen" x-data="{
-        sidebarCollapsed: false,
-        isDarkMode: false,
-        userMenuOpen: false
+<body class="bg-white min-h-screen antialiased">
+    <div class="min-h-screen" x-data="{ 
+        mobileMenuOpen: false,
+        userMenuOpen: false,
+        attendancesOpen: {{ request()->routeIs('user.attendances.*') || request()->routeIs('user.permissions.*') ? 'true' : 'false' }}
     }">
+        <!-- Mobile Menu Overlay -->
+        <div x-show="mobileMenuOpen" 
+             @click="mobileMenuOpen = false"
+             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 lg:hidden">
+        </div>
+
         <!-- Sidebar -->
-        <div class="w-64 bg-white/90 backdrop-blur-lg border-r border-sky-200 flex flex-col h-screen fixed z-30 shadow-xl">
+        <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0"
+               :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'">
+            
             <!-- Logo -->
-            <div class="p-6 border-b border-sky-200 bg-gradient-to-r from-sky-50 to-sky-100">
-                <div class="flex items-center">
-                    <div class="w-12 h-12 bg-gradient-to-br from-sky-500 to-sky-600 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-                        <i data-lucide="building-2" class="w-6 h-6 text-white"></i>
+            <div class="h-16 flex items-center px-6 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
+                        <i data-lucide="building-2" class="w-5 h-5 text-white"></i>
                     </div>
-                    <div class="ml-3">
-                        <span class="text-xl font-bold text-gray-800">Lintasarta</span>
-                        <p class="text-xs text-sky-600 font-medium">Employee Portal</p>
+                    <div>
+                        <h1 class="text-lg font-bold text-gray-900">Lintasarta</h1>
+                        <p class="text-xs text-gray-500">Employee Portal</p>
                     </div>
                 </div>
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 px-4 py-6 space-y-3">
-                <a href="{{ route('user.dashboard') }}" class="sidebar-item flex items-center px-4 py-4 text-sm font-semibold rounded-2xl menu-item-transition hover-lift {{ request()->routeIs('user.dashboard') ? 'bg-gradient-to-r from-sky-100 to-sky-200 text-sky-700 border border-sky-300 shadow-sm' : 'text-gray-600 hover:bg-sky-50 hover:text-sky-700 border border-transparent hover:border-sky-200' }}">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center mr-3 {{ request()->routeIs('user.dashboard') ? 'bg-sky-500 text-white shadow-md' : 'bg-gray-100 text-gray-500 group-hover:bg-sky-100 group-hover:text-sky-600' }}">
-                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                    </div>
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <!-- Dashboard -->
+                <a href="{{ route('user.dashboard') }}" 
+                   class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg smooth-transition {{ request()->routeIs('user.dashboard') ? 'bg-sky-50 text-sky-700' : 'text-gray-700 hover:bg-gray-50' }}">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 {{ request()->routeIs('user.dashboard') ? 'text-sky-600' : 'text-gray-400' }}"></i>
                     <span>Dashboard</span>
                 </a>
                 
-                <a href="{{ route('user.attendances.index') }}" class="sidebar-item flex items-center px-4 py-4 text-sm font-semibold rounded-2xl menu-item-transition hover-lift {{ request()->routeIs('user.attendances.*') ? 'bg-gradient-to-r from-sky-100 to-sky-200 text-sky-700 border border-sky-300 shadow-sm' : 'text-gray-600 hover:bg-sky-50 hover:text-sky-700 border border-transparent hover:border-sky-200' }}">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center mr-3 {{ request()->routeIs('user.attendances.*') ? 'bg-sky-500 text-white shadow-md' : 'bg-gray-100 text-gray-500 group-hover:bg-sky-100 group-hover:text-sky-600' }}">
-                        <i data-lucide="clock" class="w-5 h-5"></i>
+                <!-- Attendances Dropdown -->
+                <div class="space-y-1">
+                    <button @click="attendancesOpen = !attendancesOpen" 
+                            class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg smooth-transition {{ request()->routeIs('user.attendances.*') || request()->routeIs('user.permissions.*') ? 'bg-sky-50 text-sky-700' : 'text-gray-700 hover:bg-gray-50' }}">
+                        <div class="flex items-center">
+                            <i data-lucide="clock" class="w-5 h-5 mr-3 {{ request()->routeIs('user.attendances.*') || request()->routeIs('user.permissions.*') ? 'text-sky-600' : 'text-gray-400' }}"></i>
+                            <span>Attendances</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" :class="attendancesOpen ? 'rotate-180' : ''"></i>
+                    </button>
+                    
+                    <!-- Submenu -->
+                    <div x-show="attendancesOpen" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 -translate-y-1"
+                         class="ml-8 space-y-1">
+                        <a href="{{ route('user.attendances.index') }}" 
+                           class="flex items-center px-3 py-2 text-sm font-medium rounded-lg smooth-transition {{ request()->routeIs('user.attendances.index') ? 'bg-sky-50 text-sky-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                            <i data-lucide="log-in" class="w-4 h-4 mr-2 {{ request()->routeIs('user.attendances.index') ? 'text-sky-600' : 'text-gray-400' }}"></i>
+                            <span>Check In/Out</span>
+                        </a>
+                        
+                        <a href="{{ route('user.permissions.index') }}" 
+                           class="flex items-center px-3 py-2 text-sm font-medium rounded-lg smooth-transition {{ request()->routeIs('user.permissions.*') ? 'bg-purple-50 text-purple-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                            <i data-lucide="file-text" class="w-4 h-4 mr-2 {{ request()->routeIs('user.permissions.*') ? 'text-purple-600' : 'text-gray-400' }}"></i>
+                            <span>Permissions</span>
+                        </a>
+                        
+                        <a href="{{ route('user.attendances.history') }}" 
+                           class="flex items-center px-3 py-2 text-sm font-medium rounded-lg smooth-transition {{ request()->routeIs('user.attendances.history') ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                            <i data-lucide="history" class="w-4 h-4 mr-2 {{ request()->routeIs('user.attendances.history') ? 'text-emerald-600' : 'text-gray-400' }}"></i>
+                            <span>History</span>
+                        </a>
                     </div>
-                    <span>Attendance</span>
-                </a>
+                </div>
             </nav>
 
             <!-- User Profile -->
-            <div class="p-4 border-t border-sky-200 bg-gradient-to-r from-sky-50 to-sky-100">
-                <div class="flex items-center p-3 bg-white rounded-2xl shadow-sm border border-sky-200 hover:shadow-md transition-shadow duration-300">
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-md">
-                        <i data-lucide="user" class="w-6 h-6 text-white"></i>
+            <div class="p-3 border-t border-gray-200">
+                <div class="flex items-center px-3 py-2 bg-gray-50 rounded-lg">
+                    <div class="w-9 h-9 rounded-lg bg-sky-500 flex items-center justify-center text-white font-semibold text-sm">
+                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                     </div>
-                    <div class="ml-3 flex-1">
-                        <p class="text-sm font-semibold text-gray-800">{{ auth()->user()->name }}</p>
-                        <p class="text-xs text-sky-600 font-medium">Employee</p>
+                    <div class="ml-3 flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">{{ auth()->user()->name }}</p>
+                        <p class="text-xs text-gray-500">Employee</p>
                     </div>
                 </div>
             </div>
-        </div>
+        </aside>
 
-        <!-- Page Content -->
-        <div class="flex-1 ml-64 transition-all duration-300">
+        <!-- Main Content -->
+        <div class="lg:ml-64">
             <!-- Top Navigation -->
-            <header class="bg-white/90 backdrop-blur-lg border-b border-sky-200 px-6 py-4 sticky top-0 z-20 shadow-sm">
-                <div class="flex justify-end items-center">
-                    <!-- Right Side Icons -->
-                    <div class="flex items-center space-x-6">
+            <header class="sticky top-0 z-30 bg-white border-b border-gray-200">
+                <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+                    <!-- Mobile Menu Button -->
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" 
+                            class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 smooth-transition">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+
+                    <!-- Page Title (Optional - can be populated by child views) -->
+                    <div class="hidden lg:block">
+                        <h2 class="text-lg font-semibold text-gray-900">@yield('page-title', 'Dashboard')</h2>
+                    </div>
+
+                    <!-- Right Side -->
+                    <div class="flex items-center space-x-3 ml-auto">
                         <!-- Live Clock -->
-                        <div class="flex items-center space-x-3 px-4 py-3 live-clock rounded-2xl">
-                            <div class="relative">
-                                <i data-lucide="clock" class="w-5 h-5 text-sky-600"></i>
-                                <div class="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-sm font-bold text-sky-700" id="live-time">--:--:--</div>
-                                <div class="text-xs text-sky-600" id="live-date">-- --- ----</div>
+                        <div class="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                            <i data-lucide="clock" class="w-4 h-4 text-gray-500"></i>
+                            <div class="text-xs">
+                                <div class="font-semibold text-gray-900" id="live-time">--:--:--</div>
+                                <div class="text-gray-500" id="live-date">-- --- ----</div>
                             </div>
                         </div>
                         
+                        <!-- User Menu -->
                         <div class="relative" x-data="{ open: false }">
                             <button 
                                 @click="open = !open" 
-                                class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-sky-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 group"
-                                :class="{ 'bg-sky-50 ring-2 ring-sky-200': open }"
+                                class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-50 smooth-transition focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
                                 :aria-expanded="open"
                             >
-                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-300">
-                                    <i data-lucide="user" class="w-5 h-5 text-white"></i>
+                                <div class="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center text-white font-semibold text-sm">
+                                    {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                                 </div>
                                 <div class="hidden sm:block text-left">
-                                    <p class="text-sm font-semibold text-gray-700 group-hover:text-sky-700 transition-colors">{{ auth()->user()->name }}</p>
-                                    <p class="text-xs text-sky-600 font-medium">Employee</p>
+                                    <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
+                                    <p class="text-xs text-gray-500">Employee</p>
                                 </div>
-                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 transition-all duration-300 group-hover:text-sky-600" :class="{ 'rotate-180': open }"></i>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 smooth-transition" :class="{ 'rotate-180': open }"></i>
                             </button>
                             
-                            <!-- Modern Dropdown menu -->
-                            <div x-show="open" @click.away="open = false" 
-                                 class="absolute right-0 mt-3 w-80 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-sky-100 overflow-hidden z-50"
-                                 x-transition:enter="transition ease-out duration-300"
-                                 x-transition:enter-start="transform opacity-0 scale-90 translate-y-2"
-                                 x-transition:enter-end="transform opacity-100 scale-100 translate-y-0"
-                                 x-transition:leave="transition ease-in duration-200"
-                                 x-transition:leave-start="transform opacity-100 scale-100 translate-y-0"
-                                 x-transition:leave-end="transform opacity-0 scale-90 translate-y-2">
+                            <!-- Dropdown Menu -->
+                            <div x-show="open" 
+                                 @click.away="open = false" 
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 scale-95"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 scale-100"
+                                 x-transition:leave-end="opacity-0 scale-95"
+                                 class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                                 
-                                <!-- Header with gradient -->
-                                <div class="bg-gradient-to-r from-sky-500 to-sky-600 px-6 py-4">
-                                    <div class="flex items-center space-x-4">
-                                        <div class="w-16 h-16 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-                                            <i data-lucide="user" class="w-8 h-8 text-white"></i>
-                                        </div>
-                                        <div class="flex-1">
-                                            <h3 class="text-lg font-bold text-white">{{ auth()->user()->name }}</h3>
-                                            <p class="text-sky-100 text-sm font-medium">{{ auth()->user()->email }}</p>
-                                            <div class="flex items-center mt-1">
-                                                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
-                                                <span class="text-xs text-sky-100">Online</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <!-- User Info -->
+                                <div class="px-4 py-3 border-b border-gray-100">
+                                    <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
+                                    <p class="text-xs text-gray-500 truncate">{{ auth()->user()->email }}</p>
                                 </div>
                                 
                                 <!-- Menu Items -->
-                                <div class="p-4 space-y-2">
-                                    <!-- Dashboard Link -->
-                                    <a href="{{ route('user.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-sky-50 transition-all duration-200 group">
-                                        <div class="w-10 h-10 rounded-xl bg-sky-100 flex items-center justify-center group-hover:bg-sky-200 transition-colors">
-                                            <i data-lucide="layout-dashboard" class="w-5 h-5 text-sky-600"></i>
-                                        </div>
-                                        <div class="flex-1">
-                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-sky-700">Dashboard</p>
-                                            <p class="text-xs text-gray-500">View your overview</p>
-                                        </div>
-                                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 group-hover:text-sky-600"></i>
+                                <div class="py-1">
+                                    <a href="{{ route('user.dashboard') }}" 
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 smooth-transition">
+                                        <i data-lucide="layout-dashboard" class="w-4 h-4 mr-3 text-gray-400"></i>
+                                        Dashboard
                                     </a>
                                     
-                                    <!-- Attendance Link -->
-                                    <a href="{{ route('user.attendances.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-sky-50 transition-all duration-200 group">
-                                        <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                                            <i data-lucide="clock" class="w-5 h-5 text-emerald-600"></i>
-                                        </div>
-                                        <div class="flex-1">
-                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-emerald-700">Attendance</p>
-                                            <p class="text-xs text-gray-500">Manage your time</p>
-                                        </div>
-                                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 group-hover:text-emerald-600"></i>
+                                    <a href="{{ route('user.attendances.index') }}" 
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 smooth-transition">
+                                        <i data-lucide="clock" class="w-4 h-4 mr-3 text-gray-400"></i>
+                                        Attendance
                                     </a>
                                     
-                                    <!-- Profile Link -->
-                                    <a href="{{ route('user.profile.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-2xl hover:bg-purple-50 transition-all duration-200 group">
-                                        <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                                            <i data-lucide="user-circle" class="w-5 h-5 text-purple-600"></i>
-                                        </div>
-                                        <div class="flex-1">
-                                            <p class="text-sm font-semibold text-gray-700 group-hover:text-purple-700">Profile</p>
-                                            <p class="text-xs text-gray-500">Manage your profile</p>
-                                        </div>
-                                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 group-hover:text-purple-600"></i>
+                                    <a href="{{ route('user.profile.index') }}" 
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 smooth-transition">
+                                        <i data-lucide="user-circle" class="w-4 h-4 mr-3 text-gray-400"></i>
+                                        Profile
                                     </a>
                                 </div>
                                 
-                                <!-- Divider -->
-                                <div class="border-t border-sky-100 mx-4"></div>
-                                
-                                <!-- Logout Section -->
-                                <div class="p-4">
+                                <!-- Logout -->
+                                <div class="border-t border-gray-100 py-1">
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="flex items-center space-x-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-2xl transition-all duration-200 focus:outline-none focus:bg-red-50 group">
-                                            <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                                                <i data-lucide="log-out" class="w-5 h-5 text-red-600"></i>
-                                            </div>
-                                            <div class="flex-1 text-left">
-                                                <p class="text-sm font-semibold">Sign out</p>
-                                                <p class="text-xs text-red-500">End your session</p>
-                                            </div>
+                                        <button type="submit" 
+                                                class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 smooth-transition">
+                                            <i data-lucide="log-out" class="w-4 h-4 mr-3"></i>
+                                            Sign out
                                         </button>
                                     </form>
                                 </div>
@@ -254,25 +250,21 @@
             </header>
 
             <!-- Page Content -->
-            <main class="p-6 bg-white min-h-screen">
-
-                <!-- Page Content -->
-                <div class="space-y-8">
+            <main class="min-h-screen bg-white">
+                <div class="px-4 sm:px-6 lg:px-8 py-6">
                     <!-- Stats Row -->
                     @hasSection('stats')
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             @yield('stats')
                         </div>
                     @endif
 
                     <!-- Main Content -->
-                    <div class="w-full">
-                        @yield('content')
-                    </div>
+                    @yield('content')
 
                     <!-- Secondary Content -->
                     @hasSection('secondary-content')
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                             @yield('secondary-content')
                         </div>
                     @endif
@@ -286,8 +278,6 @@
         // Initialize Lucide icons
         document.addEventListener('DOMContentLoaded', function() {
             lucide.createIcons();
-            
-            // Initialize live clock
             initializeLiveClock();
         });
         
@@ -296,7 +286,6 @@
             function updateClock() {
                 const now = new Date();
                 
-                // Indonesian time options
                 const timeOptions = {
                     timeZone: 'Asia/Jakarta',
                     hour: '2-digit',
@@ -307,68 +296,24 @@
                 
                 const dateOptions = {
                     timeZone: 'Asia/Jakarta',
-                    weekday: 'short',
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric'
                 };
                 
-                // Format time and date in Indonesian locale
                 const timeString = now.toLocaleTimeString('id-ID', timeOptions);
                 const dateString = now.toLocaleDateString('id-ID', dateOptions);
                 
-                // Update DOM elements
                 const timeElement = document.getElementById('live-time');
                 const dateElement = document.getElementById('live-date');
                 
-                if (timeElement) {
-                    timeElement.textContent = timeString;
-                    // Add subtle animation on second change
-                    timeElement.style.transform = 'scale(1.05)';
-                    setTimeout(() => {
-                        timeElement.style.transform = 'scale(1)';
-                    }, 150);
-                }
-                
-                if (dateElement) {
-                    dateElement.textContent = dateString;
-                }
+                if (timeElement) timeElement.textContent = timeString;
+                if (dateElement) dateElement.textContent = dateString;
             }
             
-            // Update immediately and then every second
             updateClock();
             setInterval(updateClock, 1000);
         }
-        
-        // Add smooth scroll behavior
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add smooth scrolling to all links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            });
-            
-            // Enhanced keyboard navigation
-            document.addEventListener('keydown', function(e) {
-                // ESC key to close dropdowns
-                if (e.key === 'Escape') {
-                    document.activeElement.blur();
-                }
-            });
-        });
-        
-        // Add loading state management
-        window.addEventListener('beforeunload', function() {
-            document.body.style.opacity = '0.8';
-            document.body.style.pointerEvents = 'none';
-        });
     </script>
 </body>
 </html>
