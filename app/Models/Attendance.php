@@ -26,6 +26,6 @@ class Attendance extends Model
     
     public function shift()
     {
-        return $this->belongsTo(Location::class);
+        return $this->hasOneThrough(Shift::class, Schedules::class, 'id', 'id', 'schedule_id', 'shift_id');
     }
 }
