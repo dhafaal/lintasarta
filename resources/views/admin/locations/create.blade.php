@@ -154,7 +154,7 @@
                             </div>
 
                             {{-- Status Lokasi --}}
-                            <div class="space-y-2">
+                            <div class="space-y-2" x-data="{ isActive: {{ old('is_active', 1) ? 'true' : 'false' }} }">
                                 <label class="block text-sm font-semibold text-gray-700">
                                     <div class="flex items-center gap-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -166,15 +166,27 @@
                                         <span>Status Lokasi</span>
                                     </div>
                                 </label>
-                                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                    <label class="inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" name="is_active" value="1" class="sr-only peer" {{ old('is_active', 1) ? 'checked' : '' }}>
-                                        <div class="relative w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-500 transition-colors">
-                                            <div class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
+                                <div class="p-4 rounded-lg border-2 transition-all duration-200"
+                                     :class="isActive ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'">
+                                    <div class="inline-flex items-center cursor-pointer" @click="isActive = !isActive">
+                                        <!-- Hidden input untuk memastikan nilai 0 terkirim saat nonaktif -->
+                                        <input type="hidden" name="is_active" :value="isActive ? '1' : '0'">
+                                        <div class="relative w-14 h-7 rounded-full transition-colors duration-300"
+                                             :class="isActive ? 'bg-green-500' : 'bg-gray-300'">
+                                            <div class="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300"
+                                                 :class="isActive ? 'translate-x-7' : 'translate-x-0'"></div>
                                         </div>
-                                        <span class="ml-3 text-sm font-medium text-gray-700">Aktifkan lokasi ini</span>
-                                    </label>
-                                    <p class="text-xs text-gray-500 mt-2">Nonaktifkan jika lokasi belum ingin digunakan.</p>
+                                        <span class="ml-3 text-sm font-semibold transition-colors duration-200"
+                                              :class="isActive ? 'text-green-700' : 'text-gray-700'">
+                                            <span x-show="isActive">✓ Lokasi Aktif</span>
+                                            <span x-show="!isActive">✕ Lokasi Nonaktif</span>
+                                        </span>
+                                    </div>
+                                    <p class="text-xs mt-2 transition-colors duration-200"
+                                       :class="isActive ? 'text-green-600' : 'text-gray-500'">
+                                        <span x-show="isActive">Lokasi dapat digunakan untuk absensi</span>
+                                        <span x-show="!isActive">Lokasi tidak dapat digunakan untuk absensi</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>

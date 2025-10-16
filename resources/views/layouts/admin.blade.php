@@ -659,7 +659,7 @@
                     x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                     class="flex items-center justify-center space-x-2 text-sm text-gray-500 bg-sky-50 rounded-xl p-3">
                     <i data-lucide="code" class="w-4 h-4"></i>
-                    <span class="font-medium">Built with Laravel</span>
+                    <span class="font-medium">Made by DaDiBuy</span>
                 </div>
                 
                 <!-- Collapsed Footer (Desktop Only) -->
@@ -670,7 +670,7 @@
                     <div class="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center group hover:bg-sky-200 transition-colors relative">
                         <i data-lucide="code" class="w-4 h-4 text-sky-600"></i>
                         <div class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
-                            Built with Laravel
+                            Made by DaDiBuy
                             <div class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45"></div>
                         </div>
                     </div>

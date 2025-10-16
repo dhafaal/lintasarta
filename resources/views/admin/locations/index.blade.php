@@ -83,7 +83,7 @@
                                 <div class="relative">
                                     <input type="text" name="search" value="{{ request('search') }}"
                                         placeholder="Cari lokasi..."
-                                        class="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                                        class="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm transition-all duration-200">
                                     <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -92,26 +92,59 @@
                                 </div>
                                 @if (request('search'))
                                     <a href="{{ route('admin.locations.index') }}"
-                                        class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition">
+                                        class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition-all duration-200">
                                         Reset
                                     </a>
                                 @endif
                             </form>
-                            <div class="hidden sm:flex items-center space-x-2">
-                                <button type="button" id="btn-bulk-activate" class="px-3 py-2 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 transition">Aktifkan</button>
-                                <button type="button" id="btn-bulk-deactivate" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition">Nonaktifkan</button>
-                                <button type="button" id="btn-bulk-delete" class="px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 transition">Hapus</button>
-                            </div>
-                            <div class="text-sm text-sky-600 bg-sky-100 px-3 py-1 rounded-full">{{ $locations->count() }} lokasi</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Tabs -->
-                <div class="px-8 pt-4 bg-white">
-                    <div class="inline-flex rounded-xl border border-sky-200 overflow-hidden">
-                        <button type="button" id="tab-wfo" class="px-4 py-2 text-sm font-semibold bg-sky-100 text-sky-800">WFO</button>
-                        <button type="button" id="tab-wfa" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">WFA</button>
+                <div class="px-8 pt-6 pb-4 bg-white border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div class="inline-flex rounded-xl border border-sky-200 overflow-hidden shadow-sm">
+                            <button type="button" id="tab-wfo" class="px-6 py-2.5 text-sm font-semibold bg-sky-100 text-sky-800 transition-all duration-200">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                                        <rect width="18" height="18" x="3" y="3" rx="2"/>
+                                        <path d="M3 9h18"/>
+                                        <path d="M9 21V9"/>
+                                    </svg>
+                                    WFO
+                                </div>
+                            </button>
+                            <button type="button" id="tab-wfa" class="px-6 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all duration-200">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                        <polyline points="9 22 9 12 15 12 15 22"/>
+                                    </svg>
+                                    WFA
+                                </div>
+                            </button>
+                        </div>
+                        <div class="hidden sm:flex items-center space-x-2">
+                            <button type="button" id="btn-bulk-activate" class="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-semibold hover:bg-green-200 transition-all duration-200 hover:scale-105">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Aktifkan
+                            </button>
+                            <button type="button" id="btn-bulk-deactivate" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-all duration-200 hover:scale-105">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6"/>
+                                </svg>
+                                Nonaktifkan
+                            </button>
+                            <button type="button" id="btn-bulk-delete" class="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-200 transition-all duration-200 hover:scale-105">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                Hapus
+                            </button>
+                        </div>
                     </div>
                 </div>
 
