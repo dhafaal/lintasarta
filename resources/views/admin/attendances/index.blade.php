@@ -3,50 +3,51 @@
 @section('title', 'Manajemen Absensi')
 
 @section('content')
-    <div class="min-h-screen bg-white sm:p-6 lg:p-8">
-        <div class="mx-auto space-y-8">
+    <div class="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
+        <div class="mx-auto space-y-6 sm:space-y-8">
             <!-- Enhanced Header Section -->
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
-                        <i data-lucide="calendar-check" class="w-6 h-6 text-sky-700"></i>
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                        <i data-lucide="calendar-check" class="w-5 h-5 sm:w-6 sm:h-6 text-sky-700"></i>
                     </div>
 
             
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-700 tracking-tight">Manajemen Absensi</h1>
-                        <p class="text-gray-500 mt-1">{{ $todayFormated }} - Kelola data absensi harian</p>
+                    <div class="min-w-0">
+                        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 tracking-tight">Manajemen Absensi</h1>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1 truncate">{{ $todayFormated }} - Kelola data absensi harian</p>
                     </div>
                 </div>
                 
                 <!-- Date Filter & Actions -->
-                <div class="flex items-center space-x-3">
-                    <form method="GET" class="flex items-center space-x-3">
-                        <div class="relative">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
+                    <form method="GET" class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:flex-initial">
                             <input type="date" name="date" value="{{ $today }}" 
-                                class="pl-10 pr-4 py-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-sm">
-                            <i data-lucide="calendar" class="w-4 h-4 text-gray-400 absolute left-3 top-3"></i>
+                                class="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-xs sm:text-sm">
+                            <i data-lucide="calendar" class="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
                         </div>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-xl transition-all">
-                            <i data-lucide="search" class="w-4 h-4 mr-1"></i>
-                            Filter
+                        <button type="submit" class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-xl transition-all text-xs sm:text-sm whitespace-nowrap">
+                            <i data-lucide="search" class="w-3 h-3 sm:w-4 sm:h-4 mr-1"></i>
+                            <span class="hidden xs:inline">Filter</span>
                         </button>
                     </form>
                     
                     <a href="{{ route('admin.attendances.history') }}"
-                       class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm hover:shadow-md">
-                        <i data-lucide="history" class="w-5 h-5 mr-2"></i>
-                        Riwayat Absensi
+                       class="inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm hover:shadow-md text-xs sm:text-sm whitespace-nowrap">
+                        <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2"></i>
+                        <span class="hidden sm:inline">Riwayat Absensi</span>
+                        <span class="sm:hidden">Riwayat</span>
                     </a>
 
                     <!-- Export Dropdown -->
-                    <details class="relative">
-                        <summary class="list-none inline-flex items-center px-4 py-2 bg-white border-2 border-sky-200 text-sky-700 font-semibold rounded-xl hover:bg-sky-50 cursor-pointer select-none">
-                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                    <details class="relative w-full sm:w-auto">
+                        <summary class="list-none inline-flex items-center justify-center w-full sm:w-auto px-3 sm:px-4 py-2 bg-white border-2 border-sky-200 text-sky-700 font-semibold rounded-xl hover:bg-sky-50 cursor-pointer select-none text-xs sm:text-sm">
+                            <i data-lucide="download" class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2"></i>
                             Export
-                            <svg class="w-4 h-4 ml-2 text-sky-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                            <svg class="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 text-sky-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
                         </summary>
-                        <div class="absolute right-0 mt-2 w-[28rem] bg-white rounded-xl shadow-xl border border-sky-100 p-4 z-20">
+                        <div class="absolute right-0 left-0 sm:left-auto mt-2 w-full sm:w-[28rem] bg-white rounded-xl shadow-xl border border-sky-100 p-3 sm:p-4 z-20 max-h-[80vh] overflow-y-auto">
                             <div class="grid grid-cols-1 gap-4">
                                 <!-- Monthly Export -->
                                 <div class="border border-gray-100 rounded-lg p-3">
@@ -203,16 +204,16 @@
             </div>
 
             <!-- Enhanced Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <div class="bg-gradient-to-br from-sky-500 to-sky-600 rounded-2xl p-6 text-white shadow-xl">
+            <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
+                <div class="bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-xl">
                     <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sky-100 text-sm font-medium uppercase tracking-wide">Total Jadwal</p>
-                            <p class="text-3xl font-bold mt-2">{{ $totalSchedules }}</p>
-                            <p class="text-sky-200 text-xs mt-1">Jadwal hari ini</p>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sky-100 text-xs sm:text-sm font-medium uppercase tracking-wide truncate">Total Jadwal</p>
+                            <p class="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2">{{ $totalSchedules }}</p>
+                            <p class="text-sky-200 text-xs mt-1 truncate">Jadwal hari ini</p>
                         </div>
-                        <div class="w-14 h-14 bg-sky-400 bg-opacity-30 rounded-xl flex items-center justify-center">
-                            <i data-lucide="calendar-days" class="w-6 h-6 text-white"></i>
+                        <div class="w-10 h-10 sm:w-14 sm:h-14 bg-sky-400 bg-opacity-30 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ml-2">
+                            <i data-lucide="calendar-days" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
                         </div>
                     </div>
                 </div>
@@ -248,7 +249,7 @@
 
             @if(isset($overnightOpenAttendances) && $overnightOpenAttendances->isNotEmpty())
             <!-- Overnight Open Attendances Alert -->
-            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+            <div class="bg-amber-50 border border-amber-200 rounded-xl sm:rounded-2xl p-4 sm:p-5">
                 <div class="flex items-start">
                     <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center mr-4">
                         <i data-lucide="moon" class="w-5 h-5 text-amber-700"></i>
@@ -261,7 +262,7 @@
                             </span>
                         </div>
                         <p class="text-sm text-amber-800 mb-3">Pengguna berikut masih tercatat check-in kemarin tanpa check-out. Sistem mengizinkan checkout pada hari ini untuk shift malam.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                             @foreach($overnightOpenAttendances as $oa)
                                 <div class="bg-white rounded-xl border border-amber-200 p-3">
                                     <div class="flex items-center justify-between mb-1">
@@ -295,26 +296,26 @@
             @endif
 
             <!-- Enhanced Table Card -->
-            <div class="bg-white rounded-2xl border-2 border-sky-100 overflow-hidden shadow-xl">
-                <div class="px-8 py-6 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h2 class="text-xl font-bold text-sky-900">Daftar Absensi Karyawan</h2>
-                            <p class="text-sky-700 mt-1">Data absensi untuk tanggal {{ $todayFormated }}</p>
+            <div class="bg-white rounded-xl sm:rounded-2xl border-2 border-sky-100 overflow-hidden shadow-xl">
+                <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div class="min-w-0">
+                            <h2 class="text-lg sm:text-xl font-bold text-sky-900">Daftar Absensi Karyawan</h2>
+                            <p class="text-xs sm:text-sm text-sky-700 mt-1 truncate">Data absensi untuk tanggal {{ $todayFormated }}</p>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <form method="GET" action="{{ route('admin.attendances.index') }}" class="flex items-center space-x-3">
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
+                            <form method="GET" action="{{ route('admin.attendances.index') }}" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                                 <!-- Search -->
-                                <div class="relative">
+                                <div class="relative flex-1 sm:flex-initial">
                                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari karyawan..." oninput="this.form.submit()"
-                                           class="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
-                                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                           class="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-xs sm:text-sm">
+                                    <svg class="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                     </svg>
                                 </div>
 
                                 <!-- Filter Status -->
-                                <select name="status" onchange="this.form.submit()" class="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                                <select name="status" onchange="this.form.submit()" class="w-full sm:w-auto px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-xs sm:text-sm">
                                     <option value="">Semua Status</option>
                                     <option value="hadir" {{ request('status') == 'hadir' ? 'selected' : '' }}>Hadir</option>
                                     <option value="telat" {{ request('status') == 'telat' ? 'selected' : '' }}>Telat</option>
@@ -326,7 +327,7 @@
 
                                 <!-- Reset -->
                                 @if(request('search') || request('status'))
-                                    <a href="{{ route('admin.attendances.index') }}" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition">
+                                    <a href="{{ route('admin.attendances.index') }}" class="inline-flex items-center justify-center px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm hover:bg-gray-300 transition whitespace-nowrap">
                                         Reset
                                     </a>
                                 @endif
@@ -335,11 +336,250 @@
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
+                <!-- Mobile Card View -->
+                <div class="block md:hidden space-y-4 px-4">
+                    @php $groups = $schedulesToday->groupBy('user_id'); @endphp
+                    @forelse($groups as $userId => $userSchedules)
+                        @php
+                            $user = optional($userSchedules->first())->user;
+                            $scheduleIds = $userSchedules->pluck('id');
+                            $attGroup = $attendances->whereIn('schedule_id', $scheduleIds);
+                            $permGroup = $permissions->whereIn('schedule_id', $scheduleIds);
+
+                            // Location: pick any available
+                            $firstWithLocation = $attGroup->first(function($a){ return $a && $a->location; });
+                            $location = $firstWithLocation ? $firstWithLocation->location : null;
+
+                            // Times
+                            $checkInTime = optional($attGroup->whereNotNull('check_in_time')->sortBy('check_in_time')->first())->check_in_time;
+                            $checkOutTime = optional($attGroup->whereNotNull('check_out_time')->sortByDesc('check_out_time')->first())->check_out_time;
+
+                            // Status priority: izin > early_checkout > telat > hadir > forgot_checkout > alpha
+                            $statusText = '-';
+                            if ($attGroup->where('status','izin')->isNotEmpty()) { $statusText = 'izin'; }
+                            elseif ($attGroup->where('status','early_checkout')->isNotEmpty()) { $statusText = 'early_checkout'; }
+                            elseif ($attGroup->where('status','telat')->isNotEmpty()) { $statusText = 'telat'; }
+                            elseif ($attGroup->where('status','hadir')->isNotEmpty()) { $statusText = 'hadir'; }
+                            elseif ($attGroup->where('status','forgot_checkout')->isNotEmpty()) { $statusText = 'forgot_checkout'; }
+                            elseif ($attGroup->isNotEmpty()) { $statusText = optional($attGroup->first())->status ?: '-'; }
+                            if ($statusText === '-' && $userSchedules->isNotEmpty() && $attGroup->isEmpty() && $permGroup->isEmpty()) {
+                                $statusText = 'alpha';
+                            }
+
+                            $statusColor = 'bg-gray-100 text-gray-700';
+                            if($statusText === 'hadir') { $statusColor = 'bg-green-100 text-green-800'; }
+                            if($statusText === 'telat') { $statusColor = 'bg-orange-100 text-orange-800'; }
+                            if($statusText === 'izin') { $statusColor = 'bg-yellow-100 text-yellow-800'; }
+                            if($statusText === 'early_checkout') { $statusColor = 'bg-amber-100 text-amber-800'; }
+                            if($statusText === 'forgot_checkout') { $statusColor = 'bg-rose-100 text-rose-800'; }
+                            if($statusText === 'alpha') { $statusColor = 'bg-red-100 text-red-800'; }
+
+                            $hasForgot = $attGroup->where('status','forgot_checkout')->isNotEmpty();
+                            $hasEarly  = $attGroup->where('status','early_checkout')->isNotEmpty();
+                            $wasLate   = $attGroup->filter(function($a){ return $a && $a->is_late; })->isNotEmpty() || $attGroup->where('status','telat')->isNotEmpty();
+                            $wasPresent= $attGroup->filter(function($a){ return $a && !is_null($a->check_in_time); })->isNotEmpty() || $attGroup->where('status','hadir')->isNotEmpty();
+                            $showStacked = ($hasForgot || $hasEarly) && ($wasLate || $wasPresent);
+                            $forgotColor = 'bg-rose-100 text-rose-800';
+                            $earlyColor  = 'bg-amber-100 text-amber-800';
+
+                            $order = ['Pagi' => 1, 'Siang' => 2, 'Malam' => 3];
+                            $sortedSchedules = $userSchedules->sortBy(function($s) use ($order){ return $order[$s->shift->category ?? ''] ?? 99; });
+
+                            $earlyPending = $permGroup->first(function($p){
+                                return $p->status === 'pending' && $p->type === 'izin' && is_string($p->reason) && preg_match('/^\[EARLY_CHECKOUT\]/', $p->reason);
+                            });
+                            $otherPending = $permGroup->first(function($p){
+                                return $p->status === 'pending' && (!$p->reason || !preg_match('/^\[EARLY_CHECKOUT\]/', (string)$p->reason));
+                            });
+                            $latestPerm = $permGroup->sortByDesc('created_at')->first();
+                            $isEarly = $latestPerm && is_string($latestPerm->reason ?? '') && preg_match('/^\[EARLY_CHECKOUT\]/', $latestPerm->reason);
+                        @endphp
+                        
+                        <div class="bg-white rounded-xl border-2 border-sky-100 p-4 shadow-sm hover:shadow-md transition-shadow">
+                            <!-- User Info -->
+                            <div class="flex items-center mb-4 pb-4 border-b border-gray-100">
+                                <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
+                                    <span class="text-sky-600 font-bold text-base">{{ substr($user->name ?? '-', 0, 1) }}</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-base font-bold text-gray-900 truncate">{{ $user->name ?? '-' }}</div>
+                                    <div class="text-xs text-gray-500 truncate">{{ $user->email ?? '-' }}</div>
+                                </div>
+                                @if($showStacked)
+                                    @php
+                                        $primaryText = $wasLate ? 'telat' : 'hadir';
+                                        $primaryColor = $wasLate ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800';
+                                    @endphp
+                                    <div class="flex flex-col gap-1">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $primaryColor }}">
+                                            {{ ucwords($primaryText) }}
+                                        </span>
+                                        @if($hasForgot)
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $forgotColor }}">
+                                                Forgot
+                                            </span>
+                                        @endif
+                                        @if($hasEarly)
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $earlyColor }}">
+                                                Early
+                                            </span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $statusColor }} flex-shrink-0">
+                                        {{ ucwords(str_replace('_',' ', $statusText)) }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            <!-- Details Grid -->
+                            <div class="space-y-3">
+                                <!-- Shift -->
+                                <div class="flex items-start">
+                                    <div class="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
+                                        <i data-lucide="clock" class="w-4 h-4 text-sky-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-xs text-gray-500 mb-1">Shift</div>
+                                        <div class="flex flex-wrap gap-1">
+                                            @foreach($sortedSchedules as $us)
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                                    @if($us->shift && $us->shift->category == 'Pagi') bg-yellow-100 text-yellow-800
+                                                    @elseif($us->shift && $us->shift->category == 'Siang') bg-orange-100 text-orange-800
+                                                    @elseif($us->shift && $us->shift->category == 'Malam') bg-indigo-100 text-indigo-800
+                                                    @else bg-gray-100 text-gray-800 @endif">
+                                                    {{ $us->shift->shift_name ?? '-' }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Location -->
+                                @if($location)
+                                <div class="flex items-start">
+                                    <div class="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
+                                        <i data-lucide="map-pin" class="w-4 h-4 text-sky-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-xs text-gray-500 mb-1">Lokasi</div>
+                                        <div class="text-sm font-semibold text-gray-900 truncate">{{ $location->name }}</div>
+                                        <div class="text-xs text-gray-500">{{ ucfirst($location->type ?? '-') }}</div>
+                                    </div>
+                                </div>
+                                @endif
+
+                                <!-- Check In/Out -->
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="flex items-start">
+                                        <div class="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
+                                            <i data-lucide="log-in" class="w-4 h-4 text-green-600"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-xs text-gray-500 mb-1">Check In</div>
+                                            @if($checkInTime)
+                                                <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($checkInTime)->format('H:i') }}</div>
+                                                <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($checkInTime)->format('d M') }}</div>
+                                            @else
+                                                <span class="text-xs text-gray-400">-</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-start">
+                                        <div class="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
+                                            <i data-lucide="log-out" class="w-4 h-4 text-red-600"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-xs text-gray-500 mb-1">Check Out</div>
+                                            @if($checkOutTime)
+                                                <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($checkOutTime)->format('H:i') }}</div>
+                                                <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($checkOutTime)->format('d M') }}</div>
+                                            @else
+                                                <span class="text-xs text-gray-400">-</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Permission/Notes -->
+                                @if($latestPerm)
+                                <div class="flex items-start">
+                                    <div class="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
+                                        <i data-lucide="message-circle" class="w-4 h-4 text-sky-600"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-xs text-gray-500 mb-1">Keterangan</div>
+                                        @php
+                                            $cleanReason = $isEarly
+                                                ? preg_replace('/^\[EARLY_CHECKOUT\]\s*/', '', (string)($latestPerm->reason ?? ''))
+                                                : ($latestPerm->reason ?? '');
+                                        @endphp
+                                        <div class="text-xs font-medium {{ $latestPerm->status === 'rejected' ? 'text-red-600' : ($latestPerm->status === 'pending' ? 'text-yellow-700' : 'text-gray-700') }}">
+                                            @if($isEarly)Early Checkout: @endif{{ $cleanReason }}
+                                        </div>
+                                        <div class="text-xs mt-1">
+                                            Status: <span class="font-semibold {{ $latestPerm->status === 'rejected' ? 'text-red-600' : ($latestPerm->status === 'pending' ? 'text-yellow-700' : 'text-green-700') }}">{{ ucfirst($latestPerm->status) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+
+                                <!-- Actions -->
+                                @if($earlyPending || $otherPending)
+                                <div class="pt-3 border-t border-gray-100 flex gap-2">
+                                    @if($earlyPending)
+                                        <form action="{{ route('admin.attendances.permission.approve', $earlyPending) }}" method="post" class="flex-1" onsubmit="return confirm('Setujui early checkout ini?')">
+                                            @csrf
+                                            <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
+                                                <i data-lucide="check" class="w-3 h-3 mr-1"></i>
+                                                Setujui
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('admin.attendances.permission.reject', $earlyPending) }}" method="post" class="flex-1" onsubmit="return confirm('Tolak early checkout ini?')">
+                                            @csrf
+                                            <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all">
+                                                <i data-lucide="x" class="w-3 h-3 mr-1"></i>
+                                                Tolak
+                                            </button>
+                                        </form>
+                                    @elseif($otherPending)
+                                        <form action="{{ route('admin.attendances.permission.approve', $otherPending) }}" method="post" class="flex-1" onsubmit="return confirm('Yakin ingin menyetujui izin ini?')">
+                                            @csrf
+                                            <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
+                                                <i data-lucide="check" class="w-3 h-3 mr-1"></i>
+                                                Setujui
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('admin.attendances.permission.reject', $otherPending) }}" method="post" class="flex-1" onsubmit="return confirm('Yakin ingin menolak izin ini?')">
+                                            @csrf
+                                            <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all">
+                                                <i data-lucide="x" class="w-3 h-3 mr-1"></i>
+                                                Tolak
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="bg-white rounded-xl border-2 border-sky-100 p-8 text-center">
+                            <div class="w-16 h-16 bg-gradient-to-br from-sky-100 to-sky-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="calendar-x" class="w-8 h-8 text-sky-400"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2">Belum ada data absensi</h3>
+                            <p class="text-sm text-gray-600">Data absensi untuk tanggal ini belum tersedia</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                <!-- Desktop Table View -->
+                <div class="hidden md:block overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-50 border-b-2 border-gray-200">
                             <tr>
-                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user text-sky-600 mr-2">
                                             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
@@ -348,7 +588,7 @@
                                         Nama Karyawan
                                     </div>
                                 </th>
-                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock text-sky-600 mr-2">
                                             <circle cx="12" cy="12" r="10"/>
@@ -357,15 +597,15 @@
                                         Shift
                                     </div>
                                 </th>
-                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
-                                        <i data-lucide="map-pin" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <i data-lucide="map-pin" class="w-4 h-4 text-sky-600 mr-1"></i>
                                         Lokasi
                                     </div>
                                 </th>
-                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in text-sky-600 mr-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in text-sky-600 mr-1">
                                             <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
                                             <polyline points="10 17 15 12 10 7"/>
                                             <line x1="15" x2="3" y1="12" y2="12"/>
@@ -373,9 +613,9 @@
                                         Check In
                                     </div>
                                 </th>
-                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out text-sky-600 mr-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out text-sky-600 mr-1">
                                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                                             <polyline points="16 17 21 12 16 7"/>
                                             <line x1="21" x2="9" y1="12" y2="12"/>
@@ -383,23 +623,23 @@
                                         Check Out
                                     </div>
                                 </th>
-                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-activity text-sky-600 mr-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-activity text-sky-600 mr-1">
                                             <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                                         </svg>
                                         Status
                                     </div>
                                 </th>
-                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     <div class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle text-sky-600 mr-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle text-sky-600 mr-1">
                                             <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
                                         </svg>
                                         Keterangan
                                     </div>
                                 </th>
-                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     Aksi
                                 </th>
                             </tr>
@@ -467,7 +707,7 @@
                                     $isEarly = $latestPerm && is_string($latestPerm->reason ?? '') && preg_match('/^\[EARLY_CHECKOUT\]/', $latestPerm->reason);
                                 @endphp
                                 <tr class="hover:bg-sky-50 transition-colors duration-200 group">
-                                    <td class="px-8 py-6 whitespace-nowrap">
+                                    <td class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-4 group-hover:from-sky-200 group-hover:to-sky-300 transition-colors">
                                                 <span class="text-sky-600 font-bold text-sm">{{ substr($user->name ?? '-', 0, 1) }}</span>
@@ -478,10 +718,10 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap">
-                                        <div class="flex flex-col space-y-2">
+                                    <td class="px-4 py-4 whitespace-nowrap">
+                                        <div class="flex flex-col space-y-1">
                                             @foreach($sortedSchedules as $us)
-                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
                                                     @if($us->shift && $us->shift->category == 'Pagi') bg-yellow-100 text-yellow-800
                                                     @elseif($us->shift && $us->shift->category == 'Siang') bg-orange-100 text-orange-800
                                                     @elseif($us->shift && $us->shift->category == 'Malam') bg-indigo-100 text-indigo-800
@@ -495,79 +735,79 @@
                                             @endforeach
                                         </div>
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap">
+                                    <td class="px-3 py-4 whitespace-nowrap">
                                         @if($location)
                                             <div class="flex items-center">
-                                                <div class="w-8 h-8 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center mr-3">
-                                                    <i data-lucide="map-pin" class="w-4 h-4 text-sky-600"></i>
+                                                <div class="w-7 h-7 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center mr-2">
+                                                    <i data-lucide="map-pin" class="w-3 h-3 text-sky-600"></i>
                                                 </div>
                                                 <div>
-                                                    <div class="text-sm font-semibold text-gray-900">{{ $location->name }}</div>
+                                                    <div class="text-xs font-semibold text-gray-900">{{ $location->name }}</div>
                                                     <div class="text-xs text-gray-500"><span class="uppercase">{{ ucfirst($location->type ?? '-') }}</span></div>
                                                 </div>
                                             </div>
                                         @else
-                                            <span class="text-gray-400 text-sm">-</span>
+                                            <span class="text-gray-400 text-xs">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap">
+                                    <td class="px-3 py-4 whitespace-nowrap">
                                         @if($checkInTime)
                                             <div class="flex items-start">
-                                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                                                    <i data-lucide="log-in" class="w-4 h-4 text-green-600"></i>
+                                                <div class="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
+                                                    <i data-lucide="log-in" class="w-3 h-3 text-green-600"></i>
                                                 </div>
                                                 <div>
-                                                    <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($checkInTime)->format('H:i') }}</div>
-                                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($checkInTime)->format('d M Y') }}</div>
+                                                    <div class="text-xs font-semibold text-gray-900">{{ \Carbon\Carbon::parse($checkInTime)->format('H:i') }}</div>
+                                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($checkInTime)->format('d M') }}</div>
                                                 </div>
                                             </div>
                                         @else
-                                            <span class="text-gray-400 text-sm">-</span>
+                                            <span class="text-gray-400 text-xs">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap">
+                                    <td class="px-3 py-4 whitespace-nowrap">
                                         @if($checkOutTime)
                                             <div class="flex items-start">
-                                                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                                                    <i data-lucide="log-out" class="w-4 h-4 text-red-600"></i>
+                                                <div class="w-7 h-7 bg-red-100 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
+                                                    <i data-lucide="log-out" class="w-3 h-3 text-red-600"></i>
                                                 </div>
                                                 <div>
-                                                    <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($checkOutTime)->format('H:i') }}</div>
-                                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($checkOutTime)->format('d M Y') }}</div>
+                                                    <div class="text-xs font-semibold text-gray-900">{{ \Carbon\Carbon::parse($checkOutTime)->format('H:i') }}</div>
+                                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($checkOutTime)->format('d M') }}</div>
                                                 </div>
                                             </div>
                                         @else
-                                            <span class="text-gray-400 text-sm">-</span>
+                                            <span class="text-gray-400 text-xs">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap">
+                                    <td class="px-3 py-4 whitespace-nowrap">
                                         @if($showStacked)
                                             @php
                                                 $primaryText = $wasLate ? 'telat' : 'hadir';
                                                 $primaryColor = $wasLate ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800';
                                             @endphp
                                             <div class="flex flex-col space-y-1">
-                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $primaryColor }}">
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $primaryColor }}">
                                                     {{ ucwords($primaryText) }}
                                                 </span>
                                                 @if($hasForgot)
-                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $forgotColor }}">
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $forgotColor }}">
                                                         Forgot Checkout
                                                     </span>
                                                 @endif
                                                 @if($hasEarly)
-                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $earlyColor }}">
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $earlyColor }}">
                                                         Early Checkout
                                                     </span>
                                                 @endif
                                             </div>
                                         @else
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $statusColor }}">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $statusColor }}">
                                                 {{ ucwords(str_replace('_',' ', $statusText)) }}
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap text-sm text-gray-700">
+                                    <td class="px-3 py-4 text-xs text-gray-700">
                                         @if($latestPerm)
                                             @php
                                                 $cleanReason = $isEarly
@@ -593,13 +833,13 @@
                                             <span class="text-gray-400">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-8 py-6 whitespace-nowrap text-left">
-                                        <div class="flex items-center justify-start space-x-2">
+                                    <td class="px-3 py-4 whitespace-nowrap text-left">
+                                        <div class="flex items-center justify-start space-x-1">
                                             @if($earlyPending)
                                                 <form action="{{ route('admin.attendances.permission.approve', $earlyPending) }}" method="post" class="inline" onsubmit="return confirm('Setujui early checkout ini?')">
                                                     @csrf
-                                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200 hover:scale-105">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
+                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
                                                             <polyline points="20 6 9 17 4 12"/>
                                                         </svg>
                                                         Setujui
@@ -607,8 +847,8 @@
                                                 </form>
                                                 <form action="{{ route('admin.attendances.permission.reject', $earlyPending) }}" method="post" class="inline" onsubmit="return confirm('Tolak early checkout ini?')">
                                                     @csrf
-                                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200 hover:scale-105">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
+                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
                                                             <path d="M18 6 6 18"/>
                                                             <path d="m6 6 12 12"/>
                                                         </svg>
@@ -618,8 +858,8 @@
                                             @elseif($otherPending)
                                                 <form action="{{ route('admin.attendances.permission.approve', $otherPending) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menyetujui izin ini?')">
                                                     @csrf
-                                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200 hover:scale-105">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
+                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
                                                             <polyline points="20 6 9 17 4 12"/>
                                                         </svg>
                                                         Setujui
@@ -627,8 +867,8 @@
                                                 </form>
                                                 <form action="{{ route('admin.attendances.permission.reject', $otherPending) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menolak izin ini?')">
                                                     @csrf
-                                                    <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200 hover:scale-105">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
+                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
                                                             <path d="M18 6 6 18"/>
                                                             <path d="m6 6 12 12"/>
                                                         </svg>
@@ -643,7 +883,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-8 py-16 text-center">
+                                    <td colspan="8" class="px-4 py-12 text-center">
                                         <div class="flex flex-col items-center">
                                             <div class="w-20 h-20 bg-gradient-to-br from-sky-100 to-sky-200 rounded-full flex items-center justify-center mb-6">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-x text-sky-400">
