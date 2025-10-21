@@ -27,7 +27,7 @@
             <div class="relative bg-gradient-to-r from-sky-500 to-sky-600 h-32">
                 <div class="absolute -bottom-12 left-6">
                     <div
-                        class="w-24 h-24 rounded-full bg-sky-200 backdrop-blur-sm flex items-center justify-center border-4 border-white shadow-lg">
+                        class="w-24 h-24 rounded-3xl bg-sky-200 backdrop-blur-sm flex items-center justify-center border-4 border-white shadow-lg">
                         <span class="text-2xl font-bold text-sky-600">
                             {{ App\Http\Controllers\Admin\ProfileController::getUserInitials($user->name) }}
                         </span>
@@ -88,8 +88,8 @@
                             <div class="text-gray-900 font-medium">••••••••••••</div>
                         </div>
                         <button type="button" onclick="openChangePasswordModal()"
-                            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors duration-200">
-                            Edit
+                            class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                            Change Password
                         </button>
                     </div>
                 </div>

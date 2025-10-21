@@ -74,7 +74,7 @@
                     </div>
                     <button type="button" onclick="openChangePasswordModal()"
                         class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm font-medium rounded-lg transition-colors">
-                        Change
+                        Change Password
                     </button>
                 </div>
             </div>
