@@ -27,14 +27,14 @@
                                 class="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-xs sm:text-sm">
                             <i data-lucide="calendar" class="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
                         </div>
-                        <button type="submit" class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-xl transition-all text-xs sm:text-sm whitespace-nowrap">
+                        <button type="submit" class="inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-xl transition-all text-xs sm:text-sm whitespace-nowrap">
                             <i data-lucide="search" class="w-3 h-3 sm:w-4 sm:h-4 mr-1"></i>
-                            <span class="hidden xs:inline">Filter</span>
+                            <span class="xs:inline">Filter</span>
                         </button>
                     </form>
                     
                     <a href="{{ route('admin.attendances.history') }}"
-                       class="inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm hover:shadow-md text-xs sm:text-sm whitespace-nowrap">
+                       class="inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-medium rounded-xl transition-all transform focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm hover:shadow-md text-xs sm:text-sm whitespace-nowrap">
                         <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2"></i>
                         <span class="hidden sm:inline">Riwayat Absensi</span>
                         <span class="sm:hidden">Riwayat</span>
@@ -191,7 +191,7 @@
                                         </div>
 
                                         <!-- Export Button -->
-                                        <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105">
+                                        <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg transition-all duration-200">
                                             <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1"></i>
                                             Export
                                         </button>

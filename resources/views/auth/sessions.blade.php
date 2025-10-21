@@ -23,7 +23,7 @@
                 </div>
             </div>
             <button onclick="refreshSessions()" 
-                class="inline-flex items-center px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-200 shadow-lg hover:shadow-xl border border-gray-200">
+                class="inline-flex items-center px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-xl transition-all duration-200 transform   focus:outline-none focus:ring-4 focus:ring-gray-200 shadow-lg hover:shadow-xl border border-gray-200">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                     class="lucide lucide-refresh-cw mr-2">
@@ -65,7 +65,7 @@
                         <p class="text-gray-600 mt-1">Sessions active in the last 2 hours</p>
                     </div>
                     <button onclick="logoutAllSessions()" 
-                        class="inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
+                        class="inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200  ">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                             class="lucide lucide-log-out mr-2">
@@ -98,7 +98,7 @@
                         <p class="text-gray-600 mt-1">Devices with active "Remember Me" tokens</p>
                     </div>
                     <button onclick="revokeAllTokens()" 
-                        class="inline-flex items-center px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
+                        class="inline-flex items-center px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 font-semibold text-sm rounded-lg transition-all duration-200  ">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                             class="lucide lucide-shield-x mr-2">
@@ -166,7 +166,7 @@ async function loadSessions() {
                         </div>
                         ${!session.is_current ? `
                             <button onclick="terminateSession(${session.id})" 
-                                class="inline-flex items-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200 hover:scale-105">
+                                class="inline-flex items-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200  ">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                                     class="lucide lucide-x mr-1">

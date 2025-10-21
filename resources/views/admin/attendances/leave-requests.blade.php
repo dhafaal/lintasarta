@@ -354,7 +354,7 @@
                                     <td class="px-8 py-6 whitespace-nowrap text-left">
                                         <div class="flex items-center space-x-2">
                                             <button type="button" onclick="viewLeaveRequest({{ $request->id }})"
-                                                class="inline-flex items-center px-3 py-1.5 bg-sky-100 hover:bg-sky-200 text-sky-700 text-xs font-semibold rounded-lg transition-all duration-200 hover:scale-105">
+                                                class="inline-flex items-center px-3 py-1.5 bg-sky-100 hover:bg-sky-200 text-sky-700 text-xs font-semibold rounded-lg transition-all duration-200  ">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -368,7 +368,7 @@
                                             @if ($request->status === 'pending')
                                                 <button type="button"
                                                     onclick="processLeaveRequest({{ $request->id }}, 'approve')"
-                                                    class="inline-flex items-center px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 text-xs font-semibold rounded-lg transition-all duration-200 hover:scale-105">
+                                                    class="inline-flex items-center px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 text-xs font-semibold rounded-lg transition-all duration-200  ">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -380,7 +380,7 @@
 
                                                 <button type="button"
                                                     onclick="processLeaveRequest({{ $request->id }}, 'reject')"
-                                                    class="inline-flex items-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded-lg transition-all duration-200 hover:scale-105">
+                                                    class="inline-flex items-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded-lg transition-all duration-200  ">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"

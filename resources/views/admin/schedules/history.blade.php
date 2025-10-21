@@ -49,7 +49,7 @@
                     </div>
                     
                     <div class="flex items-end">
-                        <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm hover:shadow-md">
+                        <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl transition-all transform   focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm hover:shadow-md">
                             <i data-lucide="search" class="w-5 h-5 mr-2"></i>
                             Filter Data
                         </button>
@@ -334,7 +334,7 @@
                                         <h3 class="text-xl font-bold text-gray-900 mb-2">Belum ada riwayat jadwal</h3>
                                         <p class="text-gray-600 mb-6 max-w-sm">Tidak ada riwayat jadwal untuk periode yang dipilih</p>
                                         <a href="{{ route('admin.schedules.create') }}"
-                                            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg">
+                                            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all duration-200 transform   shadow-lg">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus mr-2">
                                                 <path d="M12 5v14"/>
                                                 <path d="M5 12h14"/>

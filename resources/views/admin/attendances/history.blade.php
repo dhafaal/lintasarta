@@ -121,7 +121,7 @@
 
                     <!-- Filter Button -->
                     <div class="flex justify-center">
-                        <button type="submit" class="inline-flex items-center px-8 py-3 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm hover:shadow-md">
+                        <button type="submit" class="inline-flex items-center px-8 py-3 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl transition-all transform   focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm hover:shadow-md">
                             <i data-lucide="search" class="w-5 h-5 mr-2"></i>
                             Filter Data
                         </button>

@@ -80,13 +80,7 @@ class DashboardController extends Controller
         })->where('status', 'izin')->count();
 
         $todayAlpha = max(0, $todaySchedules - ($todayHadir + $todayTelat + $todayIzin));
-        
-        // Get permissions data
-        $pendingPermissions = Permissions::where('status', 'pending')->count();
-        $approvedPermissions = Permissions::where('status', 'approved')->count();
-        $rejectedPermissions = Permissions::where('status', 'rejected')->count();
-        $leaveRequests = Permissions::where('type', 'cuti')->count();
-        
+
         return view('admin.dashboard', [
             'totalUsers'       => User::where('role', '!=', 'Admin')->count(),
             'totalShifts'      => Shift::count(),
@@ -98,10 +92,6 @@ class DashboardController extends Controller
             'todayTelat'       => $todayTelat,
             'todayIzin'        => $todayIzin,
             'todayAlpha'       => $todayAlpha,
-            'pendingPermissions' => $pendingPermissions,
-            'approvedPermissions' => $approvedPermissions,
-            'rejectedPermissions' => $rejectedPermissions,
-            'leaveRequests'    => $leaveRequests,
             'currentMonth'     => $monthDate->format('F Y'),
             'selectedMonth'    => $selectedMonth,
             'selectedYear'     => $selectedYear
