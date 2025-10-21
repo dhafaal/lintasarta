@@ -79,24 +79,15 @@
                             <p class="text-sky-700 mt-1">Semua lokasi yang tersedia untuk absensi karyawan</p>
                         </div>
                         <div class="flex items-center space-x-3">
-                            <form method="GET" action="{{ route('admin.locations.index') }}" class="flex items-center space-x-3">
-                                <div class="relative">
-                                    <input type="text" name="search" value="{{ request('search') }}"
-                                        placeholder="Cari lokasi..."
-                                        class="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm transition-all duration-200">
-                                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                    </svg>
-                                </div>
-                                @if (request('search'))
-                                    <a href="{{ route('admin.locations.index') }}"
-                                        class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition-all duration-200">
-                                        Reset
-                                    </a>
-                                @endif
-                            </form>
+                            <div class="relative">
+                                <input type="text" id="searchInput" placeholder="Cari lokasi..."
+                                    class="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm transition-all duration-200 w-64">
+                                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -284,6 +275,54 @@
             if(confirm('Yakin ingin menghapus lokasi terpilih?')){
                 submitBulk("{{ route('admin.locations.bulk-delete') }}");
             }
+        });
+
+        // Realtime search functionality
+        const searchInput = document.getElementById('searchInput');
+        
+        function filterLocations() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const visibleBody = bodyWfo.classList.contains('hidden') ? bodyWfa : bodyWfo;
+            const rows = visibleBody.querySelectorAll('tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                // Skip empty state row
+                if (row.querySelector('td[colspan]')) {
+                    return;
+                }
+
+                const locationName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+                const coordinates = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+                const radiusStatus = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+
+                const matches = locationName.includes(searchTerm) || 
+                              coordinates.includes(searchTerm) ||
+                              radiusStatus.includes(searchTerm);
+
+                if (matches) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show/hide empty state
+            const emptyRow = visibleBody.querySelector('tr td[colspan]')?.parentElement;
+            if (emptyRow) {
+                emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+            }
+        }
+
+        searchInput?.addEventListener('input', filterLocations);
+        
+        // Re-filter when switching tabs
+        tabWfo?.addEventListener('click', () => {
+            setTimeout(filterLocations, 100);
+        });
+        tabWfa?.addEventListener('click', () => {
+            setTimeout(filterLocations, 100);
         });
     })();
 </script>

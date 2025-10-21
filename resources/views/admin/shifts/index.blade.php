@@ -79,39 +79,25 @@
                             <p class="text-sky-700 mt-1">Kelola dan atur semua shift kerja</p>
                         </div>
                         <div class="flex items-center space-x-3">
-                            <form method="GET" action="{{ route('admin.shifts.index') }}"
-                                class="flex items-center space-x-3">
-                                <!-- Search -->
-                                <div class="relative">
-                                    <input type="text" name="search" value="{{ request('search') }}"
-                                        placeholder="Cari shift..." oninput="this.form.submit()"
-                                        class="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
-                                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                    </svg>
-                                </div>
+                            <!-- Search -->
+                            <div class="relative">
+                                <input type="text" id="searchInput" placeholder="Cari shift..."
+                                    class="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm w-64">
+                                <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
 
-                                <!-- Filter Dropdown -->
-                                <select name="filter" onchange="this.form.submit()"
-                                    class="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
-                                    <option value="">Semua Shift</option>
-                                    <option value="Pagi" {{ request('filter') == 'Pagi' ? 'selected' : '' }}>Pagi</option>
-                                    <option value="Siang" {{ request('filter') == 'Siang' ? 'selected' : '' }}>Siang
-                                    </option>
-                                    <option value="Malam" {{ request('filter') == 'Malam' ? 'selected' : '' }}>Malam
-                                    </option>
-                                </select>
-
-                                <!-- Reset -->
-                                @if (request('search') || request('filter'))
-                                    <a href="{{ route('admin.shifts.index') }}"
-                                        class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition">
-                                        Reset
-                                    </a>
-                                @endif
-                            </form>
+                            <!-- Filter Dropdown -->
+                            <select id="filterSelect"
+                                class="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                                <option value="">Semua Shift</option>
+                                <option value="Pagi">Pagi</option>
+                                <option value="Siang">Siang</option>
+                                <option value="Malam">Malam</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -340,4 +326,53 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const filterSelect = document.getElementById('filterSelect');
+            const tableRows = document.querySelectorAll('tbody tr');
+
+            function filterTable() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const filterValue = filterSelect.value.toLowerCase();
+                let visibleCount = 0;
+
+                tableRows.forEach(row => {
+                    // Skip empty state row
+                    if (row.querySelector('td[colspan]')) {
+                        return;
+                    }
+
+                    const shiftName = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
+                    const category = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+                    const startTime = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+                    const endTime = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+
+                    const matchesSearch = shiftName.includes(searchTerm) || 
+                                        category.includes(searchTerm) ||
+                                        startTime.includes(searchTerm) ||
+                                        endTime.includes(searchTerm);
+                    
+                    const matchesFilter = !filterValue || category.includes(filterValue);
+
+                    if (matchesSearch && matchesFilter) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Show/hide empty state
+                const emptyRow = document.querySelector('tbody tr td[colspan]')?.parentElement;
+                if (emptyRow) {
+                    emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+                }
+            }
+
+            searchInput.addEventListener('input', filterTable);
+            filterSelect.addEventListener('change', filterTable);
+        });
+    </script>
 @endsection

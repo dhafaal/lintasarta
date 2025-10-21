@@ -77,14 +77,20 @@
                         </div>
                         <div class="flex items-center space-x-3">
                             <div class="relative">
-                                <input type="text" placeholder="Cari user..."
-                                    class="pl-10 pr-4 bg-white py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                                <input type="text" id="searchInput" placeholder="Cari user..."
+                                    class="pl-10 pr-4 bg-white py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm w-64">
                                 <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
                             </div>
+                            <select id="roleFilter"
+                                class="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
+                                <option value="">Semua Role</option>
+                                <option value="admin">Admin</option>
+                                <option value="user">User</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -189,4 +195,51 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const roleFilter = document.getElementById('roleFilter');
+            const tableRows = document.querySelectorAll('tbody tr');
+
+            function filterTable() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const roleValue = roleFilter.value.toLowerCase();
+                let visibleCount = 0;
+
+                tableRows.forEach(row => {
+                    // Skip empty state row
+                    if (row.querySelector('td[colspan]')) {
+                        return;
+                    }
+
+                    const userName = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
+                    const userRole = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+                    const joinDate = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+
+                    const matchesSearch = userName.includes(searchTerm) || 
+                                        userRole.includes(searchTerm) ||
+                                        joinDate.includes(searchTerm);
+                    
+                    const matchesRole = !roleValue || userRole.includes(roleValue);
+
+                    if (matchesSearch && matchesRole) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Show/hide empty state
+                const emptyRow = document.querySelector('tbody tr td[colspan]')?.parentElement;
+                if (emptyRow) {
+                    emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+                }
+            }
+
+            searchInput.addEventListener('input', filterTable);
+            roleFilter.addEventListener('change', filterTable);
+        });
+    </script>
 @endsection

@@ -304,34 +304,25 @@
                             <p class="text-xs sm:text-sm text-sky-700 mt-1 truncate">Data absensi untuk tanggal {{ $todayFormated }}</p>
                         </div>
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
-                            <form method="GET" action="{{ route('admin.attendances.index') }}" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                                <!-- Search -->
-                                <div class="relative flex-1 sm:flex-initial">
-                                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari karyawan..." oninput="this.form.submit()"
-                                           class="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-xs sm:text-sm">
-                                    <svg class="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                    </svg>
-                                </div>
+                            <!-- Search -->
+                            <div class="relative flex-1 sm:flex-initial">
+                                <input type="text" id="searchInput" placeholder="Cari karyawan..."
+                                       class="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-xs sm:text-sm">
+                                <svg class="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
 
-                                <!-- Filter Status -->
-                                <select name="status" onchange="this.form.submit()" class="w-full sm:w-auto px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-xs sm:text-sm">
-                                    <option value="">Semua Status</option>
-                                    <option value="hadir" {{ request('status') == 'hadir' ? 'selected' : '' }}>Hadir</option>
-                                    <option value="telat" {{ request('status') == 'telat' ? 'selected' : '' }}>Telat</option>
-                                    <option value="izin" {{ request('status') == 'izin' ? 'selected' : '' }}>Izin</option>
-                                    <option value="early_checkout" {{ request('status') == 'early_checkout' ? 'selected' : '' }}>Early Checkout</option>
-                                    <option value="forgot_checkout" {{ request('status') == 'forgot_checkout' ? 'selected' : '' }}>Forgot Checkout</option>
-                                    <option value="alpha" {{ request('status') == 'alpha' ? 'selected' : '' }}>Alpha</option>
-                                </select>
-
-                                <!-- Reset -->
-                                @if(request('search') || request('status'))
-                                    <a href="{{ route('admin.attendances.index') }}" class="inline-flex items-center justify-center px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-xs sm:text-sm hover:bg-gray-300 transition whitespace-nowrap">
-                                        Reset
-                                    </a>
-                                @endif
-                            </form>
+                            <!-- Filter Status -->
+                            <select id="statusFilter" class="w-full sm:w-auto px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-xs sm:text-sm">
+                                <option value="">Semua Status</option>
+                                <option value="hadir">Hadir</option>
+                                <option value="telat">Telat</option>
+                                <option value="izin">Izin</option>
+                                <option value="early_checkout">Early Checkout</option>
+                                <option value="forgot_checkout">Forgot Checkout</option>
+                                <option value="alpha">Alpha</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -1063,6 +1054,87 @@
                 hideExportLoadingState();
                 hideExportNoResultsState();
             }
+
+            // Realtime search and filter for attendance table
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+
+            function filterAttendances() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const statusValue = statusFilter.value.toLowerCase();
+                let visibleCount = 0;
+
+                // Filter table rows (desktop view)
+                const tableRows = document.querySelectorAll('tbody tr:not([class*="empty"])');
+                tableRows.forEach(row => {
+                    // Skip if it's an empty state row
+                    if (row.querySelector('td[colspan]')) {
+                        return;
+                    }
+
+                    const userName = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
+                    const shift = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+                    const location = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+                    const checkIn = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+                    const checkOut = row.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || '';
+                    const status = row.querySelector('td:nth-child(6)')?.textContent.toLowerCase() || '';
+
+                    const matchesSearch = userName.includes(searchTerm) || 
+                                        shift.includes(searchTerm) ||
+                                        location.includes(searchTerm) ||
+                                        status.includes(searchTerm) ||
+                                        checkIn.includes(searchTerm) ||
+                                        checkOut.includes(searchTerm);
+                    
+                    const matchesStatus = !statusValue || status.includes(statusValue);
+
+                    if (matchesSearch && matchesStatus) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Filter mobile cards
+                const mobileContainer = document.querySelector('.block.md\\:hidden.space-y-4');
+                if (mobileContainer) {
+                    const mobileCards = mobileContainer.querySelectorAll('.bg-white.rounded-xl');
+                    mobileCards.forEach(card => {
+                        // Skip empty state
+                        if (card.querySelector('[data-lucide="calendar-x"]')) {
+                            return;
+                        }
+
+                        const userName = card.querySelector('.text-base.font-bold')?.textContent.toLowerCase() || '';
+                        const statusBadges = Array.from(card.querySelectorAll('.inline-flex.items-center.px-2, .inline-flex.items-center.px-3'))
+                            .map(badge => badge.textContent.toLowerCase()).join(' ');
+                        const allText = card.textContent.toLowerCase();
+
+                        const matchesSearch = userName.includes(searchTerm) || 
+                                            statusBadges.includes(searchTerm) ||
+                                            allText.includes(searchTerm);
+                        
+                        const matchesStatus = !statusValue || statusBadges.includes(statusValue);
+
+                        if (matchesSearch && matchesStatus) {
+                            card.style.display = '';
+                            visibleCount++;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                }
+
+                // Show/hide empty state
+                const emptyRow = document.querySelector('tbody tr td[colspan]')?.parentElement;
+                if (emptyRow) {
+                    emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+                }
+            }
+
+            searchInput?.addEventListener('input', filterAttendances);
+            statusFilter?.addEventListener('change', filterAttendances);
         });
     </script>
 @endsection
