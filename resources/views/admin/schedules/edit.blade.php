@@ -592,7 +592,7 @@
         function initializeShiftSearch() {
             const shiftsData = [
                 @foreach ($shifts as $shift)
-                    { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
+                    { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}", category: "{{ $shift->category }}" },
                 @endforeach
             ];
             
@@ -701,7 +701,7 @@
         function updateSecondShiftOptions(day, firstShiftId) {
             const shiftsData = [
                 @foreach ($shifts as $shift)
-                    { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
+                    { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}", category: "{{ $shift->category }}" },
                 @endforeach
             ];
             
@@ -709,13 +709,19 @@
             if (!shift2Container) return;
             
             const dropdown = shift2Container.querySelector('.shift-dropdown');
-            const currentValue = shift2Container.querySelector('.shift-value').value;
+            const searchInput = shift2Container.querySelector('.shift-search-input');
+            const hiddenInput = shift2Container.querySelector('.shift-value');
+            const currentValue = hiddenInput.value;
             
-            // Rebuild options excluding first shift
-            dropdown.innerHTML = '<div class="shift-option px-2 py-1 hover:bg-green-50 cursor-pointer text-xs" data-value="">-- Kosongkan --</div>';
-            
-            shiftsData.forEach(shift => {
-                if (shift.id !== firstShiftId) {
+            // If no first shift selected, reset shift 2 to normal state
+            if (!firstShiftId || firstShiftId === '') {
+                searchInput.disabled = false;
+                searchInput.placeholder = 'Shift 2...';
+                searchInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                
+                // Show all shifts
+                dropdown.innerHTML = '<div class="shift-option px-2 py-1 hover:bg-green-50 cursor-pointer text-xs" data-value="">-- Kosongkan --</div>';
+                shiftsData.forEach(shift => {
                     const optionDiv = document.createElement('div');
                     optionDiv.className = 'shift-option px-2 py-1 hover:bg-green-50 cursor-pointer text-xs';
                     optionDiv.setAttribute('data-value', shift.id);
@@ -723,9 +729,60 @@
                     optionDiv.textContent = shift.name;
                     
                     optionDiv.addEventListener('click', function() {
-                        const searchInput = shift2Container.querySelector('.shift-search-input');
-                        const hiddenInput = shift2Container.querySelector('.shift-value');
-                        
+                        hiddenInput.value = this.getAttribute('data-value');
+                        searchInput.value = this.getAttribute('data-name') || '';
+                        dropdown.classList.add('hidden');
+                    });
+                    
+                    dropdown.appendChild(optionDiv);
+                });
+                return;
+            }
+            
+            // Find selected first shift
+            const selectedFirstShift = shiftsData.find(s => s.id == firstShiftId);
+            
+            // Determine allowed category for shift 2 based on shift 1 category
+            let allowedCategory = null;
+            if (selectedFirstShift) {
+                if (selectedFirstShift.category === 'Pagi') {
+                    allowedCategory = 'Siang';
+                } else if (selectedFirstShift.category === 'Siang') {
+                    allowedCategory = 'Malam';
+                } else if (selectedFirstShift.category === 'Malam') {
+                    allowedCategory = null; // No shift 2 allowed
+                }
+            }
+            
+            // If Malam shift selected, disable shift 2
+            if (allowedCategory === null && selectedFirstShift) {
+                searchInput.disabled = true;
+                searchInput.placeholder = 'Tidak ada shift 2';
+                searchInput.value = '';
+                hiddenInput.value = '';
+                searchInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+                dropdown.innerHTML = '';
+                return;
+            } else {
+                // Enable shift 2
+                searchInput.disabled = false;
+                searchInput.placeholder = 'Shift 2...';
+                searchInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
+            
+            // Rebuild options with category filter
+            dropdown.innerHTML = '<div class="shift-option px-2 py-1 hover:bg-green-50 cursor-pointer text-xs" data-value="">-- Kosongkan --</div>';
+            
+            shiftsData.forEach(shift => {
+                // Only show shifts that match allowed category
+                if (shift.category === allowedCategory) {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'shift-option px-2 py-1 hover:bg-green-50 cursor-pointer text-xs';
+                    optionDiv.setAttribute('data-value', shift.id);
+                    optionDiv.setAttribute('data-name', shift.name);
+                    optionDiv.textContent = shift.name;
+                    
+                    optionDiv.addEventListener('click', function() {
                         hiddenInput.value = this.getAttribute('data-value');
                         searchInput.value = this.getAttribute('data-name') || '';
                         dropdown.classList.add('hidden');
@@ -735,10 +792,11 @@
                 }
             });
             
-            // Clear shift 2 if it was the same as shift 1
-            if (currentValue === firstShiftId) {
-                shift2Container.querySelector('.shift-value').value = '';
-                shift2Container.querySelector('.shift-search-input').value = '';
+            // Clear shift 2 if current value is not in allowed category
+            const currentShift = shiftsData.find(s => s.id == currentValue);
+            if (currentShift && currentShift.category !== allowedCategory) {
+                hiddenInput.value = '';
+                searchInput.value = '';
             }
         }
 
