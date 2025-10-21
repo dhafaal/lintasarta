@@ -467,20 +467,38 @@
                     <div class="p-2 bg-gray-50 border border-gray-200 rounded-lg flex flex-col items-center hover:shadow-sm transition-shadow duration-200">
                         <span class="text-sm font-semibold text-gray-700 mb-1">${day}</span>
                         <div class="w-full space-y-1">
-                            <select name="shifts[${day}][]" data-day="${day}" data-shift-position="1" onchange="updateSecondDropdown(${day})"
-                                class="shift-dropdown-1 w-full px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-sky-500 focus:border-sky-500 bg-white transition-colors duration-150">
-                                <option value="">-- Shift 1 --</option>
-                                @foreach ($shifts as $shift)
-                                    <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift_name }}" ${shift1Selected == '{{ $shift->id }}' ? 'selected' : ''}>{{ $shift->shift_name }}</option>
-                                @endforeach
-                            </select>
-                            <select name="shifts[${day}][]" data-day="${day}" data-shift-position="2" id="shift2-${day}"
-                                class="shift-dropdown-2 w-full px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500 bg-white transition-colors duration-150">
-                                <option value="">-- Shift 2 --</option>
-                                @foreach ($shifts as $shift)
-                                    <option value="{{ $shift->id }}" data-shift-name="{{ $shift->shift_name }}" ${shift2Selected == '{{ $shift->id }}' ? 'selected' : ''}>{{ $shift->shift_name }}</option>
-                                @endforeach
-                            </select>
+                            <!-- Shift 1 with Search -->
+                            <div class="relative shift-search-container" data-day="${day}" data-position="1">
+                                <input type="text" 
+                                    class="shift-search-input w-full px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-sky-500 focus:border-sky-500 bg-white"
+                                    placeholder="Shift 1..."
+                                    data-day="${day}" 
+                                    data-position="1"
+                                    autocomplete="off">
+                                <input type="hidden" name="shifts[${day}][]" class="shift-value" data-day="${day}" data-position="1" value="${shift1Selected}">
+                                <div class="shift-dropdown absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-32 overflow-y-auto hidden">
+                                    <div class="shift-option px-2 py-1 hover:bg-sky-50 cursor-pointer text-xs" data-value="">-- Kosongkan --</div>
+                                    @foreach ($shifts as $shift)
+                                        <div class="shift-option px-2 py-1 hover:bg-sky-50 cursor-pointer text-xs" data-value="{{ $shift->id }}" data-name="{{ $shift->shift_name }}">{{ $shift->shift_name }}</div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <!-- Shift 2 with Search -->
+                            <div class="relative shift-search-container" data-day="${day}" data-position="2">
+                                <input type="text" 
+                                    class="shift-search-input w-full px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500 bg-white"
+                                    placeholder="Shift 2..."
+                                    data-day="${day}" 
+                                    data-position="2"
+                                    autocomplete="off">
+                                <input type="hidden" name="shifts[${day}][]" class="shift-value" data-day="${day}" data-position="2" value="${shift2Selected}">
+                                <div class="shift-dropdown absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-32 overflow-y-auto hidden">
+                                    <div class="shift-option px-2 py-1 hover:bg-green-50 cursor-pointer text-xs" data-value="">-- Kosongkan --</div>
+                                    @foreach ($shifts as $shift)
+                                        <div class="shift-option px-2 py-1 hover:bg-green-50 cursor-pointer text-xs" data-value="{{ $shift->id }}" data-name="{{ $shift->shift_name }}">{{ $shift->shift_name }}</div>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -494,6 +512,9 @@
                 calendarContainer.innerHTML = html;
                 document.getElementById("daysInfo").textContent =
                     `${data.monthName} ${data.year} memiliki ${data.daysInMonth} hari.`;
+                
+                // Initialize shift search functionality
+                initializeShiftSearch();
             }
 
             monthSelect.addEventListener("change", function() {
@@ -507,6 +528,15 @@
             
             loadCalendar();
             loadExistingSchedules();
+            
+            // Global click outside handler - only register once
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.shift-search-container')) {
+                    document.querySelectorAll('.shift-dropdown').forEach(dropdown => {
+                        dropdown.classList.add('hidden');
+                    });
+                }
+            });
 
             // User Search Functionality - Declare variables first
             const userSearchInput = document.getElementById('user_search');
@@ -727,6 +757,22 @@
                     userValidationError.classList.add('hidden');
                 }
                 
+                // Check if at least one shift is selected
+                const allShiftValues = document.querySelectorAll('#calendarDays .shift-value');
+                let hasSchedule = false;
+                
+                allShiftValues.forEach(input => {
+                    if (input.value && input.value !== '') {
+                        hasSchedule = true;
+                    }
+                });
+                
+                if (!hasSchedule) {
+                    e.preventDefault();
+                    alert('Mohon pilih minimal satu shift untuk jadwal.');
+                    return false;
+                }
+                
                 // Show loading state
                 submitBtn.disabled = true;
                 submitText.innerHTML = `
@@ -749,65 +795,196 @@
         function applyQuickPreset(type, shiftPosition = 1) {
             const shiftId = SHIFT_IDS[type];
             if (!shiftId) return alert("ID shift untuk " + type + " belum diatur!");
-
-            const selector = shiftPosition === 1 
-                ? '.shift-dropdown-1'
-                : '.shift-dropdown-2';
             
-            document.querySelectorAll(selector).forEach(select => {
-                select.value = shiftId;
-                
-                if (shiftPosition === 1) {
-                    const day = select.getAttribute('data-day');
-                    updateSecondDropdown(day);
-                }
-            });
-        }
-
-        function clearPreset() {
-            document.querySelectorAll('#calendarDays select').forEach(select => {
-                select.value = "";
-            });
-            document.querySelectorAll('.shift-dropdown-1').forEach(firstDropdown => {
-                const day = firstDropdown.getAttribute('data-day');
-                updateSecondDropdown(day);
-            });
-        }
-
-        function updateSecondDropdown(day) {
-            const firstDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="1"]`);
-            const secondDropdown = document.querySelector(`select[data-day="${day}"][data-shift-position="2"]`);
-            
-            if (!firstDropdown || !secondDropdown) return;
-            
-            const selectedShiftId = firstDropdown.value;
-            const currentSecondValue = secondDropdown.value;  
-            
-            const allShiftOptions = [
+            const shiftsData = [
                 @foreach ($shifts as $shift)
                     { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
                 @endforeach
             ];
             
-            secondDropdown.innerHTML = '<option value="">-- Shift 2 --</option>';
+            const shift = shiftsData.find(s => s.id == shiftId);
+            if (!shift) return;
             
-            allShiftOptions.forEach(shift => {
-                if (shift.id !== selectedShiftId) {
-                    const option = document.createElement('option');
-                    option.value = shift.id;
-                    option.textContent = shift.name;
-                    option.setAttribute('data-shift-name', shift.name);
-                    
-                    if (shift.id === currentSecondValue) {
-                        option.selected = true;
+            document.querySelectorAll(`.shift-search-container[data-position="${shiftPosition}"]`).forEach(container => {
+                const searchInput = container.querySelector('.shift-search-input');
+                const hiddenInput = container.querySelector('.shift-value');
+                const day = container.getAttribute('data-day');
+                
+                hiddenInput.value = shiftId;
+                searchInput.value = shift.name;
+                
+                if (shiftPosition === 1) {
+                    updateSecondShiftOptions(day, shiftId);
+                }
+            });
+        }
+
+        function clearPreset() {
+            document.querySelectorAll('.shift-search-input').forEach(input => {
+                input.value = '';
+            });
+            document.querySelectorAll('.shift-value').forEach(input => {
+                input.value = '';
+            });
+            
+            // Reset all shift 2 options
+            document.querySelectorAll('.shift-search-container[data-position="1"]').forEach(container => {
+                const day = container.getAttribute('data-day');
+                updateSecondShiftOptions(day, '');
+            });
+        }
+
+        // Initialize shift search functionality for all shift inputs
+        function initializeShiftSearch() {
+            const shiftsData = [
+                @foreach ($shifts as $shift)
+                    { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
+                @endforeach
+            ];
+            
+            // Set initial values for existing selections
+            document.querySelectorAll('.shift-search-container').forEach(container => {
+                const day = container.getAttribute('data-day');
+                const position = container.getAttribute('data-position');
+                const hiddenInput = container.querySelector('.shift-value');
+                const searchInput = container.querySelector('.shift-search-input');
+                
+                if (hiddenInput.value) {
+                    const shift = shiftsData.find(s => s.id == hiddenInput.value);
+                    if (shift) {
+                        searchInput.value = shift.name;
                     }
-                    
-                    secondDropdown.appendChild(option);
                 }
             });
             
-            if (selectedShiftId === currentSecondValue) {
-                secondDropdown.value = "";
+            // Handle search input focus - use event delegation on calendar container
+            document.querySelectorAll('.shift-search-input').forEach(input => {
+                // Remove old listeners by cloning (if any)
+                const newInput = input.cloneNode(true);
+                input.parentNode.replaceChild(newInput, input);
+            });
+            
+            // Re-attach event listeners
+            document.querySelectorAll('.shift-search-input').forEach(input => {
+                input.addEventListener('focus', handleShiftInputFocus);
+                input.addEventListener('input', handleShiftInputChange);
+                input.addEventListener('blur', handleShiftInputBlur);
+            });
+            
+            // Handle option selection - use event delegation
+            document.querySelectorAll('.shift-option').forEach(option => {
+                // Remove old listeners by cloning
+                const newOption = option.cloneNode(true);
+                option.parentNode.replaceChild(newOption, option);
+            });
+            
+            // Re-attach event listeners
+            document.querySelectorAll('.shift-option').forEach(option => {
+                option.addEventListener('click', handleShiftOptionClick);
+            });
+        }
+        
+        // Event handler functions
+        function handleShiftInputFocus() {
+            const container = this.closest('.shift-search-container');
+            const dropdown = container.querySelector('.shift-dropdown');
+            
+            filterShiftOptions(container, '');
+            dropdown.classList.remove('hidden');
+        }
+        
+        function handleShiftInputChange() {
+            const container = this.closest('.shift-search-container');
+            const dropdown = container.querySelector('.shift-dropdown');
+            const query = this.value.toLowerCase();
+            
+            filterShiftOptions(container, query);
+            dropdown.classList.remove('hidden');
+        }
+        
+        function handleShiftInputBlur() {
+            const container = this.closest('.shift-search-container');
+            const dropdown = container.querySelector('.shift-dropdown');
+            
+            setTimeout(() => {
+                dropdown.classList.add('hidden');
+            }, 200);
+        }
+        
+        function handleShiftOptionClick() {
+            const container = this.closest('.shift-search-container');
+            const day = container.getAttribute('data-day');
+            const position = container.getAttribute('data-position');
+            const searchInput = container.querySelector('.shift-search-input');
+            const hiddenInput = container.querySelector('.shift-value');
+            const dropdown = container.querySelector('.shift-dropdown');
+            
+            const value = this.getAttribute('data-value');
+            const name = this.getAttribute('data-name') || '';
+            
+            hiddenInput.value = value;
+            searchInput.value = name;
+            dropdown.classList.add('hidden');
+            
+            if (position === '1') {
+                updateSecondShiftOptions(day, value);
+            }
+        }
+        
+        function filterShiftOptions(container, query) {
+            const options = container.querySelectorAll('.shift-option');
+            
+            options.forEach(option => {
+                const name = option.getAttribute('data-name') || '';
+                if (name.toLowerCase().includes(query) || option.getAttribute('data-value') === '') {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        }
+        
+        function updateSecondShiftOptions(day, firstShiftId) {
+            const shiftsData = [
+                @foreach ($shifts as $shift)
+                    { id: "{{ $shift->id }}", name: "{{ $shift->shift_name }}" },
+                @endforeach
+            ];
+            
+            const shift2Container = document.querySelector(`.shift-search-container[data-day="${day}"][data-position="2"]`);
+            if (!shift2Container) return;
+            
+            const dropdown = shift2Container.querySelector('.shift-dropdown');
+            const currentValue = shift2Container.querySelector('.shift-value').value;
+            
+            // Rebuild options excluding first shift
+            dropdown.innerHTML = '<div class="shift-option px-2 py-1 hover:bg-green-50 cursor-pointer text-xs" data-value="">-- Kosongkan --</div>';
+            
+            shiftsData.forEach(shift => {
+                if (shift.id !== firstShiftId) {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'shift-option px-2 py-1 hover:bg-green-50 cursor-pointer text-xs';
+                    optionDiv.setAttribute('data-value', shift.id);
+                    optionDiv.setAttribute('data-name', shift.name);
+                    optionDiv.textContent = shift.name;
+                    
+                    optionDiv.addEventListener('click', function() {
+                        const searchInput = shift2Container.querySelector('.shift-search-input');
+                        const hiddenInput = shift2Container.querySelector('.shift-value');
+                        
+                        hiddenInput.value = this.getAttribute('data-value');
+                        searchInput.value = this.getAttribute('data-name') || '';
+                        dropdown.classList.add('hidden');
+                    });
+                    
+                    dropdown.appendChild(optionDiv);
+                }
+            });
+            
+            // Clear shift 2 if it was the same as shift 1
+            if (currentValue === firstShiftId) {
+                shift2Container.querySelector('.shift-value').value = '';
+                shift2Container.querySelector('.shift-search-input').value = '';
             }
         }
 
