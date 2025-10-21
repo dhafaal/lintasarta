@@ -80,8 +80,8 @@
                         <i data-lucide="building-2" class="w-5 h-5 text-white"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg font-bold text-gray-900">Lintasarta</h1>
-                        <p class="text-xs text-gray-500">Employee Portal</p>
+                        <h1 class="text-lg font-bold text-gray-900">Scheduler</h1>
+                        <p class="text-xs text-gray-500">Employee</p>
                     </div>
                 </div>
             </div>

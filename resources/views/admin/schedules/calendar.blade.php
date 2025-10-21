@@ -175,8 +175,8 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse ($data as $index => $row)
-                                <tr class="hover:bg-sky-50/30 transition-all duration-150 group">
-                                    <td class="sticky left-0 bg-white group-hover:bg-sky-50/30 z-20 px-4 py-4 border-b border-r border-gray-300 text-center align-middle font-bold text-gray-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]"
+                                <tr class="hover:bg-sky-50 transition-all duration-150 group">
+                                    <td class="sticky left-0 bg-white group-hover:bg-sky-50 z-20 px-4 py-4 border-b border-r border-gray-300 text-center align-middle font-bold text-gray-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]"
                                         rowspan="2">
                                         <div class="flex items-center justify-center">
                                             <span class="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center text-sky-700 font-bold">
@@ -184,7 +184,7 @@
                                             </span>
                                         </div>
                                     </td>
-                                    <td class="sticky left-16 bg-white group-hover:bg-sky-50/30 z-20 px-5 py-4 border-b border-r border-gray-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                                    <td class="sticky left-16 bg-white group-hover:bg-sky-50 z-20 px-5 py-4 border-b border-r border-gray-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                                         <div class="flex items-center gap-3">
                                             <div class="w-11 h-11 bg-gradient-to-br from-sky-400 to-sky-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
                                                 <span class="text-white font-bold text-base">{{ substr($row['nama'], 0, 1) }}</span>
@@ -243,15 +243,15 @@
                                             @endif
                                         </td>
                                     @endfor
-                                    <td class="sticky right-0 bg-white group-hover:bg-sky-50/30 z-20 px-5 py-4 border-b border-l-2 border-gray-300 text-center shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.05)]" rowspan="2">
+                                    <td class="sticky right-0 bg-white group-hover:bg-sky-50 z-20 px-5 py-4 border-b border-l-2 border-gray-300 text-center shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.05)]" rowspan="2">
                                         <div class="flex flex-col items-center justify-center">
                                             <span class="text-2xl font-bold text-sky-600">{{ $row['total_jam'] }}</span>
                                             <span class="text-xs text-gray-500 font-medium mt-1">Jam</span>
                                         </div>
                                     </td>
                                 </tr>
-                                <tr class="hover:bg-sky-50/30 transition-all duration-150 group border-b-2 border-gray-300">
-                                    <td class="sticky left-16 bg-gray-100 group-hover:bg-sky-100/50 z-20 px-5 py-2.5 border-b-2 border-r border-gray-300 text-xs font-bold uppercase text-gray-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                                <tr class="hover:bg-sky-50 transition-all duration-150 group border-b-2 border-gray-300">
+                                    <td class="sticky left-16 bg-gray-100 group-hover:bg-sky-100 z-20 px-5 py-2.5 border-b-2 border-r border-gray-300 text-xs font-bold uppercase text-gray-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                                         <div class="flex items-center gap-2">
                                             <svg class="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -298,7 +298,7 @@
                                         <td class="px-3 py-2.5 border-b-2 border-r {{ $borderClass }} text-center {{ $cellBgClass }} transition-colors">
                                             @if ($row['shifts'][$d]['hours'])
                                                 <div class="flex items-center justify-center">
-                                                    <span class="{{ $textClass }} text-xs font-bold bg-white/50 px-2 py-0.5 rounded">{{ $row['shifts'][$d]['hours'] }}</span>
+                                                    <span class="{{ $textClass }} text-xs font-bold bg-white px-2 py-0.5 rounded">{{ $row['shifts'][$d]['hours'] }}</span>
                                                 </div>
                                             @else
                                                 <span class="text-gray-400 text-xs">-</span>

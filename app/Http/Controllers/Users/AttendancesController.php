@@ -294,14 +294,14 @@ class AttendancesController extends Controller
 
         // Use transaction to ensure atomic multi-shift updates
         return DB::transaction(function () use ($request) {
-            // Cek apakah user memiliki izin (pending/approved) untuk tanggal ini
             $schedule = Schedules::findOrFail($request->schedule_id);
-            // Block checkout if past final end + grace
-            $graceHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
+            
+            // Get all same-day schedules and calculate shift times
             $sameDaySchedules = Schedules::with('shift')
                 ->where('user_id', Auth::id())
                 ->whereDate('schedule_date', $schedule->schedule_date)
                 ->get();
+            
             $finalEnd = null; $firstStart = null;
             foreach ($sameDaySchedules as $sch) {
                 if (!$sch->shift) continue;
@@ -314,14 +314,27 @@ class AttendancesController extends Controller
                 if (!$firstStart || $startDT->lt($firstStart)) { $firstStart = $startDT->copy(); }
                 if (!$finalEnd || $endDT->gt($finalEnd)) { $finalEnd = $endDT->copy(); }
             }
+            
+            // Block checkout if past final end + grace period
+            $graceHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
             if ($finalEnd && now()->gte($finalEnd->copy()->addHours($graceHours))) {
                 return back()->with('error', 'Batas waktu checkout (akhir shift + '.$graceHours.' jam) telah lewat. Attendance ditutup otomatis sebagai forgot checkout.');
             }
+            
+            // Check for existing permissions (exclude approved early checkout)
             $existingPermission = \App\Models\Permissions::where('user_id', Auth::id())
                 ->whereHas('schedule', function ($q) use ($schedule) {
                     $q->whereDate('schedule_date', $schedule->schedule_date);
                 })
                 ->whereIn('status', ['pending', 'approved'])
+                ->where(function($q) {
+                    // Exclude approved early checkout permissions
+                    $q->where('type', '!=', 'izin')
+                      ->orWhere(function($subQ) {
+                          $subQ->where('type', 'izin')
+                               ->where('reason', 'not like', '[EARLY_CHECKOUT]%');
+                      });
+                })
                 ->first();
 
             if ($existingPermission) {
@@ -335,35 +348,23 @@ class AttendancesController extends Controller
                 return back()->with('error', 'Anda berada di luar radius dari semua lokasi yang tersedia. Pastikan Anda berada di salah satu lokasi kantor.');
             }
 
-            // Ambil semua schedule hari yang sama untuk menentukan akhir shift terakhir (cross-midnight aware)
-            $schedule = \App\Models\Schedules::with('shift')->find($request->schedule_id);
-            if (!$schedule || !$schedule->shift) {
-                return back()->with('error', 'Data jadwal tidak ditemukan.');
-            }
-
-            $sameDaySchedules = Schedules::with('shift')
-                ->where('user_id', Auth::id())
-                ->whereDate('schedule_date', $schedule->schedule_date)
-                ->get();
-
-            $finalEnd = null; $firstStart = null;
-            foreach ($sameDaySchedules as $sch) {
-                if (!$sch->shift) continue;
-                $date = Carbon::parse($sch->schedule_date);
-                $st = Carbon::parse($sch->shift->start_time);
-                $et = Carbon::parse($sch->shift->end_time);
-                $startDT = $date->copy()->setTimeFrom($st);
-                $endDT = $date->copy()->setTimeFrom($et);
-                if ($endDT->lt($startDT)) { $endDT->addDay(); } // cross-midnight
-                if (!$firstStart || $startDT->lt($firstStart)) { $firstStart = $startDT->copy(); }
-                if (!$finalEnd || $endDT->gt($finalEnd)) { $finalEnd = $endDT->copy(); }
-            }
-
             $now = now();
 
-            // Early checkout guard
+            // Early checkout guard - BLOCK checkout before shift ends unless approved
             if ($finalEnd && $now->lt($finalEnd)) {
-                return back()->with('warning', 'Anda mencoba checkout sebelum jam shift berakhir (akhir shift terakhir). Silakan isi alasan checkout lebih cepat.');
+                // Check if user has approved early checkout permission for today
+                $approvedEarlyCheckout = \App\Models\Permissions::where('user_id', Auth::id())
+                    ->where('type', 'izin')
+                    ->where('status', 'approved')
+                    ->where('reason', 'like', '[EARLY_CHECKOUT]%')
+                    ->whereHas('schedule', function($q) use ($schedule) {
+                        $q->whereDate('schedule_date', $schedule->schedule_date);
+                    })
+                    ->first();
+
+                if (!$approvedEarlyCheckout) {
+                    return back()->with('error', 'Anda tidak dapat checkout sebelum jam shift berakhir. Silakan gunakan fitur "Request Early Checkout" jika Anda perlu pulang lebih awal.');
+                }
             }
 
             // Collect open attendances for this day

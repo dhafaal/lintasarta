@@ -110,11 +110,22 @@
                             </th>
                             <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock text-sky-600 mr-2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <polyline points="12 6 12 12 16 14"/>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in text-sky-600 mr-2">
+                                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                                        <polyline points="10 17 15 12 10 7"/>
+                                        <line x1="15" x2="3" y1="12" y2="12"/>
                                     </svg>
-                                    Jam
+                                    Check In
+                                </div>
+                            </th>
+                            <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out text-sky-600 mr-2">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                        <polyline points="16 17 21 12 16 7"/>
+                                        <line x1="21" x2="9" y1="12" y2="12"/>
+                                    </svg>
+                                    Check Out
                                 </div>
                             </th>
                             <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -219,60 +230,34 @@
                                     <div class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l') }}</div>
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="flex flex-col space-y-2">
-                                        <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-sky-100 text-sky-800">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock mr-1">
-                                                <circle cx="12" cy="12" r="10"/>
-                                                <polyline points="12 6 12 12 16 14"/>
-                                            </svg>
-                                            @php
-                                                // Hitung jam kerja harian berbasis durasi shift (dengan potong 1 jam per hari)
-                                                $daySchedules = $schedules->where('schedule_date', $schedule->schedule_date)->where('user_id', $schedule->user_id);
-                                                $dayMinutesAcc = 0;
-                                                foreach ($daySchedules as $ds) {
-                                                    if (!$ds->shift) { continue; }
-                                                    $att = $attendances->firstWhere('schedule_id', $ds->id);
-                                                    $perm = $permissions->firstWhere('schedule_id', $ds->id);
-                                                    $start = \Carbon\Carbon::parse($ds->shift->start_time);
-                                                    $end = \Carbon\Carbon::parse($ds->shift->end_time);
-                                                    if ($end->lt($start)) { $end->addDay(); }
-                                                    $shiftMinutes = $start->diffInMinutes($end);
-                                                    if ($att && $att->status === 'alpha') {
-                                                        $m = 0;
-                                                    } elseif (!$att && !$perm) {
-                                                        // Absent tanpa izin/cuti (auto-alpha)
-                                                        $m = 0;
-                                                    } else {
-                                                        $m = $shiftMinutes;
-                                                    }
-                                                    $dayMinutesAcc += $m;
-                                                }
-                                                $dayMinutesAfterBreak = $dayMinutesAcc > 0 ? max(0, $dayMinutesAcc - 60) : 0;
-                                                $hours = $dayMinutesAfterBreak / 60;
-                                            @endphp
-                                            {{ $hours == floor($hours) ? floor($hours).' jam' : number_format($hours, 1).' jam' }}
-                                        </div>
-                                        @if($attendance && ($attendance->check_in_time || $attendance->check_out_time))
-                                            <div class="text-xs text-gray-500">
-                                                @if($attendance->check_in_time)
-                                                    <span class="inline-flex items-center">
-                                                        <svg class="w-3 h-3 mr-1 text-green-500" fill="currentColor" viewBox="0 0 8 8">
-                                                            <circle cx="4" cy="4" r="3"/>
-                                                        </svg>
-                                                        Masuk: {{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}
-                                                    </span>
-                                                @endif
-                                                @if($attendance->check_out_time)
-                                                    <span class="inline-flex items-center ml-2">
-                                                        <svg class="w-3 h-3 mr-1 text-red-500" fill="currentColor" viewBox="0 0 8 8">
-                                                            <circle cx="4" cy="4" r="3"/>
-                                                        </svg>
-                                                        Keluar: {{ \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') }}
-                                                    </span>
-                                                @endif
+                                    @if($attendance && $attendance->check_in_time)
+                                        <div class="flex items-start">
+                                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                                <i data-lucide="log-in" class="w-4 h-4 text-green-600"></i>
                                             </div>
-                                        @endif
-                                    </div>
+                                            <div>
+                                                <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}</div>
+                                                <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('d M Y') }}</div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="text-gray-400 text-sm">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-8 py-6 whitespace-nowrap">
+                                    @if($attendance && $attendance->check_out_time)
+                                        <div class="flex items-start">
+                                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                                <i data-lucide="log-out" class="w-4 h-4 text-red-600"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') }}</div>
+                                                <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($attendance->check_out_time)->format('d M Y') }}</div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="text-gray-400 text-sm">-</span>
+                                    @endif
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap">
                                     @php
@@ -336,7 +321,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-8 py-16 text-center">
+                                <td colspan="6" class="px-8 py-16 text-center">
                                     <div class="flex flex-col items-center">
                                         <div class="w-20 h-20 bg-gradient-to-br from-sky-100 to-sky-200 rounded-full flex items-center justify-center mb-6">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar text-sky-400">

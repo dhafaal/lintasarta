@@ -285,10 +285,21 @@ class ScheduleController extends Controller
         $year = $request->year;
         $shifts = $request->shifts ?? [];
 
+        // Debug logging
+        \Log::info('storeMonthly called', [
+            'user_id' => $userId,
+            'month' => $month,
+            'year' => $year,
+            'shifts_count' => count($shifts),
+            'shifts_sample' => array_slice($shifts, 0, 5, true)
+        ]);
+
         $user = User::find($userId);
         $createdSchedules = [];
+        // Track dates that were processed to later recalculate attendance status
+        $datesTouched = [];
         
-        DB::transaction(function () use ($shifts, $userId, $month, $year, $user, &$createdSchedules) {
+        DB::transaction(function () use ($shifts, $userId, $month, $year, $user, &$createdSchedules, &$datesTouched) {
             $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 
             for ($day = 1; $day <= $daysInMonth; $day++) {
@@ -315,6 +326,8 @@ class ScheduleController extends Controller
                 foreach ($result['created'] as $created) {
                     $createdSchedules[] = $created;
                 }
+                // Mark this date for attendance status recalculation
+                $datesTouched[$date] = true;
             }
         });
         
@@ -335,6 +348,19 @@ class ScheduleController extends Controller
             );
         }
 
+        // Recalculate attendance statuses for all processed dates (handle shift changes/remaps)
+        foreach (array_keys($datesTouched) as $date) {
+            try {
+                $this->recalcAttendancesForDate($user->id, $date, 5);
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to recalc attendance on date after schedule update', [
+                    'user_id' => $user->id,
+                    'date' => $date,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+        
         $totalCreated = count($createdSchedules);
         
         return redirect()->route('admin.schedules.index')
@@ -539,8 +565,9 @@ class ScheduleController extends Controller
 
         $user = User::find($userId);
         $updatedSchedules = [];
+        $datesTouched = [];
         
-        DB::transaction(function () use ($shifts, $userId, $month, $year, $user, &$updatedSchedules) {
+        DB::transaction(function () use ($shifts, $userId, $month, $year, $user, &$updatedSchedules, &$datesTouched) {
             $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 
             for ($day = 1; $day <= $daysInMonth; $day++) {
@@ -565,6 +592,8 @@ class ScheduleController extends Controller
                 foreach ($result['created'] as $created) {
                     $updatedSchedules[] = $created;
                 }
+                // track date for later attendance status recalculation
+                $datesTouched[$date] = true;
             }
         });
         
@@ -586,6 +615,19 @@ class ScheduleController extends Controller
         }
 
         $totalUpdated = count($updatedSchedules);
+        
+        // Recalculate attendance statuses for all processed dates (handle shift changes/remaps)
+        foreach (array_keys($datesTouched) as $date) {
+            try {
+                $this->recalcAttendancesForDate($user->id, $date, 5);
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to recalc attendance on date after monthly update', [
+                    'user_id' => $user->id,
+                    'date' => $date,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
         
         return redirect()->route('admin.schedules.index')
             ->with('success', "Jadwal bulanan berhasil diperbarui. {$totalUpdated} jadwal diupdate untuk {$user->name}.");
@@ -876,11 +918,14 @@ class ScheduleController extends Controller
                 }
 
                 // Remap attendance from other schedules to desired schedule, then delete others
-                $others = $existing->filter(fn($s) => (int)$s->shift_id !== (int)$desiredId);
+                $others = $existing->filter(fn($s) => (int)$s->shift_id !== $desiredId);
                 if ($others->isNotEmpty()) {
                     $otherIds = $others->pluck('id')->all();
                     Attendance::whereIn('schedule_id', $otherIds)
                         ->update(['schedule_id' => $desiredSchedule->id]);
+
+                    // Recalculate statuses right after remap for this date
+                    try { $this->recalcAttendancesForDate($user->id, $date, 5); } catch (\Throwable $e) { \Log::warning('recalc after remap failed', ['user_id'=>$user->id,'date'=>$date,'e'=>$e->getMessage()]); }
 
                     foreach ($others as $ex) {
                         $old = $ex->toArray();
@@ -931,7 +976,7 @@ class ScheduleController extends Controller
                             optional($shiftModel)->shift_name,
                             $date,
                             $old,
-                            $desiredSchedule->toArray(),
+                            $desiredSchedule->fresh()->toArray(),
                             "Menetapkan jadwal tujuan untuk remap attendance pada {$date}"
                         );
                         $updated[] = ['old' => $old, 'schedule' => $desiredSchedule];
@@ -988,6 +1033,9 @@ class ScheduleController extends Controller
                     $otherIds = $others->pluck('id')->all();
                     Attendance::whereIn('schedule_id', $otherIds)
                         ->update(['schedule_id' => $desiredSchedule->id]);
+
+                    // Recalculate statuses right after remap for this date
+                    try { $this->recalcAttendancesForDate($user->id, $date, 5); } catch (\Throwable $e) { \Log::warning('recalc after remap (single desired) failed', ['user_id'=>$user->id,'date'=>$date,'e'=>$e->getMessage()]); }
 
                     // Delete non-desired schedules after remap
                     foreach ($others as $ex) {
@@ -1641,6 +1689,64 @@ class ScheduleController extends Controller
                 'success' => false,
                 'message' => 'Gagal mengambil jadwal: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    private function recalcAttendancesForDate(int $userId, string $date, int $toleranceMinutes = 5): void
+    {
+        // Load attendances with their schedules and shifts for the given date
+        $attendances = Attendance::with(['schedule.shift'])
+            ->where('user_id', $userId)
+            ->whereNotNull('check_in_time')
+            ->whereHas('schedule', function($q) use ($date) {
+                $q->whereDate('schedule_date', $date);
+            })
+            ->get();
+
+        foreach ($attendances as $att) {
+            $schedule = $att->schedule;
+            if (!$schedule || !$schedule->shift) {
+                continue;
+            }
+
+            $scheduleDate = Carbon::parse($schedule->schedule_date);
+            $shiftStartT  = Carbon::parse($schedule->shift->start_time);
+            $shiftStart   = $scheduleDate->copy()->setTimeFrom($shiftStartT);
+            $checkIn      = Carbon::parse($att->check_in_time);
+
+            $status = 'hadir';
+            $isLate = false;
+            $lateMinutes = 0;
+
+            $grace = $toleranceMinutes; // minutes
+            if ($checkIn->gt($shiftStart->copy()->addMinutes($grace))) {
+                $lateMinutes = (int) $shiftStart->diffInMinutes($checkIn);
+                $status = 'telat';
+                $isLate = true;
+            }
+
+            // Update only if changed
+            if ($att->status !== $status || (bool)$att->is_late !== $isLate || (int)$att->late_minutes !== $lateMinutes) {
+                \Log::info('Recalc attendance status after schedule change', [
+                    'attendance_id' => $att->id,
+                    'user_id' => $userId,
+                    'date' => $date,
+                    'old_status' => $att->status,
+                    'old_is_late' => (bool)$att->is_late,
+                    'old_late_minutes' => (int)$att->late_minutes,
+                    'new_status' => $status,
+                    'new_is_late' => $isLate,
+                    'new_late_minutes' => $lateMinutes,
+                    'shift_start' => $shiftStart->toDateTimeString(),
+                    'check_in' => $checkIn->toDateTimeString(),
+                    'tolerance_min' => $grace,
+                ]);
+                $att->update([
+                    'status' => $status,
+                    'is_late' => $isLate,
+                    'late_minutes' => $lateMinutes,
+                ]);
+            }
         }
     }
 

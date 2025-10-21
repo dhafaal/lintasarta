@@ -147,8 +147,9 @@
                                            id="user_search"
                                            class="block w-full pl-12 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white transition-all duration-200"
                                            placeholder="Ketik untuk mencari pengguna..."
-                                           autocomplete="off">
-                                    <input type="hidden" name="user_id" id="selected_user_id" required>
+                                           autocomplete="off"
+                                           value="{{ old('user_search') }}">
+                                    <input type="hidden" name="user_id" id="selected_user_id" value="{{ old('user_id') }}" data-original-value="{{ old('user_id') }}">
                                 </div>
 
                                 {{-- Search Results Dropdown --}}
@@ -171,23 +172,24 @@
 
                                 {{-- Selected User Display --}}
                                 <div id="selected_user_display" class="mt-3 hidden">
-                                    <div class="flex items-center justify-between p-3 bg-sky-50 border border-sky-200 rounded-lg">
-                                        <div class="flex items-center">
-                                            <div class="w-8 h-8 bg-gradient-to-br from-sky-100 to-sky-200 rounded-full flex items-center justify-center mr-3">
+                                    <div class="flex items-center justify-between p-3 bg-green-50 border-2 border-green-300 rounded-lg">
+                                        <div class="flex items-center flex-1">
+                                            <div class="w-8 h-8 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mr-3">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                    class="lucide lucide-user text-sky-600">
-                                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                                                    <circle cx="12" cy="7" r="4"/>
+                                                    class="lucide lucide-check text-green-600">
+                                                    <path d="M20 6 9 17l-5-5"/>
                                                 </svg>
                                             </div>
-                                            <div>
+                                            <div class="flex-1">
+                                                <div class="text-xs text-green-600 font-semibold mb-0.5">✓ Pengguna Terpilih</div>
                                                 <div class="text-sm font-medium text-gray-900" id="selected_user_name"></div>
                                                 <div class="text-xs text-gray-500" id="selected_user_email"></div>
+                                                <div class="text-xs text-green-700 font-mono mt-1">User ID: <span id="selected_user_id_display"></span></div>
                                             </div>
                                         </div>
                                         <button type="button" onclick="clearUserSelection()"
-                                                class="text-gray-400 hover:text-gray-600 transition-colors">
+                                                class="text-gray-400 hover:text-red-600 transition-colors">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                                                 class="lucide lucide-x">
@@ -432,6 +434,9 @@
                 }
             }
 
+            // OLD_SHIFTS from Laravel old() helper - preserve user changes after validation error
+            const OLD_SHIFTS = @json(old('shifts', []));
+
             function renderCalendar(data) {
                 let html = "";
                 let day = 1;
@@ -443,9 +448,20 @@
                 }
 
                 while (day <= data.daysInMonth) {
-                    const existingSchedulesForDay = currentExistingSchedules[day] || [];
-                    const shift1Selected = existingSchedulesForDay[0] ? existingSchedulesForDay[0].shift_id : '';
-                    const shift2Selected = existingSchedulesForDay[1] ? existingSchedulesForDay[1].shift_id : '';
+                    // Priority: OLD_SHIFTS (user's last input) > existing schedules
+                    let shift1Selected = '';
+                    let shift2Selected = '';
+                    
+                    if (OLD_SHIFTS && OLD_SHIFTS[day] && Array.isArray(OLD_SHIFTS[day])) {
+                        // Use old values if available (after validation error)
+                        shift1Selected = OLD_SHIFTS[day][0] || '';
+                        shift2Selected = OLD_SHIFTS[day][1] || '';
+                    } else {
+                        // Fallback to existing schedules
+                        const existingSchedulesForDay = currentExistingSchedules[day] || [];
+                        shift1Selected = existingSchedulesForDay[0] ? existingSchedulesForDay[0].shift_id : '';
+                        shift2Selected = existingSchedulesForDay[1] ? existingSchedulesForDay[1].shift_id : '';
+                    }
                     
                     html += `
                     <div class="p-2 bg-gray-50 border border-gray-200 rounded-lg flex flex-col items-center hover:shadow-sm transition-shadow duration-200">
@@ -492,7 +508,7 @@
             loadCalendar();
             loadExistingSchedules();
 
-            // User Search Functionality
+            // User Search Functionality - Declare variables first
             const userSearchInput = document.getElementById('user_search');
             const userSearchResults = document.getElementById('user_search_results');
             const userSearchResultsList = document.getElementById('user_search_results_list');
@@ -515,6 +531,24 @@
             ];
 
             let searchTimeout;
+
+            // Check if there's an old user_id value (after validation error)
+            const oldUserId = selectedUserId ? selectedUserId.value : null;
+            if (oldUserId) {
+                // Find user data from usersData
+                const oldUser = usersData.find(u => u.id == oldUserId);
+                if (oldUser) {
+                    // Display the selected user
+                    selectedUserName.textContent = oldUser.name;
+                    selectedUserEmail.textContent = oldUser.email;
+                    const userIdDisplay = document.getElementById('selected_user_id_display');
+                    if (userIdDisplay) {
+                        userIdDisplay.textContent = oldUser.id;
+                    }
+                    selectedUserDisplay.classList.remove('hidden');
+                    userSearchInput.value = oldUser.name;
+                }
+            }
 
             if (userSearchInput) {
                 userSearchInput.addEventListener('input', function() {
@@ -596,6 +630,13 @@
                 selectedUserId.value = user.id;
                 selectedUserName.textContent = user.name;
                 selectedUserEmail.textContent = user.email;
+                
+                // Display User ID for debugging
+                const userIdDisplay = document.getElementById('selected_user_id_display');
+                if (userIdDisplay) {
+                    userIdDisplay.textContent = user.id;
+                }
+                
                 selectedUserDisplay.classList.remove('hidden');
                 userSearchInput.value = user.name;
                 hideSearchResults();
@@ -645,8 +686,60 @@
                 hideLoadingState();
                 hideNoResultsState();
             }
-        });
 
+            // Form submission handler with validation
+            document.getElementById('scheduleForm')?.addEventListener('submit', function(e) {
+                const submitBtn = document.getElementById('submitBtn');
+                const submitText = document.getElementById('submitText');
+                const selectedUserId = document.getElementById('selected_user_id');
+                const userValidationError = document.getElementById('user_validation_error');
+                
+                console.log('=== FORM SUBMIT DEBUG ===');
+                console.log('Hidden input element:', selectedUserId);
+                console.log('Hidden input value:', selectedUserId ? selectedUserId.value : 'NOT FOUND');
+                console.log('Hidden input name:', selectedUserId ? selectedUserId.name : 'NOT FOUND');
+                
+                // Get FormData to see what will be sent
+                const formData = new FormData(this);
+                console.log('FormData user_id:', formData.get('user_id'));
+                console.log('All form data:');
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+                console.log('=== END DEBUG ===');
+                
+                // Validate user selection
+                if (!selectedUserId || !selectedUserId.value || selectedUserId.value === '') {
+                    e.preventDefault();
+                    
+                    if (userValidationError) {
+                        userValidationError.classList.remove('hidden');
+                        userValidationError.textContent = 'Silakan pilih pengguna terlebih dahulu';
+                    }
+                    
+                    // Scroll to user selection field
+                    document.getElementById('user_search')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+                
+                // Hide validation error
+                if (userValidationError) {
+                    userValidationError.classList.add('hidden');
+                }
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                submitText.innerHTML = `
+                    <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Menyimpan...
+                `;
+            });
+        }); // End of DOMContentLoaded
+
+        // Global functions - OUTSIDE DOMContentLoaded
         const SHIFT_IDS = {
             pagi: 1,
             siang: 2,
@@ -718,18 +811,21 @@
             }
         }
 
-        document.getElementById('scheduleForm')?.addEventListener('submit', function() {
-            const submitBtn = document.getElementById('submitBtn');
-            const submitText = document.getElementById('submitText');
+    // Handle "Pindahkan attendance & simpan" button click - OUTSIDE DOMContentLoaded
+    // This ensures the handler works even when the button appears after page load (validation error)
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'confirmRemapBtn') {
+            const conflictInput = document.getElementById('on_attendance_conflict');
+            const scheduleForm = document.getElementById('scheduleForm');
             
-            submitBtn.disabled = true;
-            submitText.innerHTML = `
-                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Menyimpan...
-            `;
-        });
+            if (conflictInput) {
+                conflictInput.value = 'remap';
+            }
+            
+            if (scheduleForm) {
+                scheduleForm.submit();
+            }
+        }
+    });
     </script>
 @endsection

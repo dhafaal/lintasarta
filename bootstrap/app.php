@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\BlockSuspiciousIPs::class,
             \App\Http\Middleware\SecureSessionMiddleware::class,
+            \App\Http\Middleware\RememberMeMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

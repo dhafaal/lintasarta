@@ -151,7 +151,7 @@
                             <div class="min-w-0 flex-1">
                                 <p class="text-xs font-semibold text-gray-600 mb-1">Working Hours</p>
                                 @php
-                                    $forgotGraceHours = env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
+                                    $forgotGraceHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
                                 @endphp
                                 @if($shiftCount > 1 && $firstStartDT && $lastEndDT)
                                     <p class="text-base font-bold text-gray-900">{{ $firstStartDT->format('H:i') }} - {{ $lastEndDT->format('H:i') }}</p>
@@ -288,7 +288,7 @@
                                     </div>
                                     <div class="min-w-0">
                                         <h4 class="text-sm font-semibold text-rose-900 mb-1">Forgot Checkout</h4>
-                                        @php $forgotGraceHoursBanner = env('FORGOT_CHECKOUT_GRACE_HOURS', 6); @endphp
+                                        @php $forgotGraceHoursBanner = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 6); @endphp
                                         <p class="text-xs text-rose-800">The system automatically closed your attendance because you didn't check out on time. The automatic closure limit is: end of last shift + {{ $forgotGraceHoursBanner }} hours.</p>
                                     </div>
                                 </div>
@@ -440,7 +440,7 @@
                         {{-- Check Out Button --}}
                         @if ($attendance && $attendance->check_in_time && !$attendance->check_out_time)
                             @php
-                                $graceUIHours = env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
+                                $graceUIHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
                                 $sameDay = \App\Models\Schedules::with('shift')
                                     ->where('user_id', auth()->id())
                                     ->whereDate('schedule_date', optional($schedule)->schedule_date)
@@ -483,11 +483,23 @@
                             @endif
                         @endif
 
+                        {{-- Request Early Checkout Button --}}
+                        @if ($attendance && $attendance->check_in_time && !$attendance->check_out_time)
+                            <button type="button"
+                                    onclick="document.getElementById('early-checkout-modal').classList.remove('hidden')"
+                                    class="w-full h-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform hover:scale-95 shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
+                                <div class="w-10 sm:w-12 h-10 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="clock" class="w-5 sm:w-6 h-5 sm:h-6 text-white"></i>
+                                </div>
+                                <span class="text-xs sm:text-lg">Request Early Checkout</span>
+                            </button>
+                        @endif
+
                         {{-- Request Permission Button --}}
                         @if (!$attendance || !$attendance->check_in_time)
                             <button type="button"
                                     onclick="document.getElementById('izin-modal').classList.remove('hidden')"
-                                    class="w-full h-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform hover:scale-95 shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
+                                    class="w-full h-full bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform hover:scale-95 shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
                                 <div class="w-10 sm:w-12 h-10 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
                                     <i data-lucide="file-text" class="w-5 sm:w-6 h-5 sm:h-6 text-white"></i>
                                 </div>

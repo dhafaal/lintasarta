@@ -94,14 +94,38 @@
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-In</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-Out</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Hours</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
+                                    Date
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i data-lucide="clock" class="w-4 h-4 inline mr-1"></i>
+                                    Shift
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>
+                                    Location
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i data-lucide="activity" class="w-4 h-4 inline mr-1"></i>
+                                    Status
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i data-lucide="log-in" class="w-4 h-4 inline mr-1"></i>
+                                    Check-In
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i data-lucide="log-out" class="w-4 h-4 inline mr-1"></i>
+                                    Check-Out
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i data-lucide="clock" class="w-4 h-4 inline mr-1"></i>
+                                    Work Hours
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i data-lucide="message-circle" class="w-4 h-4 inline mr-1"></i>
+                                    Notes
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -117,7 +141,7 @@
                                             {{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}
                                         </div>
                                         <div class="text-xs text-gray-500">
-                                            {{ \Carbon\Carbon::parse($schedule->schedule_date)->format('l') }}
+                                            {{ \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l') }}
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -145,6 +169,15 @@
                                             $statusBase = $attendance->status ?? ($permission ? 'izin' : 'alpha');
                                             $hasForgot = ($statusBase === 'forgot_checkout');
                                             $hasEarly  = ($statusBase === 'early_checkout');
+                                            // Consider early checkout permission to display secondary badge even if status is not early_checkout
+                                            $hasEarlyPerm = false;
+                                            if ($permission && $permission->type === 'izin') {
+                                                $reasonStr = (string) ($permission->reason ?? '');
+                                                if (strpos($reasonStr, '[EARLY_CHECKOUT]') === 0) {
+                                                    // show secondary badge for any early checkout request (pending/approved/rejected)
+                                                    $hasEarlyPerm = true;
+                                                }
+                                            }
                                             $wasLate   = ($statusBase === 'telat') || ($attendance && $attendance->is_late);
                                             $wasPresent= ($statusBase === 'hadir') || ($attendance && $attendance->check_in_time);
                                             // Priority like admin index
@@ -158,14 +191,14 @@
                                             }
                                             $statusColor = 'bg-gray-100 text-gray-700';
                                             if($statusText === 'hadir') { $statusColor = 'bg-green-100 text-green-800'; }
-                                            if($statusText === 'telat') { $statusColor = 'bg-yellow-100 text-yellow-800'; }
-                                            if($statusText === 'izin') { $statusColor = 'bg-blue-100 text-blue-800'; }
+                                            if($statusText === 'telat') { $statusColor = 'bg-orange-100 text-orange-800'; }
+                                            if($statusText === 'izin') { $statusColor = 'bg-yellow-100 text-yellow-800'; }
                                             if($statusText === 'early_checkout') { $statusColor = 'bg-amber-100 text-amber-800'; }
                                             if($statusText === 'forgot_checkout') { $statusColor = 'bg-rose-100 text-rose-800'; }
                                             if($statusText === 'alpha') { $statusColor = 'bg-red-100 text-red-800'; }
-                                            $showStacked = ($hasForgot || $hasEarly) && ($wasLate || $wasPresent);
+                                            $showStacked = ($hasForgot || $hasEarly || $hasEarlyPerm) && ($wasLate || $wasPresent);
                                             $primaryText = $wasLate ? 'telat' : 'hadir';
-                                            $primaryColor = $wasLate ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800';
+                                            $primaryColor = $wasLate ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800';
                                         @endphp
                                         @if($showStacked)
                                             <div class="flex flex-col space-y-1">
@@ -177,7 +210,7 @@
                                                         Forgot Checkout
                                                     </span>
                                                 @endif
-                                                @if($hasEarly)
+                                                @if($hasEarly || $hasEarlyPerm)
                                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                                                         Early Checkout
                                                     </span>
@@ -189,11 +222,35 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $attendance && $attendance->check_in_time ? \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') : '-' }}
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if($attendance && $attendance->check_in_time)
+                                            <div class="flex items-start">
+                                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                                    <i data-lucide="log-in" class="w-4 h-4 text-green-600"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}</div>
+                                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('d M Y') }}</div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <span class="text-gray-400 text-sm">-</span>
+                                        @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $attendance && $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') : '-' }}
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if($attendance && $attendance->check_out_time)
+                                            <div class="flex items-start">
+                                                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                                    <i data-lucide="log-out" class="w-4 h-4 text-red-600"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') }}</div>
+                                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($attendance->check_out_time)->format('d M Y') }}</div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <span class="text-gray-400 text-sm">-</span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         @php

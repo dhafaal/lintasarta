@@ -167,7 +167,6 @@
                 </svg>
                 <span id="btnText">Login</span>
             </button>
-
         </form>
     </div>
 

@@ -459,16 +459,57 @@
             // Initial load
             loadCalendar();
 
-            // Attendance conflict confirmation
-            if (confirmRemapBtn) {
-                confirmRemapBtn.addEventListener('click', function () {
-                    if (conflictInput) conflictInput.value = 'remap';
-                    document.getElementById('scheduleForm').submit();
+            // Form submission validation and loading states
+            document.getElementById('scheduleForm')?.addEventListener('submit', function(e) {
+                const submitBtn = document.getElementById('submitBtn');
+                const submitText = document.getElementById('submitText');
+                const validationAlert = document.getElementById('validationAlert');
+                const validationMessage = document.getElementById('validationMessage');
+                
+                // Hide previous validation messages
+                validationAlert.classList.add('hidden');
+                
+                // Basic validation
+                const month = document.getElementById('calendarMonth').value;
+                const year = document.getElementById('calendarYear').value;
+                
+                if (!month || !year) {
+                    e.preventDefault();
+                    validationMessage.textContent = 'Mohon pilih bulan dan tahun terlebih dahulu.';
+                    validationAlert.classList.remove('hidden');
+                    return false;
+                }
+                
+                // Check if at least one shift is selected
+                const allSelects = document.querySelectorAll('#calendarDays select');
+                let hasSchedule = false;
+                
+                allSelects.forEach(select => {
+                    if (select.value && select.value !== '') {
+                        hasSchedule = true;
+                    }
                 });
-            }
-        });
+                
+                if (!hasSchedule) {
+                    e.preventDefault();
+                    validationMessage.textContent = 'Mohon pilih minimal satu shift untuk jadwal.';
+                    validationAlert.classList.remove('hidden');
+                    return false;
+                }
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                submitText.innerHTML = `
+                    <svg class="w-5 h-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Mengupdate...
+                `;
+            });
+        }); // End of DOMContentLoaded
 
-        // Atur ID shift sesuai dengan ID shift yang ada di database
+        // Global functions - OUTSIDE DOMContentLoaded
         const SHIFT_IDS = {
             pagi: 1, // ganti sesuai id shift pagi
             siang: 2, // ganti sesuai id shift siang
@@ -588,53 +629,27 @@
             }
         }
 
-        // Form submission validation and loading states
-        document.getElementById('scheduleForm')?.addEventListener('submit', function(e) {
-            const submitBtn = document.getElementById('submitBtn');
-            const submitText = document.getElementById('submitText');
-            const validationAlert = document.getElementById('validationAlert');
-            const validationMessage = document.getElementById('validationMessage');
-            
-            // Hide previous validation messages
-            validationAlert.classList.add('hidden');
-            
-            // Basic validation
-            const month = document.getElementById('calendarMonth').value;
-            const year = document.getElementById('calendarYear').value;
-            
-            if (!month || !year) {
-                e.preventDefault();
-                validationMessage.textContent = 'Mohon pilih bulan dan tahun terlebih dahulu.';
-                validationAlert.classList.remove('hidden');
-                return false;
-            }
-            
-            // Check if at least one shift is selected
-            const allSelects = document.querySelectorAll('#calendarDays select');
-            let hasSchedule = false;
-            
-            allSelects.forEach(select => {
-                if (select.value && select.value !== '') {
-                    hasSchedule = true;
+        // Handle "Pindahkan attendance & simpan" button click - OUTSIDE DOMContentLoaded
+        // This ensures the handler works even when the button appears after page load (validation error)
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'confirmRemapBtn') {
+                console.log('confirmRemapBtn clicked!'); // Debug
+                const conflictInput = document.getElementById('on_attendance_conflict');
+                const scheduleForm = document.getElementById('scheduleForm');
+                
+                console.log('conflictInput:', conflictInput); // Debug
+                console.log('scheduleForm:', scheduleForm); // Debug
+                
+                if (conflictInput) {
+                    conflictInput.value = 'remap';
+                    console.log('Set on_attendance_conflict to: remap'); // Debug
                 }
-            });
-            
-            if (!hasSchedule) {
-                e.preventDefault();
-                validationMessage.textContent = 'Mohon pilih minimal satu shift untuk jadwal.';
-                validationAlert.classList.remove('hidden');
-                return false;
+                
+                if (scheduleForm) {
+                    console.log('Submitting form...'); // Debug
+                    scheduleForm.submit();
+                }
             }
-            
-            // Show loading state
-            submitBtn.disabled = true;
-            submitText.innerHTML = `
-                <svg class="w-5 h-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Mengupdate...
-            `;
         });
     </script>
 @endsection 
