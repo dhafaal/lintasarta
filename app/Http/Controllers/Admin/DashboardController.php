@@ -72,24 +72,38 @@ class DashboardController extends Controller
         $today = Carbon::today();
         $todaySchedules = Schedules::whereDate('schedule_date', $today)->count();
         
-        // Hadir = semua attendance (hadir + telat + early_checkout) kecuali izin
-        $todayHadir = Attendance::whereHas('schedule', function($q) use ($today) {
+        // Get unique user IDs for each status (to match modal display)
+        // Hadir = unique users yang punya attendance (hadir + telat + early_checkout) kecuali izin
+        $hadirUserIds = Attendance::whereHas('schedule', function($q) use ($today) {
             $q->whereDate('schedule_date', $today);
-        })->where('status', '!=', 'izin')->count();
+        })->where('status', '!=', 'izin')
+          ->distinct()
+          ->pluck('user_id');
+        $todayHadir = $hadirUserIds->count();
 
-        // Telat = has attendance AND is_late = 1 (termasuk early_checkout yang telat)
-        $todayTelat = Attendance::whereHas('schedule', function($q) use ($today) {
+        // Telat = unique users yang punya attendance dengan is_late = 1
+        $telatUserIds = Attendance::whereHas('schedule', function($q) use ($today) {
             $q->whereDate('schedule_date', $today);
         })->where('is_late', 1)
           ->where('status', '!=', 'izin')
-          ->count();
+          ->distinct()
+          ->pluck('user_id');
+        $todayTelat = $telatUserIds->count();
 
-        // Izin = attendance with status 'izin' (from approved permissions)
-        $todayIzin = Attendance::whereHas('schedule', function($q) use ($today) {
+        // Izin = unique users yang punya attendance dengan status 'izin'
+        $izinUserIds = Attendance::whereHas('schedule', function($q) use ($today) {
             $q->whereDate('schedule_date', $today);
-        })->where('status', 'izin')->count();
+        })->where('status', 'izin')
+          ->distinct()
+          ->pluck('user_id');
+        $todayIzin = $izinUserIds->count();
 
-        $todayAlpha = max(0, $todaySchedules - ($todayHadir + $todayIzin));
+        // Alpha = unique users yang punya schedule tapi tidak ada attendance
+        $allScheduledUserIds = Schedules::whereDate('schedule_date', $today)
+            ->distinct()
+            ->pluck('user_id');
+        $allAttendedUserIds = $hadirUserIds->merge($izinUserIds)->unique();
+        $todayAlpha = $allScheduledUserIds->diff($allAttendedUserIds)->count();
 
         return view('admin.dashboard', [
             'totalUsers'       => User::where('role', '!=', 'Admin')->count(),
