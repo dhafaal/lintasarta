@@ -66,8 +66,8 @@ class AttendancesController extends Controller
 
         // Hitung statistik berdasarkan data yang sudah difilter
         $totalSchedules = $schedulesToday->count();
-        $totalHadir = $attendances->where('status', 'hadir')->count();
-        $totalTelat = $attendances->where('status', 'telat')->count();
+        $totalHadir = $attendances->where('is_late', 0)->count();
+        $totalTelat = $attendances->where('is_late', 1)->count();
         $totalIzin = $attendances->where('status', 'izin')->count();
         $totalEarlyCheckout = $attendances->where('status', 'early_checkout')->count();
         $totalForgotCheckout = $attendances->where('status', 'forgot_checkout')->count();

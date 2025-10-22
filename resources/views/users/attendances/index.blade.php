@@ -428,7 +428,7 @@
                                 <input type="hidden" name="schedule_id" value="{{ $schedule?->id }}">
                                 <input type="hidden" name="latitude" id="latitude">
                                 <input type="hidden" name="longitude" id="longitude">
-                                <button type="submit" class="w-full h-full bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform hover:scale-95 shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
+                                <button type="submit" class="w-full h-full bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
                                     <div class="w-10 sm:w-12 h-10 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
                                         <i data-lucide="log-in" class="w-5 sm:w-6 h-5 sm:h-6 text-white"></i>
                                     </div>
@@ -473,7 +473,7 @@
                                     <input type="hidden" name="schedule_id" value="{{ $schedule?->id }}">
                                     <input type="hidden" name="latitude" id="checkout-latitude">
                                     <input type="hidden" name="longitude" id="checkout-longitude">
-                                    <button type="submit" class="w-full h-full bg-gradient-to-br from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform hover:scale-95 shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
+                                    <button type="submit" class="w-full h-full bg-gradient-to-br from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
                                         <div class="w-10 sm:w-12 h-10 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
                                             <i data-lucide="log-out" class="w-5 sm:w-6 h-5 sm:h-6 text-white"></i>
                                         </div>
@@ -487,7 +487,7 @@
                         @if ($attendance && $attendance->check_in_time && !$attendance->check_out_time)
                             <button type="button"
                                     onclick="document.getElementById('early-checkout-modal').classList.remove('hidden')"
-                                    class="w-full h-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform hover:scale-95 shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
+                                    class="w-full h-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
                                 <div class="w-10 sm:w-12 h-10 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
                                     <i data-lucide="clock" class="w-5 sm:w-6 h-5 sm:h-6 text-white"></i>
                                 </div>
@@ -499,7 +499,7 @@
                         @if (!$attendance || !$attendance->check_in_time)
                             <button type="button"
                                     onclick="document.getElementById('izin-modal').classList.remove('hidden')"
-                                    class="w-full h-full bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform hover:scale-95 shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
+                                    class="w-full h-full bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
                                 <div class="w-10 sm:w-12 h-10 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
                                     <i data-lucide="file-text" class="w-5 sm:w-6 h-5 sm:h-6 text-white"></i>
                                 </div>
@@ -510,7 +510,7 @@
                         {{-- Request Leave Button --}}
                         <button type="button"
                                 onclick="document.getElementById('cuti-modal').classList.remove('hidden'); loadUserSchedules()"
-                                class="w-full h-full bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform hover:scale-95 shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
+                                class="w-full h-full bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
                             <div class="w-10 sm:w-12 h-10 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
                                 <i data-lucide="calendar-x" class="w-5 sm:w-6 h-5 sm:h-6 text-white"></i>
                             </div>
@@ -519,7 +519,7 @@
 
                         {{-- View History Button --}}
                         <a href="{{ route('user.attendances.history') }}"
-                           class="w-full h-full bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform hover:scale-95 shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
+                           class="w-full h-full bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 sm:py-4 px-3 sm:px-4 rounded-xl transition-all duration-300 transform shadow-md hover:shadow-lg flex flex-col items-center justify-center gap-1 sm:gap-2">
                             <div class="w-10 sm:w-12 h-10 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center">
                                 <i data-lucide="history" class="w-5 sm:w-6 h-5 sm:h-6 text-white"></i>
                             </div>
@@ -577,7 +577,7 @@
                 <p class="text-xs sm:text-base text-gray-600 mb-6 sm:mb-8 max-w-md mx-auto">You don't have any scheduled shifts for today. Please contact your administrator for schedule information.</p>
                 
                 <a href="{{ route('user.attendances.history') }}"
-                   class="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-8 rounded-xl transition-all duration-300 transform hover:scale-95 shadow-md hover:shadow-lg">
+                   class="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-8 rounded-xl transition-all duration-300 transform shadow-md hover:shadow-lg">
                     <i data-lucide="history" class="w-4 sm:w-5 h-4 sm:h-5"></i>
                     <span class="text-sm sm:text-base">View History</span>
                 </a>

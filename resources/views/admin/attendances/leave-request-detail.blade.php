@@ -1,7 +1,7 @@
 <!-- Employee Information -->
-<div class="bg-gradient-to-r from-sky-50 to-blue-50 rounded-xl p-6 mb-6 border border-sky-200">
+<div class="bg-gradient-to-r from-sky-50 to-blue-50 rounded-2xl p-6 mb-6 border-2 border-sky-200">
     <div class="flex items-center space-x-4">
-        <div class="w-16 h-16 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center shadow-sm">
+        <div class="w-16 h-16 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center shadow-lg">
             <span class="text-lg font-bold text-white">
                 {{ strtoupper(substr($leaveRequest->user->name, 0, 2)) }}
             </span>
@@ -56,8 +56,8 @@
 </div>
 
 <!-- Leave Reason -->
-<div class="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
-    <h4 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+<div class="bg-white border-2 border-gray-200 rounded-2xl p-6 mb-6 shadow-lg">
+    <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
             class="lucide lucide-message-square text-sky-600 mr-2">
@@ -65,15 +65,15 @@
         </svg>
         Leave Reason
     </h4>
-    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
         <p class="text-gray-700 leading-relaxed">{{ $leaveRequest->reason }}</p>
     </div>
 </div>
 
 <!-- Schedules Selection -->
-<div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+<div class="bg-white border-2 border-gray-200 rounded-2xl p-6 shadow-lg">
     <div class="flex items-center justify-between mb-4">
-        <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+        <h4 class="text-lg font-bold text-gray-900 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                 class="lucide lucide-calendar-days text-sky-600 mr-2">
@@ -111,7 +111,7 @@
         <input type="hidden" name="action" id="lr-action" value="">
         <div class="space-y-3 max-h-80 overflow-y-auto">
             @foreach($permissions as $permission)
-                <div class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:bg-sky-50 transition-colors">
                     @if($leaveRequest->status === 'pending')
                         <input type="checkbox" 
                                name="approved_permissions[]" 
@@ -140,9 +140,9 @@
                         </div>
                     @endif
                     
-                    <label for="permission_{{ $permission->id }}" class="flex-1 cursor-pointer">
+                    <label for="permission_{{ $permission->id }}" class="flex-1 {{ $leaveRequest->status === 'pending' ? 'cursor-pointer' : '' }}">
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center">
+                            <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                                     class="lucide lucide-calendar text-sky-600">
@@ -184,16 +184,16 @@
 
         @if($leaveRequest->status === 'pending')
             <!-- Action Buttons -->
-            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-100 mt-6">
+            <div class="flex justify-end space-x-3 pt-6 border-t-2 border-gray-100 mt-6">
                 <button type="button"
                         onclick="closeLeaveDetailModal()"
-                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-gray-300 shadow-sm">
                     Cancel
                 </button>
                 
                 <button type="button"
                         onclick="(function(){const f=document.getElementById('schedule-approval-form');document.getElementById('lr-action').value='reject'; if(confirm('Reject ALL schedules in this leave request?')) f.submit();})();"
-                        class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-sm">
+                        class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-lg">
                     <span class="flex items-center space-x-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -213,7 +213,7 @@
                             if(selected.length===0){ alert('Please select at least one schedule to approve.'); return; }
                             if(confirm(`Approve ${selected.length} selected schedule(s)?`)) f.submit();
                         })();"
-                        class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 shadow-sm">
+                        class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 shadow-lg">
                     <span class="flex items-center space-x-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -229,6 +229,11 @@
 </div>
 
 <script>
+    // Initialize Lucide icons after content is loaded
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+
     function validateLeaveFormSubmit(e){
         // Kept for safety if form submit used elsewhere
         const actionInput = document.getElementById('lr-action');

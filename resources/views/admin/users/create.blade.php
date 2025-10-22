@@ -201,7 +201,6 @@
                                     required>
                                 <option value="" disabled selected>Pilih role pengguna</option>
                                 <option value="admin">Admin - Akses penuh sistem</option>
-                                <option value="operator">Operator - Kelola jadwal dan shift</option>
                                 <option value="user">User - Akses terbatas</option>
                             </select>
                             <p class="text-xs text-gray-500 flex items-center gap-1">

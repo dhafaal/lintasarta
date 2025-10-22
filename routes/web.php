@@ -25,6 +25,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
 
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/attendance-details', [DashboardController::class, 'getTodayAttendanceDetails'])->name('dashboard.attendance-details');
         Route::resource('locations', LocationsController::class);   
         Route::post('locations/{location}/toggle-active', [LocationsController::class, 'toggleActive'])
             ->name('locations.toggle-active');

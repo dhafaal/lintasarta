@@ -33,10 +33,9 @@ class UserController extends Controller
         $users = $query->latest()->paginate(10)->withQueryString();
 
         $countAdmin = User::where('role', 'admin')->count();
-        $countOperator = User::where('role', 'operator')->count();
         $countUser = User::where('role', 'user')->count();
 
-        return view('admin.users.index', compact('users', 'countAdmin', 'countOperator', 'countUser'));
+        return view('admin.users.index', compact('users', 'countAdmin', 'countUser'));
 
         $users = $query->orderBy('name')
             ->paginate(10)
@@ -56,7 +55,7 @@ class UserController extends Controller
         $query = User::with('shifts');
 
         $role = strtolower($request->get('role', 'all'));
-        if ($role !== 'all' && in_array($role, ['admin', 'operator', 'user'])) {
+        if ($role !== 'all' && in_array($role, ['admin', 'user'])) {
             $query->where('role', $role);
         }
 
@@ -94,7 +93,7 @@ class UserController extends Controller
             'name'     => 'required',
             'email'    => 'required|email|unique:users',
             'password' => 'nullable|min:8',
-            'role'     => 'required|in:admin,operator,user'
+            'role'     => 'required|in:admin,user'
         ]);
 
         $user = User::create([
@@ -136,7 +135,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
-            'role' => 'required|in:admin,operator,user',
+            'role' => 'required|in:admin,user',
         ]);
 
         // Store old values for logging

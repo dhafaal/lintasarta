@@ -11,6 +11,20 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+
+        ::-webkit-scrollbar{
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb{
+            background-color: #e0f2fe;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover{
+            background-color: #0ea5e9
+        }
+        
         /* Enhanced Sidebar Transitions */
         .sidebar-transition {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
