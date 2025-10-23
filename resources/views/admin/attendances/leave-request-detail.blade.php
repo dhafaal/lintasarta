@@ -1,7 +1,7 @@
 <!-- Employee Information -->
 <div class="bg-gradient-to-r from-sky-50 to-blue-50 rounded-2xl p-6 mb-6 border-2 border-sky-200">
     <div class="flex items-center space-x-4">
-        <div class="w-16 h-16 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center shadow-lg">
+        <div class="w-16 h-16 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center shadow-lg">
             <span class="text-lg font-bold text-white">
                 {{ strtoupper(substr($leaveRequest->user->name, 0, 2)) }}
             </span>

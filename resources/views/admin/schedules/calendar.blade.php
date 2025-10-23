@@ -164,7 +164,7 @@
                                         $dayOfWeek = \Carbon\Carbon::createFromDate($year, $month, $d)->dayOfWeek;
                                         $isWeekend = $dayOfWeek === 0 || $dayOfWeek === 6;
                                     @endphp
-                                    <th class="px-2 py-2 sm:px-3 sm:py-3 border-b-2 border-r border-gray-300 font-bold text-[10px] sm:text-xs uppercase min-w-[60px] sm:min-w-[80px] text-center {{ $isWeekend ? 'bg-red-100 text-red-700' : 'text-gray-800' }}">
+                                    <th class="px-2 py-2 sm:px-3 sm:py-3 border-b-2 border-r border-gray-300 font-bold text-[10px] sm:text-xs uppercase min-w-[60px] sm:min-w-[80px] text-center ">
                                         {{ $d }}
                                     </th>
                                 @endfor
@@ -181,7 +181,7 @@
                                         $dayOfWeek = \Carbon\Carbon::createFromDate($year, $month, $d)->dayOfWeek;
                                         $isWeekend = $dayOfWeek === 0 || $dayOfWeek === 6;
                                     @endphp
-                                    <th class="px-2 py-1.5 sm:px-3 sm:py-2 border-b border-r border-gray-300 text-[10px] sm:text-xs uppercase font-semibold text-center {{ $isWeekend ? 'bg-red-100 text-red-700' : 'text-gray-700' }}">
+                                    <th class="px-2 py-1.5 sm:px-3 sm:py-2 border-b border-r border-gray-300 text-[10px] sm:text-xs uppercase font-semibold text-center">
                                         {{ \Carbon\Carbon::createFromDate($year, $month, $d)->translatedFormat('D') }}
                                     </th>
                                 @endfor
@@ -194,15 +194,15 @@
                                     <td class="sticky left-0 bg-white group-hover:bg-sky-50 z-20 px-2 sm:px-4 py-2 sm:py-4 border-b border-r border-gray-300 text-center align-middle font-bold text-gray-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]"
                                         rowspan="2">
                                         <div class="flex items-center justify-center">
-                                            <span class="w-6 h-6 sm:w-8 sm:h-8 bg-sky-100 rounded-lg flex items-center justify-center text-sky-700 font-bold text-xs sm:text-sm">
+                                            <span class="w-6 h-6 sm:w-8 sm:h-8 bg-sky-100 rounded-lg flex items-center justify-center text-sky-600 font-bold text-xs sm:text-sm">
                                                 {{ $index + 1 }}
                                             </span>
                                         </div>
                                     </td>
                                     <td class="sticky left-12 sm:left-16 bg-white group-hover:bg-sky-50 z-20 px-3 sm:px-5 py-2 sm:py-4 border-b border-r border-gray-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                                         <div class="flex items-center gap-2 sm:gap-3">
-                                            <div class="w-8 h-8 sm:w-11 sm:h-11 bg-gradient-to-br from-sky-400 to-sky-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
-                                                <span class="text-white font-bold text-xs sm:text-base">{{ substr($row['nama'], 0, 1) }}</span>
+                                            <div class="w-8 h-8 sm:w-11 sm:h-11 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                <span class="text-sky-600 font-bold text-xs sm:text-base">{{ substr($row['nama'], 0, 1) }}</span>
                                             </div>
                                             <div class="min-w-0">
                                                 <div class="font-bold text-gray-900 text-xs sm:text-sm truncate">{{ $row['nama'] }}</div>
@@ -236,15 +236,6 @@
                                                 $cellBgClass = 'bg-red-50';
                                                 $textClass = 'text-red-800 font-semibold';
                                                 $borderClass = 'border-red-100';
-                                            } else {
-                                                if ($isWeekend) {
-                                                    $cellBgClass = 'bg-red-50';
-                                                    $textClass = 'text-red-500';
-                                                    $borderClass = 'border-red-100';
-                                                } else {
-                                                    $cellBgClass = 'bg-white';
-                                                    $textClass = 'text-gray-700';
-                                                }
                                             }
                                         @endphp
                                         <td class="px-2 py-1.5 sm:px-3 sm:py-3 border-b border-r {{ $borderClass }} text-center {{ $cellBgClass }} transition-colors"
@@ -300,15 +291,6 @@
                                                 $cellBgClass = 'bg-red-50';
                                                 $textClass = 'text-red-700 font-medium';
                                                 $borderClass = 'border-red-100';
-                                            } else {
-                                                if ($isWeekend) {
-                                                    $cellBgClass = 'bg-red-50';
-                                                    $textClass = 'text-red-500';
-                                                    $borderClass = 'border-red-100';
-                                                } else {
-                                                    $cellBgClass = 'bg-white';
-                                                    $textClass = 'text-gray-600';
-                                                }
                                             }
                                         @endphp
                                         <td class="px-2 py-1 sm:px-3 sm:py-2.5 border-b-2 border-r {{ $borderClass }} text-center {{ $cellBgClass }} transition-colors">
@@ -387,14 +369,6 @@
                                             } elseif ($attendanceStatus === 'alpha') {
                                                 $cellBgClass = 'bg-red-100';
                                                 $textClass = 'text-red-800';
-                                            } else {
-                                                if ($isWeekend) {
-                                                    $cellBgClass = 'bg-red-50';
-                                                    $textClass = 'text-red-500';
-                                                } else {
-                                                    $cellBgClass = 'bg-gray-50';
-                                                    $textClass = 'text-gray-500';
-                                                }
                                             }
                                         @endphp
                                         <div class="aspect-square flex flex-col items-center justify-center rounded {{ $cellBgClass }} p-1">

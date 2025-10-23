@@ -275,8 +275,8 @@
                                     <td class="px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
-                                                <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center">
-                                                    <span class="text-white font-bold text-xs sm:text-sm">{{ strtoupper(substr($request->user->name, 0, 1)) }}</span>
+                                                <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-4 group-hover:from-sky-200 group-hover:to-sky-300 transition-colors">
+                                                    <span class="text-sky-600 font-bold text-xs sm:text-sm">{{ strtoupper(substr($request->user->name, 0, 1)) }}</span>
                                                 </div>
                                             </div>
                                             <div class="ml-3 sm:ml-4">
@@ -380,8 +380,8 @@
                             {{-- Employee Header --}}
                             <div class="flex items-center justify-between mb-2 sm:mb-3">
                                 <div class="flex items-center gap-2 sm:gap-3">
-                                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-sky-400 to-sky-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <span class="text-white font-bold text-xs sm:text-sm">{{ strtoupper(substr($request->user->name, 0, 1)) }}</span>
+                                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-100-400 to-sky-200 rounded-md flex items-center justify-center flex-shrink-0">
+                                        <span class="text-sky-600 font-bold text-xs sm:text-sm">{{ strtoupper(substr($request->user->name, 0, 1)) }}</span>
                                     </div>
                                     <div class="min-w-0">
                                         <div class="font-bold text-gray-900 text-xs sm:text-sm">{{ $request->user->name }}</div>

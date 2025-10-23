@@ -10,19 +10,11 @@ class AccountSeeder extends Seeder {
     public function run(): void {
 
         User::create([
-            'name' => 'Admin 1',
+            'name' => 'Super Admin',
             'email' => 'admin@example.com',
             'password' => Hash::make('password'),
             'role' => 'Admin',
         ]);
-
-        User::create([
-            'name' => 'Operator 1',
-            'email' => 'operator@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'Operator',
-        ]); 
-
         User::create([
             'name' => 'Mursidi',
             'email' => 'murmur@example.com',
@@ -32,6 +24,30 @@ class AccountSeeder extends Seeder {
         User::create([
             'name' => 'Dirman',
             'email' => 'dir@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'User',
+        ]);
+            User::create([
+            'name' => 'Dayat',
+            'email' => 'dayat@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'User',
+        ]);
+        User::create([
+            'name' => 'Herman',
+            'email' => 'herman@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'User',
+        ]);
+        User::create([
+            'name' => 'Surya',
+            'email' => 'surya@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'User',
+        ]);
+        User::create([
+            'name' => 'Agus',
+            'email' => 'agus@example.com',
             'password' => Hash::make('password'),
             'role' => 'User',
         ]);

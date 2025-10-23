@@ -134,7 +134,7 @@
     </style>
 </head>
 
-<body class="bg-slate-50 min-h-screen antialiased">
+<body class="bg-white min-h-screen antialiased">
     <div class="min-h-screen" x-data="{ 
         mobileMenuOpen: false,
         userMenuOpen: false,
