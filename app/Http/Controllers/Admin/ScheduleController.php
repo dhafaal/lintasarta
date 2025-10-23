@@ -1709,6 +1709,45 @@ class ScheduleController extends Controller
                 continue;
             }
 
+            // PRESERVE forgot_checkout and early_checkout statuses
+            // Only recalculate hadir/telat for attendances that don't have these special statuses
+            if (in_array($att->status, ['forgot_checkout', 'early_checkout'])) {
+                // Still update is_late and late_minutes, but keep the status
+                $scheduleDate = Carbon::parse($schedule->schedule_date);
+                $shiftStartT  = Carbon::parse($schedule->shift->start_time);
+                $shiftStart   = $scheduleDate->copy()->setTimeFrom($shiftStartT);
+                $checkIn      = Carbon::parse($att->check_in_time);
+
+                $isLate = false;
+                $lateMinutes = 0;
+
+                $grace = $toleranceMinutes;
+                if ($checkIn->gt($shiftStart->copy()->addMinutes($grace))) {
+                    $lateMinutes = (int) $shiftStart->diffInMinutes($checkIn);
+                    $isLate = true;
+                }
+
+                // Update only is_late and late_minutes, preserve status
+                if ((bool)$att->is_late !== $isLate || (int)$att->late_minutes !== $lateMinutes) {
+                    \Log::info('Recalc attendance is_late/late_minutes (preserving special status)', [
+                        'attendance_id' => $att->id,
+                        'user_id' => $userId,
+                        'date' => $date,
+                        'preserved_status' => $att->status,
+                        'old_is_late' => (bool)$att->is_late,
+                        'old_late_minutes' => (int)$att->late_minutes,
+                        'new_is_late' => $isLate,
+                        'new_late_minutes' => $lateMinutes,
+                    ]);
+                    $att->update([
+                        'is_late' => $isLate,
+                        'late_minutes' => $lateMinutes,
+                    ]);
+                }
+                continue;
+            }
+
+            // For normal statuses (hadir, telat, izin, alpha), recalculate as before
             $scheduleDate = Carbon::parse($schedule->schedule_date);
             $shiftStartT  = Carbon::parse($schedule->shift->start_time);
             $shiftStart   = $scheduleDate->copy()->setTimeFrom($shiftStartT);

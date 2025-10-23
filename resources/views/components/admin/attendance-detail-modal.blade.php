@@ -117,6 +117,16 @@ function showAttendanceDetail(status) {
             title: 'Alpha',
             icon: '<i data-lucide="x-circle" class="w-6 h-6 text-red-600"></i>',
             bgColor: 'bg-red-100'
+        },
+        'early_checkout': {
+            title: 'Early Checkout',
+            icon: '<i data-lucide="log-out" class="w-6 h-6 text-amber-600"></i>',
+            bgColor: 'bg-amber-100'
+        },
+        'forgot_checkout': {
+            title: 'Forgot Checkout',
+            icon: '<i data-lucide="alert-circle" class="w-6 h-6 text-rose-600"></i>',
+            bgColor: 'bg-rose-100'
         }
     };
     
@@ -234,16 +244,19 @@ function renderAttendanceDetail(response) {
         
         shift.employees.forEach(employee => {
             const statusClass = statusColors[employee.status] || 'bg-gray-50 border-gray-200 text-gray-700';
-            const statusLabel = employee.status.charAt(0).toUpperCase() + employee.status.slice(1);
+            let statusLabel = employee.status.charAt(0).toUpperCase() + employee.status.slice(1);
             
-            // Determine checkout status
-            let checkoutStatusBadge = '';
-            if (employee.checkout_status) {
-                const checkoutClass = checkoutStatusColors[employee.checkout_status] || 'bg-gray-50 border-gray-200 text-gray-700';
-                const checkoutLabel = employee.checkout_status === 'early' ? 'Early Checkout' : 'Forgot Checkout';
-                checkoutStatusBadge = `
-                    <span class="px-2 py-1 ${checkoutClass} border rounded-full text-xs font-semibold ml-2">
-                        ${checkoutLabel}
+            // For izin status, show permission type (Izin or Cuti)
+            if (employee.status === 'izin' && employee.permission_type) {
+                statusLabel = employee.permission_type.charAt(0).toUpperCase() + employee.permission_type.slice(1);
+            }
+            
+            // Determine if early checkout
+            let earlyCheckoutBadge = '';
+            if (employee.is_early_checkout) {
+                earlyCheckoutBadge = `
+                    <span class="px-2 py-1 bg-amber-50 border-amber-200 text-amber-700 border rounded-full text-xs font-semibold ml-2">
+                        Early Checkout
                     </span>
                 `;
             }
@@ -264,7 +277,7 @@ function renderAttendanceDetail(response) {
                             <span class="px-3 py-1 ${statusClass} border rounded-full text-xs font-semibold">
                                 ${statusLabel}
                             </span>
-                            ${checkoutStatusBadge}
+                            ${earlyCheckoutBadge}
                         </div>
                     </div>
                     <div class="flex items-center space-x-4 text-xs text-gray-600 bg-gray-50 rounded-lg p-2">

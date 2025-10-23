@@ -38,26 +38,32 @@ class DashboardController extends Controller
             // Get schedules for this date
             $schedulesCount = Schedules::whereDate('schedule_date', $dateString)->count();
             
-            // Get attendances for this date
-            // Hadir = semua attendance (hadir + telat + early_checkout) kecuali izin
+            // Hadir = attendance dengan is_late = 0 (tidak telat)
             $hadirCount = Attendance::whereHas('schedule', function($q) use ($dateString) {
                 $q->whereDate('schedule_date', $dateString);
-            })->where('status', '!=', 'izin')->count();
+            })->where('is_late', 0)->count();
             
-            // Telat = has attendance AND is_late = 1 (termasuk early_checkout yang telat)
+            // Telat = attendance dengan is_late = 1
             $telatCount = Attendance::whereHas('schedule', function($q) use ($dateString) {
                 $q->whereDate('schedule_date', $dateString);
-            })->where('is_late', 1)
-              ->where('status', '!=', 'izin')
-              ->count();
+            })->where('is_late', 1)->count();
             
-            // Izin = attendance with status 'izin'
-            $izinCount = Attendance::whereHas('schedule', function($q) use ($dateString) {
+            // Izin = approved permissions untuk tanggal ini
+            $izinCount = Permissions::whereHas('schedule', function($q) use ($dateString) {
                 $q->whereDate('schedule_date', $dateString);
-            })->where('status', 'izin')->count();
+            })->where('status', 'approved')->count();
             
-            // Alpha = schedules - (hadir + izin)
-            $alphaCount = max(0, $schedulesCount - ($hadirCount + $izinCount));
+            // Alpha = schedules tanpa attendance dan tanpa approved permission
+            $attendedScheduleIds = Attendance::whereHas('schedule', function($q) use ($dateString) {
+                $q->whereDate('schedule_date', $dateString);
+            })->pluck('schedule_id');
+            
+            $permissionScheduleIds = Permissions::whereHas('schedule', function($q) use ($dateString) {
+                $q->whereDate('schedule_date', $dateString);
+            })->where('status', 'approved')->pluck('schedule_id');
+            
+            $allScheduleIds = Schedules::whereDate('schedule_date', $dateString)->pluck('id');
+            $alphaCount = $allScheduleIds->diff($attendedScheduleIds)->diff($permissionScheduleIds)->count();
             
             $attendanceData[] = [
                 'date' => $dateString,
@@ -72,53 +78,59 @@ class DashboardController extends Controller
         $today = Carbon::today();
         $todaySchedules = Schedules::whereDate('schedule_date', $today)->count();
         
-        // Get unique user IDs for each status (to match modal display)
-        // Hadir = unique users yang punya attendance (hadir + telat + early_checkout) kecuali izin
-        $hadirUserIds = Attendance::whereHas('schedule', function($q) use ($today) {
+        // Hadir = attendance dengan is_late = 0 (tidak telat)
+        $todayHadir = Attendance::whereHas('schedule', function($q) use ($today) {
             $q->whereDate('schedule_date', $today);
-        })->where('status', '!=', 'izin')
-          ->distinct()
-          ->pluck('user_id');
-        $todayHadir = $hadirUserIds->count();
+        })->where('is_late', 0)->count();
 
-        // Telat = unique users yang punya attendance dengan is_late = 1
-        $telatUserIds = Attendance::whereHas('schedule', function($q) use ($today) {
+        // Telat = attendance dengan is_late = 1
+        $todayTelat = Attendance::whereHas('schedule', function($q) use ($today) {
             $q->whereDate('schedule_date', $today);
-        })->where('is_late', 1)
-          ->where('status', '!=', 'izin')
-          ->distinct()
-          ->pluck('user_id');
-        $todayTelat = $telatUserIds->count();
+        })->where('is_late', 1)->count();
 
-        // Izin = unique users yang punya attendance dengan status 'izin'
-        $izinUserIds = Attendance::whereHas('schedule', function($q) use ($today) {
+        // Izin = approved permissions untuk hari ini
+        $todayIzin = Permissions::whereHas('schedule', function($q) use ($today) {
             $q->whereDate('schedule_date', $today);
-        })->where('status', 'izin')
-          ->distinct()
-          ->pluck('user_id');
-        $todayIzin = $izinUserIds->count();
+        })->where('status', 'approved')->count();
 
-        // Alpha = unique users yang punya schedule tapi tidak ada attendance
-        $allScheduledUserIds = Schedules::whereDate('schedule_date', $today)
-            ->distinct()
-            ->pluck('user_id');
-        $allAttendedUserIds = $hadirUserIds->merge($izinUserIds)->unique();
-        $todayAlpha = $allScheduledUserIds->diff($allAttendedUserIds)->count();
+        // Alpha = schedules tanpa attendance dan tanpa approved permission
+        $todayAttendedScheduleIds = Attendance::whereHas('schedule', function($q) use ($today) {
+            $q->whereDate('schedule_date', $today);
+        })->pluck('schedule_id');
+        
+        $todayPermissionScheduleIds = Permissions::whereHas('schedule', function($q) use ($today) {
+            $q->whereDate('schedule_date', $today);
+        })->where('status', 'approved')->pluck('schedule_id');
+        
+        $todayAllScheduleIds = Schedules::whereDate('schedule_date', $today)->pluck('id');
+        $todayAlpha = $todayAllScheduleIds->diff($todayAttendedScheduleIds)->diff($todayPermissionScheduleIds)->count();
+        
+        // Early Checkout = attendance dengan status 'early_checkout'
+        $todayEarlyCheckout = Attendance::whereHas('schedule', function($q) use ($today) {
+            $q->whereDate('schedule_date', $today);
+        })->where('status', 'early_checkout')->count();
+        
+        // Forgot Checkout = attendance dengan status 'forgot_checkout'
+        $todayForgotCheckout = Attendance::whereHas('schedule', function($q) use ($today) {
+            $q->whereDate('schedule_date', $today);
+        })->where('status', 'forgot_checkout')->count();
 
         return view('admin.dashboard', [
-            'totalUsers'       => User::where('role', '!=', 'Admin')->count(),
-            'totalShifts'      => Shift::count(),
-            'totalSchedules'   => Schedules::count(),
-            'attendanceData'   => $attendanceData,
-            'chartDates'       => $dates,
-            'todaySchedules'   => $todaySchedules,
-            'todayHadir'       => $todayHadir,
-            'todayTelat'       => $todayTelat,
-            'todayIzin'        => $todayIzin,
-            'todayAlpha'       => $todayAlpha,
-            'currentMonth'     => $monthDate->format('F Y'),
-            'selectedMonth'    => $selectedMonth,
-            'selectedYear'     => $selectedYear
+            'totalUsers'          => User::where('role', '!=', 'Admin')->count(),
+            'totalShifts'         => Shift::count(),
+            'totalSchedules'      => Schedules::count(),
+            'attendanceData'      => $attendanceData,
+            'chartDates'          => $dates,
+            'todaySchedules'      => $todaySchedules,
+            'todayHadir'          => $todayHadir,
+            'todayTelat'          => $todayTelat,
+            'todayIzin'           => $todayIzin,
+            'todayAlpha'          => $todayAlpha,
+            'todayEarlyCheckout'  => $todayEarlyCheckout,
+            'todayForgotCheckout' => $todayForgotCheckout,
+            'currentMonth'        => $monthDate->format('F Y'),
+            'selectedMonth'       => $selectedMonth,
+            'selectedYear'        => $selectedYear
         ]);
     }
 
@@ -142,18 +154,33 @@ class DashboardController extends Controller
             // Determine actual status using attendance status field
             $actualStatus = 'alpha'; // default
             $checkoutStatus = null;
+            $isEarlyCheckout = false;
+            $permissionType = null;
             
             if ($schedule->attendance) {
                 // Check attendance status field first (for early_checkout, forgot_checkout, izin)
                 $attendanceStatus = $schedule->attendance->status;
                 
                 if ($attendanceStatus === 'early_checkout') {
-                    // Early checkout: set as hadir with early checkout badge
-                    $actualStatus = $schedule->attendance->is_late == 1 ? 'telat' : 'hadir';
-                    $checkoutStatus = 'early';
+                    // Early checkout: categorize as hadir/telat based on is_late, but flag as early checkout
+                    $isEarlyCheckout = true;
+                    if ($schedule->attendance->is_late == 1) {
+                        $actualStatus = 'telat';
+                    } else {
+                        $actualStatus = 'hadir';
+                    }
+                } elseif ($attendanceStatus === 'forgot_checkout') {
+                    // Forgot checkout: treat as separate status
+                    $actualStatus = 'forgot_checkout';
                 } elseif ($attendanceStatus === 'izin') {
-                    // Izin from permission
+                    // Izin from permission - get permission type
                     $actualStatus = 'izin';
+                    $permission = Permissions::where('schedule_id', $schedule->id)
+                        ->where('status', 'approved')
+                        ->first();
+                    if ($permission) {
+                        $permissionType = $permission->type; // izin or cuti
+                    }
                 } else {
                     // Normal attendance: use is_late field
                     if ($schedule->attendance->is_late == 1) {
@@ -161,7 +188,6 @@ class DashboardController extends Controller
                     } else {
                         $actualStatus = 'hadir';
                     }
-                
                 }
             } else {
                 // No attendance, check if has approved permission
@@ -170,11 +196,25 @@ class DashboardController extends Controller
                     ->first();
                 if ($permission) {
                     $actualStatus = 'izin';
+                    // Store permission type for display (izin or cuti)
+                    $permissionType = $permission->type;
                 }
             }
             
             // Filter by requested status
-            if ($status === 'all' || $actualStatus === $status) {
+            // For early_checkout filter, show only those with early checkout flag
+            if ($status === 'early_checkout') {
+                if (!$isEarlyCheckout) {
+                    continue; // Skip if not early checkout
+                }
+            } elseif ($status === 'all' || $actualStatus === $status) {
+                // Normal filtering
+            } else {
+                continue; // Skip if doesn't match
+            }
+            
+            // If we reach here, include this schedule
+            if (true) {
                 // Group by category, not shift name
                 if (!isset($groupedData[$shiftCategory])) {
                     $groupedData[$shiftCategory] = [
@@ -200,7 +240,8 @@ class DashboardController extends Controller
                     'status' => $actualStatus,
                     'check_in' => $schedule->attendance ? $schedule->attendance->check_in_time : null,
                     'check_out' => $schedule->attendance ? $schedule->attendance->check_out_time : null,
-                    'checkout_status' => $checkoutStatus,
+                    'is_early_checkout' => $isEarlyCheckout,
+                    'permission_type' => $permissionType, // izin or cuti (only for status = izin)
                 ];
             }
         }

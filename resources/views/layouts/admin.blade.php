@@ -8,6 +8,80 @@
     <title>Admin - @yield('title')</title>
     <link rel="icon" href="">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+        // Initialize Alpine.js store for global state
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('badges', {
+                izin: 0,
+                cuti: 0,
+                isLoading: false,
+                lastUpdate: null,
+                errorCount: 0,
+                
+                init() {
+                    // Start polling when component initializes
+                    this.startPolling();
+                },
+                
+                startPolling() {
+                    // Initial poll immediately
+                    this.fetchCounts();
+                    
+                    // Set up interval for polling (every 10 seconds)
+                    setInterval(() => this.fetchCounts(), 10000);
+                },
+                
+                async fetchCounts() {
+                    // Skip if already loading
+                    if (this.isLoading) return;
+                    
+                    this.isLoading = true;
+                    
+                    try {
+                        const response = await fetch('{{ route('admin.attendances.pending-counts') }}', {
+                            method: 'GET',
+                            headers: { 
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            },
+                            credentials: 'same-origin'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        // Update counts with animation
+                        const oldIzin = this.izin;
+                        const oldCuti = this.cuti;
+                        
+                        this.izin = parseInt(data.izin || 0);
+                        this.cuti = parseInt(data.cuti || 0);
+                        this.lastUpdate = new Date();
+                        this.errorCount = 0; // Reset error count on success
+                        
+                        // Log if counts changed
+                        if (oldIzin !== this.izin || oldCuti !== this.cuti) {
+                            console.log('Badge counts updated:', { izin: this.izin, cuti: this.cuti });
+                        }
+                        
+                    } catch (error) {
+                        this.errorCount++;
+                        console.error('Error fetching badge counts:', error);
+                        
+                        // Stop polling after 3 consecutive errors
+                        if (this.errorCount >= 3) {
+                            console.warn('Badge polling stopped after 3 consecutive errors');
+                        }
+                    } finally {
+                        this.isLoading = false;
+                    }
+                }
+            });
+        });
+    </script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -506,7 +580,7 @@
                     </div>
                 </div>
 
-                               <!-- Schedules -->
+                <!-- Schedules -->
                 <div class="space-y-1 relative">
                     <button
                         @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.schedules.index') }}' : toggleSchedules()"
@@ -650,13 +724,29 @@
                             class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.attendances.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
                             <i data-lucide="book-check" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
                             <span>View Attendances</span>
+                            <span x-data="{}"
+                                  x-show="$store.badges.izin > 0"
+                                  x-transition:enter="transition ease-out duration-300"
+                                  x-transition:enter-start="opacity-0 scale-50"
+                                  x-transition:enter-end="opacity-100 scale-100"
+                                  class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-red-600 text-white animate-pulse">
+                                <span x-text="$store.badges.izin"></span>
+                            </span>
                         </a>
                         <a href="{{ route('admin.attendances.leave-requests') }}"
                             @click="closeMobileMenu()"
                             class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.attendances.leave-requests') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="book    "
+                            <i data-lucide="book-open"
                                 class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
                             <span>Leave Requests</span>
+                            <span x-data="{}"
+                                  x-show="$store.badges.cuti > 0"
+                                  x-transition:enter="transition ease-out duration-300"
+                                  x-transition:enter-start="opacity-0 scale-50"
+                                  x-transition:enter-end="opacity-100 scale-100"
+                                  class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-red-600 text-white animate-pulse">
+                                <span x-text="$store.badges.cuti"></span>
+                            </span>
                         </a>
                     </div>
                 </div>
@@ -1031,12 +1121,6 @@
 
         // Add smooth scrolling for better UX
         document.documentElement.style.scrollBehavior = 'smooth';
-
-        // Add loading state management
-        window.addEventListener('beforeunload', function() {
-            document.body.style.opacity = '0.7';
-            document.body.style.pointerEvents = 'none';
-        });
     </script>
 
     @stack('scripts')

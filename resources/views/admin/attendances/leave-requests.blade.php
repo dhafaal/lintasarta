@@ -338,14 +338,14 @@
                                             </button>
                                             @if ($request->status === 'pending')
                                                 <button type="button" onclick="processLeaveRequest({{ $request->id }}, 'approve')"
-                                                    class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors"
+                                                    class="inline-flex items-center px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-sm rounded-lg transition-all duration-200"
                                                     title="Approve">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check">
                                                         <path d="M20 6 9 17l-5-5" />
                                                     </svg>
                                                 </button>
                                                 <button type="button" onclick="processLeaveRequest({{ $request->id }}, 'reject')"
-                                                    class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
+                                                    class="inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition-all duration-200"
                                                     title="Reject">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x">
                                                         <path d="M18 6 6 18" />

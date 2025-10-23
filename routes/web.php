@@ -84,6 +84,8 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
             Route::get('/export-yearly', [AdminAttendanceController::class, 'exportYearly'])->name('export.yearly');
             Route::get('/export-per-user', [AdminAttendanceController::class, 'exportPerUser'])->name('export.per-user');
             Route::get('/export-all', [AdminAttendanceController::class, 'exportAll'])->name('export.all');
+            // Real-time pending counts endpoint for badges
+            Route::get('/pending-counts', [AdminAttendanceController::class, 'pendingCounts'])->name('pending-counts');
             
             // Leave Requests Management
             Route::get('/leave-requests', [AdminAttendanceController::class, 'leaveRequests'])->name('leave-requests');

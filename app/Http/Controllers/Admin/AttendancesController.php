@@ -418,6 +418,20 @@ class AttendancesController extends Controller
     }
 
     /**
+     * Return pending izin and cuti counts for real-time badges
+     */
+    public function pendingCounts(Request $request)
+    {
+        $izin = Permissions::where('status', 'pending')->where('type', 'izin')->count();
+        $cuti = Permissions::where('status', 'pending')->where('type', 'cuti')->count();
+
+        return response()->json([
+            'izin' => $izin,
+            'cuti' => $cuti,
+        ]);
+    }
+
+    /**
      * Display leave requests management page
      */
     public function leaveRequests(Request $request)
