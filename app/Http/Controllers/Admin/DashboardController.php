@@ -132,10 +132,11 @@ class DashboardController extends Controller
             ->whereDate('schedule_date', $today)
             ->get();
         
-        // Group by shift
+        // Group by shift category
         $groupedData = [];
         
         foreach ($schedules as $schedule) {
+            $shiftCategory = $schedule->shift->category;
             $shiftName = $schedule->shift->shift_name;
             
             // Determine actual status using attendance status field
@@ -174,17 +175,28 @@ class DashboardController extends Controller
             
             // Filter by requested status
             if ($status === 'all' || $actualStatus === $status) {
-                if (!isset($groupedData[$shiftName])) {
-                    $groupedData[$shiftName] = [
-                        'shift_name' => $shiftName,
+                // Group by category, not shift name
+                if (!isset($groupedData[$shiftCategory])) {
+                    $groupedData[$shiftCategory] = [
+                        'category' => $shiftCategory,
                         'shift_start' => $schedule->shift->shift_start,
                         'shift_end' => $schedule->shift->shift_end,
                         'employees' => []
                     ];
+                } else {
+                    // Update shift_start to earliest time
+                    if ($schedule->shift->shift_start < $groupedData[$shiftCategory]['shift_start']) {
+                        $groupedData[$shiftCategory]['shift_start'] = $schedule->shift->shift_start;
+                    }
+                    // Update shift_end to latest time
+                    if ($schedule->shift->shift_end > $groupedData[$shiftCategory]['shift_end']) {
+                        $groupedData[$shiftCategory]['shift_end'] = $schedule->shift->shift_end;
+                    }
                 }
                 
-                $groupedData[$shiftName]['employees'][] = [
+                $groupedData[$shiftCategory]['employees'][] = [
                     'name' => $schedule->user->name,
+                    'shift_name' => $shiftName,
                     'status' => $actualStatus,
                     'check_in' => $schedule->attendance ? $schedule->attendance->check_in_time : null,
                     'check_out' => $schedule->attendance ? $schedule->attendance->check_out_time : null,

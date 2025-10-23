@@ -107,12 +107,14 @@
                         {{ old('remember') ? 'checked' : '' }}>
                     <span class="select-none group-hover:text-sky-600 transition-colors">Remember me for 30 days</span>
                     <div class="relative">
-                        <svg class="w-4 h-4 text-gray-400 hover:text-sky-500 cursor-help transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" onclick="toggleRememberInfo()">
+                        <svg class="w-4 h-4 text-gray-400 hover:text-sky-500 cursor-help transition-colors"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24" onclick="toggleRememberInfo()">
                             <circle cx="12" cy="12" r="10"></circle>
                             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                             <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
-                        <div id="rememberInfo" class="hidden absolute bottom-6 left-0 bg-gray-800 text-white text-xs rounded-lg p-3 w-64 z-10 shadow-lg">
+                        <div id="rememberInfo"
+                            class="hidden absolute bottom-6 left-0 bg-gray-800 text-white text-xs rounded-lg p-3 w-64 z-10 shadow-lg">
                             <div class="mb-2 font-semibold">Secure Remember Me</div>
                             <ul class="space-y-1 text-gray-300">
                                 <li>• Uses encrypted tokens</li>
@@ -124,7 +126,8 @@
                         </div>
                     </div>
                 </label>
-                <a href="{{ route('password.request') }}" class="text-sky-500 hover:text-sky-600 hover:underline font-medium transition-colors">
+                <a href="{{ route('password.request') }}"
+                    class="text-sky-500 hover:text-sky-600 hover:underline font-medium transition-colors">
                     Forgot your password?
                 </a>
             </div>
@@ -132,40 +135,19 @@
             <!-- Submit -->
             <button id="submitBtn" type="submit"
                 class="w-full bg-[#1E90FF] text-white py-2 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg hover:bg-[#1E90FF]/90 transition duration-300 flex justify-center items-center gap-2">
-                <svg id="loadingSpinner" class="hidden h-6 w-6 text-white/50 mr-2" xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24">
-                    <rect width="10" height="10" x="1" y="1" fill="currentColor" rx="1">
-                        <animate id="SVG7WybndBt" fill="freeze" attributeName="x" begin="0;SVGo3aOUHlJ.end"
-                            dur="0.2s" values="1;13" />
-                        <animate id="SVGVoKldbWM" fill="freeze" attributeName="y" begin="SVGFpk9ncYc.end"
-                            dur="0.2s" values="1;13" />
-                        <animate id="SVGKsXgPbui" fill="freeze" attributeName="x" begin="SVGaI8owdNK.end"
-                            dur="0.2s" values="13;1" />
-                        <animate id="SVG7JzAfdGT" fill="freeze" attributeName="y" begin="SVG28A4To9L.end"
-                            dur="0.2s" values="13;1" />
-                    </rect>
-                    <rect width="10" height="10" x="1" y="13" fill="currentColor" rx="1">
-                        <animate id="SVGUiS2jeZq" fill="freeze" attributeName="y" begin="SVG7WybndBt.end"
-                            dur="0.2s" values="13;1" />
-                        <animate id="SVGU0vu2GEM" fill="freeze" attributeName="x" begin="SVGVoKldbWM.end"
-                            dur="0.2s" values="1;13" />
-                        <animate id="SVGOIboFeLf" fill="freeze" attributeName="y" begin="SVGKsXgPbui.end"
-                            dur="0.2s" values="1;13" />
-                        <animate id="SVG14lAaeuv" fill="freeze" attributeName="x" begin="SVG7JzAfdGT.end"
-                            dur="0.2s" values="13;1" />
-                    </rect>
-                    <rect width="10" height="10" x="13" y="13" fill="currentColor" rx="1">
-                        <animate id="SVGFpk9ncYc" fill="freeze" attributeName="x" begin="SVGUiS2jeZq.end"
-                            dur="0.2s" values="13;1" />
-                        <animate id="SVGaI8owdNK" fill="freeze" attributeName="y" begin="SVGU0vu2GEM.end"
-                            dur="0.2s" values="13;1" />
-                        <animate id="SVG28A4To9L" fill="freeze" attributeName="x" begin="SVGOIboFeLf.end"
-                            dur="0.2s" values="1;13" />
-                        <animate id="SVGo3aOUHlJ" fill="freeze" attributeName="y" begin="SVG14lAaeuv.end"
-                            dur="0.2s" values="1;13" />
-                    </rect>
-                </svg>
-                <span id="btnText">Login</span>
+                <svg id="loadingSpinner" class="hidden h-6 w-6 text-white/70 mr-2" xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24" fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
+                            opacity="0.25" />
+                        <path fill="currentColor"
+                            d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z">
+                            <animateTransform attributeName="transform" dur="0.75s" repeatCount="indefinite"
+                                type="rotate" values="0 12 12;360 12 12" />
+                        </path>
+                    </svg>
+                    <span id="btnText">Login</span>
             </button>
         </form>
     </div>
@@ -220,7 +202,7 @@
             ctx.textBaseline = 'top';
             ctx.font = '14px Arial';
             ctx.fillText('Device fingerprint', 2, 2);
-            
+
             return {
                 screen: `${screen.width}x${screen.height}`,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
