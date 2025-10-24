@@ -34,86 +34,29 @@ class DashboardController extends Controller
         for ($date = $startOfMonth->copy(); $date <= $endOfMonth; $date->addDay()) {
             $dateString = $date->format('Y-m-d');
             $dates[] = $date->format('d');
-            
-            // Get schedules for this date
-            $schedulesCount = Schedules::whereDate('schedule_date', $dateString)->count();
-            
-            // Hadir = attendance dengan is_late = 0 (tidak telat)
-            $hadirCount = Attendance::whereHas('schedule', function($q) use ($dateString) {
-                $q->whereDate('schedule_date', $dateString);
-            })->where('is_late', 0)->count();
-            
-            // Telat = attendance dengan is_late = 1
-            $telatCount = Attendance::whereHas('schedule', function($q) use ($dateString) {
-                $q->whereDate('schedule_date', $dateString);
-            })->where('is_late', 1)->count();
-            
-            // Izin = approved permissions untuk tanggal ini
-            $izinCount = Permissions::whereHas('schedule', function($q) use ($dateString) {
-                $q->whereDate('schedule_date', $dateString);
-            })->where('status', 'approved')->count();
-            
-            // Alpha = schedules tanpa attendance dan tanpa approved permission
-            $attendedScheduleIds = Attendance::whereHas('schedule', function($q) use ($dateString) {
-                $q->whereDate('schedule_date', $dateString);
-            })->pluck('schedule_id');
-            
-            $permissionScheduleIds = Permissions::whereHas('schedule', function($q) use ($dateString) {
-                $q->whereDate('schedule_date', $dateString);
-            })->where('status', 'approved')->pluck('schedule_id');
-            
-            $allScheduleIds = Schedules::whereDate('schedule_date', $dateString)->pluck('id');
-            $alphaCount = $allScheduleIds->diff($attendedScheduleIds)->diff($permissionScheduleIds)->count();
-            
+
+            $stats = $this->aggregateDailyByUser($dateString);
+
             $attendanceData[] = [
-                'date' => $dateString,
-                'hadir' => $hadirCount,
-                'telat' => $telatCount,
-                'izin' => $izinCount,
-                'alpha' => $alphaCount
+                'date'  => $dateString,
+                'hadir' => $stats['hadir'],
+                'telat' => $stats['telat'],
+                'izin'  => $stats['izin'],
+                'alpha' => $stats['alpha'],
             ];
         }
         
         // Get today's attendance summary
         $today = Carbon::today();
-        $todaySchedules = Schedules::whereDate('schedule_date', $today)->count();
-        
-        // Hadir = attendance dengan is_late = 0 (tidak telat)
-        $todayHadir = Attendance::whereHas('schedule', function($q) use ($today) {
-            $q->whereDate('schedule_date', $today);
-        })->where('is_late', 0)->count();
-
-        // Telat = attendance dengan is_late = 1
-        $todayTelat = Attendance::whereHas('schedule', function($q) use ($today) {
-            $q->whereDate('schedule_date', $today);
-        })->where('is_late', 1)->count();
-
-        // Izin = approved permissions untuk hari ini
-        $todayIzin = Permissions::whereHas('schedule', function($q) use ($today) {
-            $q->whereDate('schedule_date', $today);
-        })->where('status', 'approved')->count();
-
-        // Alpha = schedules tanpa attendance dan tanpa approved permission
-        $todayAttendedScheduleIds = Attendance::whereHas('schedule', function($q) use ($today) {
-            $q->whereDate('schedule_date', $today);
-        })->pluck('schedule_id');
-        
-        $todayPermissionScheduleIds = Permissions::whereHas('schedule', function($q) use ($today) {
-            $q->whereDate('schedule_date', $today);
-        })->where('status', 'approved')->pluck('schedule_id');
-        
-        $todayAllScheduleIds = Schedules::whereDate('schedule_date', $today)->pluck('id');
-        $todayAlpha = $todayAllScheduleIds->diff($todayAttendedScheduleIds)->diff($todayPermissionScheduleIds)->count();
-        
-        // Early Checkout = attendance dengan status 'early_checkout'
-        $todayEarlyCheckout = Attendance::whereHas('schedule', function($q) use ($today) {
-            $q->whereDate('schedule_date', $today);
-        })->where('status', 'early_checkout')->count();
-        
-        // Forgot Checkout = attendance dengan status 'forgot_checkout'
-        $todayForgotCheckout = Attendance::whereHas('schedule', function($q) use ($today) {
-            $q->whereDate('schedule_date', $today);
-        })->where('status', 'forgot_checkout')->count();
+        $todayStats = $this->aggregateDailyByUser($today->format('Y-m-d'));
+        $todaySchedules = $todayStats['total'];
+        $todayHadir = $todayStats['hadir'];
+        $todayTelat = $todayStats['telat'];
+        $todayIzin = $todayStats['izin'];
+        $todayAlpha = $todayStats['alpha'];
+        // Keep EC/FC as zero here since cards not shown in this view
+        $todayEarlyCheckout = 0;
+        $todayForgotCheckout = 0;
 
         return view('admin.dashboard', [
             'totalUsers'          => User::where('role', '!=', 'Admin')->count(),
@@ -134,126 +77,211 @@ class DashboardController extends Controller
         ]);
     }
 
+    /**
+     * Aggregate daily stats by user so double/long shifts count as ONE schedule.
+     * Status derived from earliest shift's attendance (is_late) unless has approved permission.
+     * Returns: ['total','hadir','telat','izin','alpha']
+     */
+    private function aggregateDailyByUser(string $dateString): array
+    {
+        $schedulesByUser = Schedules::with('shift')
+            ->whereDate('schedule_date', $dateString)
+            ->get()
+            ->groupBy('user_id');
+
+        $total = 0; $hadir = 0; $telat = 0; $izin = 0; $alpha = 0;
+
+        foreach ($schedulesByUser as $userId => $userSchedules) {
+            $total++;
+            $scheduleIds = $userSchedules->pluck('id');
+
+            // Permission takes precedence
+            $hasApprovedPermission = Permissions::whereIn('schedule_id', $scheduleIds)
+                ->where('status', 'approved')
+                ->exists();
+            if ($hasApprovedPermission) {
+                $izin++;
+                continue;
+            }
+
+            $atts = Attendance::whereIn('schedule_id', $scheduleIds)->get();
+            if ($atts->isEmpty()) {
+                $alpha++;
+                continue;
+            }
+
+            // Determine earliest shift for the day
+            $earliestSchedule = $userSchedules->sortBy(function($s){
+                return optional($s->shift)->shift_start ?? '23:59:59';
+            })->first();
+
+            $refAttendance = $atts->firstWhere('schedule_id', optional($earliestSchedule)->id);
+            if (!$refAttendance) {
+                $refAttendance = $atts->sortBy('check_in_time')->first();
+            }
+
+            if ($refAttendance) {
+                if ((int)$refAttendance->is_late === 1) { $telat++; } else { $hadir++; }
+            } else {
+                $alpha++;
+            }
+        }
+
+        return compact('total','hadir','telat','izin','alpha');
+    }
+
     public function getTodayAttendanceDetails(Request $request)
     {
         $status = $request->input('status');
         $today = Carbon::today();
-        
-        // Get all schedules for today
+
+        // Load all schedules for today with relations
         $schedules = Schedules::with(['user', 'shift', 'attendance'])
             ->whereDate('schedule_date', $today)
-            ->get();
-        
-        // Group by shift category
-        $groupedData = [];
-        
-        foreach ($schedules as $schedule) {
-            $shiftCategory = $schedule->shift->category;
-            $shiftName = $schedule->shift->shift_name;
-            
-            // Determine actual status using attendance status field
-            $actualStatus = 'alpha'; // default
-            $checkoutStatus = null;
-            $isEarlyCheckout = false;
+            ->get()
+            ->groupBy('user_id');
+
+        // Build per-user summary (earliest category, combined times)
+        $users = [];
+        foreach ($schedules as $userId => $userSchedules) {
+            $user = optional($userSchedules->first())->user;
+            if (!$user) { continue; }
+
+            // Determine earliest schedule by shift_start
+            $sorted = $userSchedules->sortBy(function($s){ return optional($s->shift)->shift_start ?? '23:59:59'; });
+            $earliest = $sorted->first();
+            $primaryCategory = optional($earliest->shift)->category ?? 'Unknown';
+            $primaryShiftName = optional($earliest->shift)->shift_name ?? '';
+            $primaryStart = optional($earliest->shift)->shift_start ?? null;
+            $primaryEnd = optional($earliest->shift)->shift_end ?? null;
+
+            // Combine attendance across schedules for this user
+            $attendances = $userSchedules->map(function($s){ return $s->attendance; })->filter();
+            $checkIn = $attendances->pluck('check_in_time')->filter()->sort()->first();
+            $checkOut = $attendances->pluck('check_out_time')->filter()->sort()->last();
+
+            // Flags & permissions
+            $hasApprovedPermission = Permissions::whereIn('schedule_id', $userSchedules->pluck('id'))
+                ->where('status','approved')->exists();
             $permissionType = null;
-            
-            if ($schedule->attendance) {
-                // Check attendance status field first (for early_checkout, forgot_checkout, izin)
-                $attendanceStatus = $schedule->attendance->status;
-                
-                if ($attendanceStatus === 'early_checkout') {
-                    // Early checkout: categorize as hadir/telat based on is_late, but flag as early checkout
-                    $isEarlyCheckout = true;
-                    if ($schedule->attendance->is_late == 1) {
-                        $actualStatus = 'telat';
-                    } else {
-                        $actualStatus = 'hadir';
-                    }
-                } elseif ($attendanceStatus === 'forgot_checkout') {
-                    // Forgot checkout: treat as separate status
-                    $actualStatus = 'forgot_checkout';
-                } elseif ($attendanceStatus === 'izin') {
-                    // Izin from permission - get permission type
-                    $actualStatus = 'izin';
-                    $permission = Permissions::where('schedule_id', $schedule->id)
-                        ->where('status', 'approved')
-                        ->first();
-                    if ($permission) {
-                        $permissionType = $permission->type; // izin or cuti
-                    }
-                } else {
-                    // Normal attendance: use is_late field
-                    if ($schedule->attendance->is_late == 1) {
-                        $actualStatus = 'telat';
-                    } else {
-                        $actualStatus = 'hadir';
-                    }
+            if ($hasApprovedPermission) {
+                $perm = Permissions::whereIn('schedule_id', $userSchedules->pluck('id'))
+                    ->where('status','approved')->first();
+                $permissionType = optional($perm)->type;
+            }
+            $hasEarly = $attendances->first(function($a){ return optional($a)->status === 'early_checkout'; }) ? true : false;
+            $hasForgot = $attendances->first(function($a){ return optional($a)->status === 'forgot_checkout'; }) ? true : false;
+
+            // Determine status based on requested rule (permission > forgot > early > hadir/telat > alpha)
+            $actualStatus = 'alpha';
+            if ($hasApprovedPermission) {
+                $actualStatus = 'izin';
+            } elseif ($hasForgot) {
+                $actualStatus = 'forgot_checkout';
+            } elseif ($hasEarly) {
+                // Early checkout: still categorize as hadir/telat based on is_late
+                $earliestAttendance = optional($earliest)->attendance;
+                if ($earliestAttendance) {
+                    $actualStatus = ((int)$earliestAttendance->is_late === 1) ? 'telat' : 'hadir';
                 }
             } else {
-                // No attendance, check if has approved permission
-                $permission = Permissions::where('schedule_id', $schedule->id)
-                    ->where('status', 'approved')
-                    ->first();
-                if ($permission) {
-                    $actualStatus = 'izin';
-                    // Store permission type for display (izin or cuti)
-                    $permissionType = $permission->type;
+                // Use earliest schedule's attendance is_late
+                $earliestAttendance = optional($earliest)->attendance;
+                if ($earliestAttendance) {
+                    $actualStatus = ((int)$earliestAttendance->is_late === 1) ? 'telat' : 'hadir';
                 }
             }
-            
+
             // Filter by requested status
-            // For early_checkout filter, show only those with early checkout flag
             if ($status === 'early_checkout') {
-                if (!$isEarlyCheckout) {
-                    continue; // Skip if not early checkout
-                }
-            } elseif ($status === 'all' || $actualStatus === $status) {
-                // Normal filtering
-            } else {
-                continue; // Skip if doesn't match
+                if (!$hasEarly) { continue; }
+            } elseif (!($status === 'all' || $actualStatus === $status)) {
+                continue;
             }
-            
-            // If we reach here, include this schedule
-            if (true) {
-                // Group by category, not shift name
-                if (!isset($groupedData[$shiftCategory])) {
-                    $groupedData[$shiftCategory] = [
-                        'category' => $shiftCategory,
-                        'shift_start' => $schedule->shift->shift_start,
-                        'shift_end' => $schedule->shift->shift_end,
-                        'employees' => []
-                    ];
-                } else {
-                    // Update shift_start to earliest time
-                    if ($schedule->shift->shift_start < $groupedData[$shiftCategory]['shift_start']) {
-                        $groupedData[$shiftCategory]['shift_start'] = $schedule->shift->shift_start;
-                    }
-                    // Update shift_end to latest time
-                    if ($schedule->shift->shift_end > $groupedData[$shiftCategory]['shift_end']) {
-                        $groupedData[$shiftCategory]['shift_end'] = $schedule->shift->shift_end;
+
+            // Build all shifts info for this user
+            $allShifts = $sorted->map(function($s) {
+                $att = $s->attendance;
+                // Normalize status: early_checkout/forgot_checkout -> hadir/telat based on is_late
+                $shiftStatus = null;
+                if ($att) {
+                    if (in_array($att->status, ['early_checkout', 'forgot_checkout'])) {
+                        $shiftStatus = ((int)$att->is_late === 1) ? 'telat' : 'hadir';
+                    } else {
+                        $shiftStatus = $att->status;
                     }
                 }
-                
-                $groupedData[$shiftCategory]['employees'][] = [
-                    'name' => $schedule->user->name,
-                    'shift_name' => $shiftName,
-                    'status' => $actualStatus,
-                    'check_in' => $schedule->attendance ? $schedule->attendance->check_in_time : null,
-                    'check_out' => $schedule->attendance ? $schedule->attendance->check_out_time : null,
-                    'is_early_checkout' => $isEarlyCheckout,
-                    'permission_type' => $permissionType, // izin or cuti (only for status = izin)
+                return [
+                    'category' => optional($s->shift)->category,
+                    'shift_name' => optional($s->shift)->shift_name,
+                    'shift_start' => optional($s->shift)->shift_start,
+                    'shift_end' => optional($s->shift)->shift_end,
+                    'check_in' => optional($att)->check_in_time,
+                    'check_out' => optional($att)->check_out_time,
+                    'status' => $shiftStatus,
+                    'is_early_checkout' => optional($att)->status === 'early_checkout',
+                    'permission_type' => null,
                 ];
-            }
+            })->values()->all();
+
+            // Store per-user entry keyed by earliest category
+            $users[] = [
+                'category' => $primaryCategory,
+                'shift_start' => $primaryStart ?: null,
+                'shift_end' => $primaryEnd ?: null,
+                'name' => $user->name,
+                'shift_name' => $primaryShiftName ?: '',
+                'status' => $actualStatus,
+                'check_in' => $checkIn ?: null,
+                'check_out' => $checkOut ?: null,
+                'is_early_checkout' => $hasEarly,
+                'permission_type' => $permissionType,
+                'shifts' => $allShifts,
+            ];
         }
-        
-        // Sort shifts by start time
-        usort($groupedData, function($a, $b) {
-            return strcmp($a['shift_start'], $b['shift_start']);
+
+        // Build grouped data by earliest category and normalize header times
+        $groupedData = [];
+        foreach ($users as $emp) {
+            $cat = $emp['category'];
+            if (!isset($groupedData[$cat])) {
+                $groupedData[$cat] = [
+                    'category' => $cat,
+                    'shift_start' => $emp['shift_start'] ?: null,
+                    'shift_end' => $emp['shift_end'] ?: null,
+                    'employees' => []
+                ];
+            } else {
+                if ($emp['shift_start'] && (!isset($groupedData[$cat]['shift_start']) || $emp['shift_start'] < $groupedData[$cat]['shift_start'])) {
+                    $groupedData[$cat]['shift_start'] = $emp['shift_start'];
+                }
+                if ($emp['shift_end'] && (!isset($groupedData[$cat]['shift_end']) || $emp['shift_end'] > $groupedData[$cat]['shift_end'])) {
+                    $groupedData[$cat]['shift_end'] = $emp['shift_end'];
+                }
+            }
+            $groupedData[$cat]['employees'][] = [
+                'name' => $emp['name'],
+                'shift_name' => $emp['shift_name'] ?: '',
+                'status' => $emp['status'],
+                'check_in' => $emp['check_in'] ?: null,
+                'check_out' => $emp['check_out'] ?: null,
+                'is_early_checkout' => $emp['is_early_checkout'],
+                'permission_type' => $emp['permission_type'],
+                'shifts' => $emp['shifts'] ?? [],
+            ];
+        }
+
+        // Sort groups by earliest shift start (null-safe)
+        $groups = array_values($groupedData);
+        usort($groups, function($a, $b) {
+            $sa = $a['shift_start'] ?? '23:59';
+            $sb = $b['shift_start'] ?? '23:59';
+            return strcmp($sa, $sb);
         });
-        
+
         return response()->json([
             'status' => $status,
-            'data' => array_values($groupedData)
+            'data' => $groups,
         ]);
     }
 }

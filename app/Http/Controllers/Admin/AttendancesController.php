@@ -64,14 +64,39 @@ class AttendancesController extends Controller
             ->whereIn('schedule_id', $scheduleIds)
             ->get();
 
-        // Hitung statistik berdasarkan data yang sudah difilter
-        $totalSchedules = $schedulesToday->count();
-        $totalHadir = $attendances->where('is_late', 0)->count();
-        $totalTelat = $attendances->where('is_late', 1)->count();
-        $totalIzin = $attendances->where('status', 'izin')->count();
-        $totalEarlyCheckout = $attendances->where('status', 'early_checkout')->count();
-        $totalForgotCheckout = $attendances->where('status', 'forgot_checkout')->count();
-        $totalAlpha = max(0, $totalSchedules - ($totalHadir + $totalTelat + $totalIzin + $totalEarlyCheckout + $totalForgotCheckout));
+        // Aggregate per user so double/long shifts count as one schedule
+        $groupsByUser = $schedulesToday->groupBy('user_id');
+        $totalSchedules = $groupsByUser->count();
+        $totalHadir = 0; $totalTelat = 0; $totalIzin = 0; $totalAlpha = 0;
+        // keep EC/FC variables for view compatibility
+        $totalEarlyCheckout = 0; $totalForgotCheckout = 0;
+
+        foreach ($groupsByUser as $userId => $userSchedules) {
+            $scheduleIds = $userSchedules->pluck('id');
+            // Permission precedence across any of the user's schedules
+            $hasPermission = Permissions::whereIn('schedule_id', $scheduleIds)
+                ->where('status', 'approved')
+                ->exists();
+            if ($hasPermission) {
+                $totalIzin++;
+                continue;
+            }
+
+            $attGroup = $attendances->whereIn('schedule_id', $scheduleIds);
+            if ($attGroup->isEmpty()) {
+                $totalAlpha++;
+                continue;
+            }
+
+            // Use earliest shift as reference for hadir/telat
+            $earliest = $userSchedules->sortBy(function($s){ return optional($s->shift)->shift_start ?? '23:59:59'; })->first();
+            $ref = $attGroup->firstWhere('schedule_id', optional($earliest)->id);
+            if (!$ref) { $ref = $attGroup->sortBy('check_in_time')->first(); }
+
+            if ($ref && (int)$ref->is_late === 1) { $totalTelat++; }
+            elseif ($ref) { $totalHadir++; }
+            else { $totalAlpha++; }
+        }
 
         // Users for per-user export selector
         $users = User::orderBy('name')->get(['id','name']);

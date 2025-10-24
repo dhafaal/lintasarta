@@ -129,35 +129,67 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach ($schedules as $schedule)
+                            @php
+                                // Group schedules by schedule_date for double shift support
+                                $groupedSchedules = $schedules->groupBy('schedule_date');
+                            @endphp
+                            @foreach ($groupedSchedules as $date => $userSchedules)
                                 @php
-                                    $attendance = $attendances->firstWhere('schedule_id', $schedule->id);
-                                    $permission = $permissions->firstWhere('schedule_id', $schedule->id);
-                                    $status = $attendance->status ?? ($permission ? 'izin' : 'alpha');
+                                    // Get first schedule for date info
+                                    $firstSchedule = $userSchedules->first();
+                                    
+                                    // Sort schedules by shift category (Pagi -> Siang -> Malam)
+                                    $order = ['Pagi' => 1, 'Siang' => 2, 'Malam' => 3];
+                                    $sortedSchedules = $userSchedules->sortBy(function($s) use ($order) {
+                                        return $order[$s->shift->category ?? ''] ?? 99;
+                                    });
+                                    
+                                    // Get schedule IDs for this group
+                                    $scheduleIds = $sortedSchedules->pluck('id');
+                                    
+                                    // Get attendances and permissions for all schedules in this group
+                                    $attGroup = $attendances->whereIn('schedule_id', $scheduleIds);
+                                    $permGroup = $permissions->whereIn('schedule_id', $scheduleIds);
+                                    
+                                    // Location: pick any available
+                                    $firstWithLocation = $attGroup->first(function($a){ return $a && $a->location; });
+                                    $location = $firstWithLocation ? $firstWithLocation->location : null;
+                                    
+                                    // Times: earliest check-in, latest check-out
+                                    $checkInTime = optional($attGroup->whereNotNull('check_in_time')->sortBy('check_in_time')->first())->check_in_time;
+                                    $checkOutTime = optional($attGroup->whereNotNull('check_out_time')->sortByDesc('check_out_time')->first())->check_out_time;
                                 @endphp
                                 <tr class="hover:bg-sky-50/50 transition-colors duration-200">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">
-                                            {{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y') }}
+                                            {{ \Carbon\Carbon::parse($date)->format('d M Y') }}
                                         </div>
                                         <div class="text-xs text-gray-500">
-                                            {{ \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l') }}
+                                            {{ \Carbon\Carbon::parse($date)->translatedFormat('l') }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col space-y-1">
+                                            @foreach($sortedSchedules as $us)
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
+                                                    @if($us->shift && $us->shift->category == 'Pagi') bg-yellow-100 text-yellow-800
+                                                    @elseif($us->shift && $us->shift->category == 'Siang') bg-orange-100 text-orange-800
+                                                    @elseif($us->shift && $us->shift->category == 'Malam') bg-indigo-100 text-indigo-800
+                                                    @else bg-gray-100 text-gray-800 @endif">
+                                                    {{ $us->shift->shift_name ?? '-' }}
+                                                </span>
+                                            @endforeach
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                            {{ $schedule->shift->shift_name ?? '-' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($attendance && $attendance->location)
+                                        @if($location)
                                             <div class="flex items-center">
                                                 <div class="w-6 h-6 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center mr-2">
                                                     <i data-lucide="map-pin" class="w-3 h-3 text-sky-600"></i>
                                                 </div>
                                                 <div>
-                                                    <div class="text-xs font-medium text-gray-900">{{ $attendance->location->name }}</div>
-                                                    <div class="text-xs text-gray-500">{{ $attendance->location->radius }}m</div>
+                                                    <div class="text-xs font-medium text-gray-900">{{ $location->name }}</div>
+                                                    <div class="text-xs text-gray-500">{{ $location->radius }}m</div>
                                                 </div>
                                             </div>
                                         @else
@@ -166,29 +198,28 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @php
-                                            $statusBase = $attendance->status ?? ($permission ? 'izin' : 'alpha');
-                                            $hasForgot = ($statusBase === 'forgot_checkout');
-                                            $hasEarly  = ($statusBase === 'early_checkout');
-                                            // Consider early checkout permission to display secondary badge even if status is not early_checkout
-                                            $hasEarlyPerm = false;
-                                            if ($permission && $permission->type === 'izin') {
-                                                $reasonStr = (string) ($permission->reason ?? '');
-                                                if (strpos($reasonStr, '[EARLY_CHECKOUT]') === 0) {
-                                                    // show secondary badge for any early checkout request (pending/approved/rejected)
-                                                    $hasEarlyPerm = true;
-                                                }
+                                            // Status priority: izin > early_checkout > telat > hadir > forgot_checkout > alpha
+                                            // Status based on FIRST shift (Pagi if exists) for consistency with index.blade.php
+                                            $statusText = '-';
+                                            if ($attGroup->where('status','izin')->isNotEmpty()) { $statusText = 'izin'; }
+                                            elseif ($attGroup->where('status','early_checkout')->isNotEmpty()) { $statusText = 'early_checkout'; }
+                                            elseif ($attGroup->where('status','telat')->isNotEmpty()) { $statusText = 'telat'; }
+                                            elseif ($attGroup->where('status','hadir')->isNotEmpty()) { $statusText = 'hadir'; }
+                                            elseif ($attGroup->where('status','forgot_checkout')->isNotEmpty()) { $statusText = 'forgot_checkout'; }
+                                            elseif ($attGroup->isNotEmpty()) { $statusText = optional($attGroup->first())->status ?: '-'; }
+                                            
+                                            // Fallback: if no attendance and no permission, mark as alpha
+                                            if ($statusText === '-' && $sortedSchedules->isNotEmpty() && $attGroup->isEmpty() && $permGroup->isEmpty()) {
+                                                $statusText = 'alpha';
                                             }
-                                            $wasLate   = ($statusBase === 'telat') || ($attendance && $attendance->is_late);
-                                            $wasPresent= ($statusBase === 'hadir') || ($attendance && $attendance->check_in_time);
-                                            // Priority like admin index
-                                            $statusText = $statusBase;
-                                            if ($statusBase !== 'izin') {
-                                                if ($hasEarly) { $statusText = 'early_checkout'; }
-                                                elseif ($wasLate) { $statusText = 'telat'; }
-                                                elseif ($wasPresent) { $statusText = 'hadir'; }
-                                                elseif ($hasForgot) { $statusText = 'forgot_checkout'; }
-                                                else { $statusText = 'alpha'; }
-                                            }
+                                            
+                                            // Determine if we need stacked badges
+                                            $hasForgot = $attGroup->where('status','forgot_checkout')->isNotEmpty();
+                                            $hasEarly  = $attGroup->where('status','early_checkout')->isNotEmpty();
+                                            $wasLate   = $attGroup->filter(function($a){ return $a && $a->is_late; })->isNotEmpty() || $attGroup->where('status','telat')->isNotEmpty();
+                                            $wasPresent= $attGroup->filter(function($a){ return $a && !is_null($a->check_in_time); })->isNotEmpty() || $attGroup->where('status','hadir')->isNotEmpty();
+                                            $showStacked = ($hasForgot || $hasEarly) && ($wasLate || $wasPresent);
+                                            
                                             $statusColor = 'bg-gray-100 text-gray-700';
                                             if($statusText === 'hadir') { $statusColor = 'bg-green-100 text-green-800'; }
                                             if($statusText === 'telat') { $statusColor = 'bg-orange-100 text-orange-800'; }
@@ -196,7 +227,7 @@
                                             if($statusText === 'early_checkout') { $statusColor = 'bg-amber-100 text-amber-800'; }
                                             if($statusText === 'forgot_checkout') { $statusColor = 'bg-rose-100 text-rose-800'; }
                                             if($statusText === 'alpha') { $statusColor = 'bg-red-100 text-red-800'; }
-                                            $showStacked = ($hasForgot || $hasEarly || $hasEarlyPerm) && ($wasLate || $wasPresent);
+                                            
                                             $primaryText = $wasLate ? 'telat' : 'hadir';
                                             $primaryColor = $wasLate ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800';
                                         @endphp
@@ -223,41 +254,26 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($attendance && $attendance->check_in_time)
-                                            <div class="flex items-start">
-                                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                                                    <i data-lucide="log-in" class="w-4 h-4 text-green-600"></i>
-                                                </div>
-                                                <div>
-                                                    <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}</div>
-                                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('d M Y') }}</div>
-                                                </div>
-                                            </div>
+                                        @if($checkInTime)
+                                            <div class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($checkInTime)->format('H:i') }}</div>
+                                            <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($checkInTime)->format('d M Y') }}</div>
                                         @else
-                                            <span class="text-gray-400 text-sm">-</span>
+                                            <span class="text-gray-400 text-xs">-</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($attendance && $attendance->check_out_time)
-                                            <div class="flex items-start">
-                                                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                                                    <i data-lucide="log-out" class="w-4 h-4 text-red-600"></i>
-                                                </div>
-                                                <div>
-                                                    <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') }}</div>
-                                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($attendance->check_out_time)->format('d M Y') }}</div>
-                                                </div>
-                                            </div>
+                                        @if($checkOutTime)
+                                            <div class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($checkOutTime)->format('H:i') }}</div>
+                                            <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($checkOutTime)->format('d M Y') }}</div>
                                         @else
-                                            <span class="text-gray-400 text-sm">-</span>
+                                            <span class="text-gray-400 text-xs">-</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         @php
-                                            // Daily work based on total shift durations for this date/user, minus 1 hour if any
-                                            $daySchedules = $schedules->where('schedule_date', $schedule->schedule_date)->where('user_id', $schedule->user_id);
+                                            // Calculate work hours for all shifts in this group
                                             $dayMinutesAcc = 0;
-                                            foreach ($daySchedules as $ds) {
+                                            foreach ($sortedSchedules as $ds) {
                                                 if (!$ds->shift) { continue; }
                                                 $att = $attendances->firstWhere('schedule_id', $ds->id);
                                                 $perm = $permissions->firstWhere('schedule_id', $ds->id);
@@ -280,15 +296,18 @@
                                         {{ $hours == floor($hours) ? floor($hours).' h' : number_format($hours, 1).' h' }}
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-600">
-                                        @if($permission)
+                                        @php
+                                            $latestPerm = $permGroup->sortByDesc('created_at')->first();
+                                        @endphp
+                                        @if($latestPerm)
                                             <div class="max-w-xs">
-                                                <div class="font-medium text-gray-900 truncate" title="{{ $permission->reason }}">
-                                                    {{ $permission->reason }}
+                                                <div class="font-medium text-gray-900 truncate" title="{{ $latestPerm->reason }}">
+                                                    {{ $latestPerm->reason }}
                                                 </div>
-                                                @if($permission->approved_at)
+                                                @if($latestPerm->approved_at)
                                                     <div class="text-xs text-gray-500 mt-1">
-                                                        {{ $permission->status === 'approved' ? 'Disetujui' : 'Ditolak' }} pada 
-                                                        {{ \Carbon\Carbon::parse($permission->approved_at)->format('d/m/Y H:i') }}
+                                                        {{ $latestPerm->status === 'approved' ? 'Disetujui' : 'Ditolak' }} pada 
+                                                        {{ \Carbon\Carbon::parse($latestPerm->approved_at)->format('d/m/Y H:i') }}
                                                     </div>
                                                 @endif
                                             </div>
