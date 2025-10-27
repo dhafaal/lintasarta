@@ -1452,7 +1452,7 @@ class ScheduleController extends Controller
                         // Apply rules:
                         // - If explicit alpha attendance: 0
                         // - Else if NO attendance AND NO pending/approved permission: auto-alpha => 0
-                        // - Else: use shift duration (izin/cuti tetap pakai durasi shift)
+                        // - Else: use shift duration MINUS 1 hour break per shift
                         if ($attendance && $attendance->status === 'alpha') {
                             $minutes = 0; // explicit alpha
                             $forcedAlpha = true;
@@ -1460,11 +1460,12 @@ class ScheduleController extends Controller
                             $minutes = 0; // auto-alpha when truly absent without izin/cuti
                             $forcedAlpha = true;
                         } else {
-                            $minutes = $shiftMinutes; // use shift duration
+                            // Deduct 1 hour (60 minutes) break per shift
+                            $minutes = max(0, $shiftMinutes - 60);
                             $forcedAlpha = false;
                         }
 
-                        // accumulate per-day; total will be added after day-level break deduction
+                        // accumulate per-day with break already deducted per shift
                         $dayMinutesAcc += $minutes;
 
                         $shiftLetters[] = strtoupper(substr($schedule->shift->shift_name, 0, 1));
@@ -1477,9 +1478,9 @@ class ScheduleController extends Controller
                         $attendanceStatuses[] = $attendanceStatus;
                     }
 
-                    // Deduct 1 hour (60 minutes) for lunch if there is any work time this day
-                    $dayMinutesAfterBreak = $dayMinutesAcc > 0 ? max(0, $dayMinutesAcc - 60) : 0;
-                    // Add to monthly total after deduction
+                    // Break already deducted per shift, so just use accumulated minutes
+                    $dayMinutesAfterBreak = $dayMinutesAcc;
+                    // Add to monthly total
                     $totalMinutes += $dayMinutesAfterBreak;
 
                     $row['shifts'][$day] = [

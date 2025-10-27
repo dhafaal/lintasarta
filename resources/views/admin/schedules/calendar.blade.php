@@ -214,13 +214,24 @@
                                         @php
                                             $dayOfWeek = \Carbon\Carbon::createFromDate($year, $month, $d)->dayOfWeek;
                                             $isWeekend = $dayOfWeek === 0 || $dayOfWeek === 6;
+                                            // Always use primary_attendance (first shift status) for coloring
                                             $attendanceStatus = $row['shifts'][$d]['primary_attendance'] ?? null;
                                             $shiftName = $row['shifts'][$d]['shift_name'] ?? null;
 
                                             $cellBgClass = '';
                                             $textClass = '';
                                             $borderClass = 'border-gray-200';
-                                            if ($attendanceStatus === 'hadir') {
+                                            
+                                            // Prioritize status: early_checkout/forgot_checkout > hadir/telat > izin > alpha
+                                            if ($attendanceStatus === 'early_checkout') {
+                                                $cellBgClass = 'bg-amber-50';
+                                                $textClass = 'text-amber-800 font-semibold';
+                                                $borderClass = 'border-amber-100';
+                                            } elseif ($attendanceStatus === 'forgot_checkout') {
+                                                $cellBgClass = 'bg-rose-50';
+                                                $textClass = 'text-rose-800 font-semibold';
+                                                $borderClass = 'border-rose-100';
+                                            } elseif ($attendanceStatus === 'hadir') {
                                                 $cellBgClass = 'bg-green-50';
                                                 $textClass = 'text-green-800 font-semibold';
                                                 $borderClass = 'border-green-100';
@@ -270,12 +281,23 @@
                                         @php
                                             $dayOfWeek = \Carbon\Carbon::createFromDate($year, $month, $d)->dayOfWeek;
                                             $isWeekend = $dayOfWeek === 0 || $dayOfWeek === 6;
+                                            // Always use primary_attendance (first shift status) for coloring
                                             $attendanceStatus = $row['shifts'][$d]['primary_attendance'] ?? null;
 
                                             $cellBgClass = '';
                                             $textClass = '';
                                             $borderClass = 'border-gray-200';
-                                            if ($attendanceStatus === 'hadir') {
+                                            
+                                            // Prioritize status: early_checkout/forgot_checkout > hadir/telat > izin > alpha
+                                            if ($attendanceStatus === 'early_checkout') {
+                                                $cellBgClass = 'bg-amber-50';
+                                                $textClass = 'text-amber-700 font-medium';
+                                                $borderClass = 'border-amber-100';
+                                            } elseif ($attendanceStatus === 'forgot_checkout') {
+                                                $cellBgClass = 'bg-rose-50';
+                                                $textClass = 'text-rose-700 font-medium';
+                                                $borderClass = 'border-rose-100';
+                                            } elseif ($attendanceStatus === 'hadir') {
                                                 $cellBgClass = 'bg-green-50';
                                                 $textClass = 'text-green-700 font-medium';
                                                 $borderClass = 'border-green-100';
