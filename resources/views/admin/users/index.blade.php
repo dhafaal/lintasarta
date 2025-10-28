@@ -87,18 +87,33 @@
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full">
+                <div class="overflow-x-auto -mx-4 sm:mx-0">
+                    <table class="w-full min-w-[700px]">
                         <thead class="bg-gray-50 border-b-2 border-gray-200">
                             <tr>
-                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    User
+                                <th class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user text-sky-600 mr-2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                        User
+                                    </div>
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    Role
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail text-sky-600 mr-2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2Z"/><path d="m22 6-10 7L2 6"/></svg>
+                                        Email
+                                    </div>
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    Bergabung
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield text-sky-600 mr-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+                                        Role
+                                    </div>
+                                </th>
+                                <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar text-sky-600 mr-2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                                        Bergabung
+                                    </div>
                                 </th>
                                 <th class="px-8 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     Aksi
@@ -117,9 +132,12 @@
                                             </div>
                                             <div>
                                                 <div class="text-base font-semibold text-gray-700">{{ $user->name }}</div>
-                                                <div class="text-sm text-gray-500">{{ $user->email }}</div>
+                                                <div class="text-xs text-gray-500">ID: {{ $user->id }}</div>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td class="px-8 py-6 whitespace-nowrap">
+                                        <div class="text-sm text-gray-700">{{ $user->email }}</div>
                                     </td>
                                     <td class="px-8 py-6 whitespace-nowrap">
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
@@ -206,10 +224,12 @@
                     }
 
                     const userName = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
-                    const userRole = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
-                    const joinDate = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+                    const userEmail = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+                    const userRole = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+                    const joinDate = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
 
                     const matchesSearch = userName.includes(searchTerm) || 
+                                        userEmail.includes(searchTerm) ||
                                         userRole.includes(searchTerm) ||
                                         joinDate.includes(searchTerm);
                     

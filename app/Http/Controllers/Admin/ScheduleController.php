@@ -15,6 +15,8 @@ use App\Exports\ScheduleReportExport;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Validation\ValidationException;
+use App\Imports\SchedulesImport;
+use App\Exports\ScheduleTemplateExport;
 
 class ScheduleController extends Controller
 {
@@ -1846,6 +1848,187 @@ class ScheduleController extends Controller
                 'message' => 'Gagal menghapus jadwal: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Download template Excel untuk import schedules
+     */
+    public function downloadTemplate()
+    {
+        return Excel::download(new ScheduleTemplateExport, 'template_jadwal.xlsx');
+    }
+
+    /**
+     * Preview import schedules dari Excel
+     */
+    public function previewImport(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:2048',
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer|min:2020|max:2100',
+        ]);
+
+        try {
+            // Import dalam preview mode (tidak menyimpan ke database)
+            $import = new SchedulesImport($request->month, $request->year, true);
+            Excel::import($import, $request->file('excel_file'));
+
+            $previewData = $import->getPreviewData();
+            $successCount = $import->getSuccessCount();
+            $skipCount = $import->getSkipCount();
+            $errors = $import->getErrors();
+
+            // Simpan file Excel ke temporary storage untuk digunakan saat confirm
+            $fileName = 'import_' . time() . '_' . $request->file('excel_file')->getClientOriginalName();
+            $filePath = $request->file('excel_file')->storeAs('temp/imports', $fileName);
+
+            // Simpan data preview ke session
+            session([
+                'import_preview' => [
+                    'file_path' => $filePath,
+                    'month' => $request->month,
+                    'year' => $request->year,
+                    'preview_data' => $previewData,
+                    'success_count' => $successCount,
+                    'skip_count' => $skipCount,
+                    'errors' => $errors,
+                ]
+            ]);
+
+            return redirect()->route('admin.schedules.import-preview');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memproses Excel: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Tampilkan halaman preview import
+     */
+    public function showImportPreview()
+    {
+        if (!session()->has('import_preview')) {
+            return redirect()->route('admin.schedules.create')->with('error', 'Tidak ada data preview');
+        }
+
+        $previewData = session('import_preview');
+        
+        return view('admin.schedules.import-preview', [
+            'previewData' => $previewData['preview_data'],
+            'month' => $previewData['month'],
+            'year' => $previewData['year'],
+            'successCount' => $previewData['success_count'],
+            'skipCount' => $previewData['skip_count'],
+            'importErrors' => $previewData['errors'],
+        ]);
+    }
+
+    /**
+     * Konfirmasi dan simpan import schedules
+     */
+    public function confirmImport(Request $request)
+    {
+        if (!session()->has('import_preview')) {
+            return redirect()->route('admin.schedules.create')->with('error', 'Tidak ada data preview');
+        }
+
+        $previewData = session('import_preview');
+
+        try {
+            // Pastikan file temporary masih ada (gunakan Storage agar path OS-agnostic)
+            $relative = $previewData['file_path'];
+            if (!\Storage::disk('local')->exists($relative)) {
+                return back()->with('error', 'File sementara import tidak ditemukan. Silakan ulangi proses import.');
+            }
+            $tempPath = \Storage::disk('local')->path($relative);
+
+            // Import dengan mode normal (simpan ke database)
+            $import = new SchedulesImport($previewData['month'], $previewData['year'], false);
+            Excel::import($import, $tempPath);
+
+            $successCount = $import->getSuccessCount();
+            $skipCount = $import->getSkipCount();
+            $errors = $import->getErrors();
+
+            $message = "Import selesai: {$successCount} jadwal berhasil ditambahkan";
+            if ($skipCount > 0) {
+                $message .= ", {$skipCount} dilewati (sudah ada)";
+            }
+
+            // Log activity (best effort)
+            try {
+                if (method_exists(AdminSchedulesLog::class, 'log')) {
+                    AdminSchedulesLog::log(
+                        'import',
+                        null,
+                        Auth::id(),
+                        Auth::user()->name ?? '-',
+                        null,
+                        null,
+                        null,
+                        null,
+                        [
+                            'month' => $previewData['month'],
+                            'year' => $previewData['year'],
+                            'success_count' => $successCount,
+                            'skip_count' => $skipCount,
+                        ],
+                        "Import jadwal dari Excel untuk {$previewData['month']}/{$previewData['year']}"
+                    );
+                } else {
+                    AdminSchedulesLog::create([
+                        'user_id' => Auth::id(),
+                        'action' => 'import',
+                        'resource_type' => 'Schedule',
+                        'resource_id' => null,
+                        'description' => "Import jadwal dari Excel untuk bulan {$previewData['month']}/{$previewData['year']}",
+                        'old_values' => null,
+                        'new_values' => json_encode([
+                            'month' => $previewData['month'],
+                            'year' => $previewData['year'],
+                            'success_count' => $successCount,
+                            'skip_count' => $skipCount,
+                        ]),
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->userAgent(),
+                    ]);
+                }
+            } catch (\Throwable $logEx) {
+                // Do not block the flow if logging fails
+            }
+
+            // Hapus file temporary
+            try { \Storage::disk('local')->delete($previewData['file_path']); } catch (\Throwable $e) {}
+
+            // Hapus session preview
+            session()->forget('import_preview');
+
+            // Redirect dengan session data untuk auto-load calendar
+            return redirect()->route('admin.schedules.create')->with([
+                'success' => $message,
+                'auto_load_month' => $previewData['month'],
+                'auto_load_year' => $previewData['year'],
+            ]);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menyimpan import: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Batalkan preview import
+     */
+    public function cancelImport()
+    {
+        if (session()->has('import_preview')) {
+            $previewData = session('import_preview');
+            // Hapus file temporary
+            \Storage::delete($previewData['file_path']);
+            session()->forget('import_preview');
+        }
+
+        return redirect()->route('admin.schedules.create')->with('info', 'Import dibatalkan');
     }
 }
  
