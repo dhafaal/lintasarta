@@ -27,6 +27,7 @@ class PermissionController extends Controller
             'schedule_id' => 'required|exists:schedules,id',
             'type' => 'required|in:izin,sakit,cuti',
             'reason' => 'required|string|min:10|max:255',
+            'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         $schedule = Schedules::findOrFail($request->schedule_id);
@@ -42,11 +43,17 @@ class PermissionController extends Controller
             return back()->with('error', 'Anda sudah memiliki pengajuan izin untuk tanggal ini.');
         }
 
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store('permissions', 'public');
+        }
+
         $permission = Permissions::create([
             'user_id' => Auth::id(),
             'schedule_id' => $request->schedule_id,
             'type' => $request->type,
             'reason' => $request->reason,
+            'file' => $filePath,
             'status' => 'pending'
         ]);
 
@@ -75,6 +82,7 @@ class PermissionController extends Controller
             'schedule_ids.*' => 'exists:schedules,id',
             'type' => 'required|in:cuti',
             'reason' => 'required|string|min:10|max:500',
+            'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         $user = Auth::user();
@@ -104,6 +112,11 @@ class PermissionController extends Controller
             }
         }
 
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store('permissions', 'public');
+        }
+
         // Create permissions for each schedule
         foreach ($schedules as $schedule) {
             $permission = Permissions::create([
@@ -111,6 +124,7 @@ class PermissionController extends Controller
                 'schedule_id' => $schedule->id,
                 'type' => $request->type,
                 'reason' => $request->reason,
+                'file' => $filePath,
                 'status' => 'pending'
             ]);
 

@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Exports\ScheduleReportExport;
+use App\Services\ScheduleMonthlyDataBuilder;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Validation\ValidationException;
@@ -127,13 +128,13 @@ class ScheduleController extends Controller
     public function getAvailableShifts(Request $request)
     {
         $firstShiftId = $request->input('first_shift_id');
-        
+
         if (!$firstShiftId) {
             return response()->json(['shifts' => []]);
         }
 
         $firstShift = Shift::find($firstShiftId);
-        
+
         if (!$firstShift) {
             return response()->json(['shifts' => []]);
         }
@@ -298,16 +299,16 @@ class ScheduleController extends Controller
         $createdSchedules = [];
         // Track dates that were processed to later recalculate attendance status
         $datesTouched = [];
-        
+
         DB::transaction(function () use ($shifts, $userId, $month, $year, $user, &$createdSchedules, &$datesTouched) {
             $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 
             for ($day = 1; $day <= $daysInMonth; $day++) {
                 $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
-                
+
                 // Handle multiple shifts per day
                 $dayShifts = $shifts[$day] ?? [];
-                
+
                 // If dayShifts is not an array, convert it to array for backward compatibility
                 if (!is_array($dayShifts)) {
                     $dayShifts = [$dayShifts];
@@ -330,7 +331,7 @@ class ScheduleController extends Controller
                 $datesTouched[$date] = true;
             }
         });
-        
+
         // Log creation of new schedules
         foreach ($createdSchedules as $schedule) {
             $shift = Shift::find($schedule->shift_id);
@@ -360,9 +361,9 @@ class ScheduleController extends Controller
                 ]);
             }
         }
-        
+
         $totalCreated = count($createdSchedules);
-        
+
         return redirect()->route('admin.schedules.index')
             ->with('success', "Jadwal bulanan berhasil diperbarui. {$totalCreated} jadwal dibuat untuk {$user->name}.");
     }
@@ -382,7 +383,7 @@ class ScheduleController extends Controller
 
         $createdSchedules = [];
         $shift = Shift::find($request->shift_id);
-        
+
         DB::transaction(function () use ($request, $shift, &$createdSchedules) {
             foreach ($request->users as $userId) {
                 $user = User::find($userId);
@@ -400,7 +401,7 @@ class ScheduleController extends Controller
                 }
             }
         });
-        
+
         // Log creation of schedules
         foreach ($createdSchedules as $item) {
             AdminSchedulesLog::log(
@@ -459,7 +460,7 @@ class ScheduleController extends Controller
                 $currentDate->addDay();
             }
         });
-        
+
         // Log creation of schedules
         foreach ($createdSchedules as $schedule) {
             AdminSchedulesLog::log(
@@ -477,7 +478,7 @@ class ScheduleController extends Controller
         }
 
         $createdCount = count($createdSchedules);
-        
+
         return redirect()->route('admin.schedules.index')
             ->with('success', "Jadwal berhasil dibuat untuk periode yang dipilih. {$createdCount} jadwal dibuat untuk {$user->name}.");
     }
@@ -491,7 +492,7 @@ class ScheduleController extends Controller
         if ($schedule === 'bulk') {
             $selectedUserId = request('user_id');
             $selectedUser = $selectedUserId ? User::find($selectedUserId) : null;
-            
+
             return view('admin.schedules.edit', compact('users', 'shifts', 'selectedUser'))
                 ->with('schedule', null)
                 ->with('isBulkEdit', true);
@@ -511,10 +512,10 @@ class ScheduleController extends Controller
         if ($isMonthlyEdit) {
             return $this->updateMonthly($request, null);
         }
-        
+
         // For single schedule update, find the schedule
         $schedule = Schedules::findOrFail($schedule);
-        
+
         // Handle single schedule update (original functionality)
         $request->validate([
             'user_id'       => 'required|exists:users,id',
@@ -566,16 +567,16 @@ class ScheduleController extends Controller
         $user = User::find($userId);
         $updatedSchedules = [];
         $datesTouched = [];
-        
+
         DB::transaction(function () use ($shifts, $userId, $month, $year, $user, &$updatedSchedules, &$datesTouched) {
             $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
 
             for ($day = 1; $day <= $daysInMonth; $day++) {
                 $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
-                
+
                 // Handle multiple shifts per day
                 $dayShifts = $shifts[$day] ?? [];
-                
+
                 // If dayShifts is not an array, convert it to array for backward compatibility
                 if (!is_array($dayShifts)) {
                     $dayShifts = [$dayShifts];
@@ -596,7 +597,7 @@ class ScheduleController extends Controller
                 $datesTouched[$date] = true;
             }
         });
-        
+
         // Log creation of new schedules
         foreach ($updatedSchedules as $newSchedule) {
             $shift = Shift::find($newSchedule->shift_id);
@@ -615,7 +616,7 @@ class ScheduleController extends Controller
         }
 
         $totalUpdated = count($updatedSchedules);
-        
+
         // Recalculate attendance statuses for all processed dates (handle shift changes/remaps)
         foreach (array_keys($datesTouched) as $date) {
             try {
@@ -628,7 +629,7 @@ class ScheduleController extends Controller
                 ]);
             }
         }
-        
+
         return redirect()->route('admin.schedules.index')
             ->with('success', "Jadwal bulanan berhasil diperbarui. {$totalUpdated} jadwal diupdate untuk {$user->name}.");
     }
@@ -1391,120 +1392,7 @@ class ScheduleController extends Controller
 
     private function buildMonthlyTableData(int $month, int $year): array
     {
-        $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
-
-        $users = User::whereHas('schedules', function ($q) use ($year, $month) {
-            $q->whereYear('schedule_date', $year)->whereMonth('schedule_date', $month);
-        })
-            ->whereIn('role', ['user', 'operator'])
-            ->orderBy('name')
-            ->get();
-
-        $data = [];
-        foreach ($users as $user) {
-            $row = [
-                'nama' => $user->name,
-                'shifts' => [],
-                'total_jam' => '0j'
-            ];
-
-            $totalMinutes = 0;
-
-            for ($day = 1; $day <= $daysInMonth; $day++) {
-                $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
-                // Load shift + attendance(s) + permissions; hours use SHIFT DURATION (not actual checkin/checkout)
-                $schedules = Schedules::with(['shift', 'attendances', 'permissions'])
-                    ->where('user_id', $user->id)
-                    ->whereDate('schedule_date', $date)
-                    ->get();
-
-                if ($schedules->isNotEmpty()) {
-                    $shiftLetters = [];
-                    $shiftNames = [];
-                    $attendanceStatuses = [];
-                    $dayMinutesAcc = 0; // accumulate minutes for the whole day
-
-                    foreach ($schedules as $schedule) {
-                        if (!$schedule->shift) continue;
-                        // Determine minutes based on SHIFT DURATION by default
-                        // Then apply business rules: alpha => 0, approved permission => 0
-                        $attendance = null;
-                        if (isset($schedule->attendances) && $schedule->attendances) {
-                            $attendance = $schedule->attendances->firstWhere('user_id', $user->id) ?? $schedule->attendances->first();
-                        } elseif (isset($schedule->attendance)) { // backward compatibility
-                            $attendance = $schedule->attendance;
-                        }
-
-                        // Permissions presence for this schedule (to avoid auto-alpha for izin/cuti)
-                        $permissionApproved = null;
-                        $permissionPending = null;
-                        if (isset($schedule->permissions) && $schedule->permissions) {
-                            $permissionApproved = $schedule->permissions->firstWhere('status', 'approved');
-                            $permissionPending = $schedule->permissions->firstWhere('status', 'pending');
-                        }
-
-                        // Compute shift duration in minutes (handle crossing midnight)
-                        $start = Carbon::parse($schedule->shift->start_time);
-                        $end = Carbon::parse($schedule->shift->end_time);
-                        if ($end->lt($start)) { $end->addDay(); }
-                        $shiftMinutes = $start->diffInMinutes($end);
-
-                        // Apply rules:
-                        // - If explicit alpha attendance: 0
-                        // - Else if NO attendance AND NO pending/approved permission: auto-alpha => 0
-                        // - Else: use shift duration (izin/cuti tetap pakai durasi shift)
-                        if ($attendance && $attendance->status === 'alpha') {
-                            $minutes = 0; // explicit alpha
-                            $forcedAlpha = true;
-                        } elseif (!$attendance && !$permissionApproved && !$permissionPending) {
-                            $minutes = 0; // auto-alpha when truly absent without izin/cuti
-                            $forcedAlpha = true;
-                        } else {
-                            $minutes = $shiftMinutes; // use shift duration
-                            $forcedAlpha = false;
-                        }
-
-                        // accumulate per-day; total will be added after day-level break deduction
-                        $dayMinutesAcc += $minutes;
-
-                        $shiftLetters[] = strtoupper(substr($schedule->shift->shift_name, 0, 1));
-                        $shiftNames[] = $schedule->shift->shift_name; // full shift names
-                        $hoursList[] = round($minutes / 60, 1) . 'j';
-
-                        // Determine primary attendance status for coloring
-                        $attendanceStatus = $attendance->status ?? (($permissionApproved || $permissionPending) ? 'izin' : null);
-                        if ($forcedAlpha && !$attendanceStatus) { $attendanceStatus = 'alpha'; }
-                        $attendanceStatuses[] = $attendanceStatus;
-                    }
-
-                    // Deduct 1 hour (60 minutes) for lunch if there is any work time this day
-                    $dayMinutesAfterBreak = $dayMinutesAcc > 0 ? max(0, $dayMinutesAcc - 60) : 0;
-                    // Add to monthly total after deduction
-                    $totalMinutes += $dayMinutesAfterBreak;
-
-                    $row['shifts'][$day] = [
-                        'shift' => implode(',', $shiftLetters), // contoh: "P,M"
-                        'shift_name' => implode(' + ', $shiftNames), // contoh: "Pagi + Malam"
-                        'hours' => (function($m){ $h = $m/60; return ($h==floor($h)) ? floor($h).'j' : number_format($h,1).'j'; })($dayMinutesAfterBreak),
-                        'attendance_statuses' => $attendanceStatuses, // array of attendance statuses for each shift
-                        'primary_attendance' => $attendanceStatuses[0] ?? null, // primary attendance status for coloring
-                    ];
-                } else {
-                    $row['shifts'][$day] = [
-                        'shift' => '',
-                        'shift_name' => '',
-                        'hours' => '',
-                        'attendance_statuses' => [],
-                        'primary_attendance' => null,
-                    ];
-                }
-            }
-
-            $row['total_jam'] = round($totalMinutes / 60, 1) . 'j';
-            $data[] = $row;
-        }
-
-        return [$data, $daysInMonth];
+        return ScheduleMonthlyDataBuilder::build($month, $year);
     }
 
     public function history(Request $request, User $user)
@@ -1566,8 +1454,8 @@ class ScheduleController extends Controller
                     'id' => $schedule->id,
                     'shift_name' => $schedule->shift->shift_name ?? '-',
                     'formatted_date' => Carbon::parse($schedule->schedule_date)->format('d M Y'),
-                    'time_range' => $schedule->shift ? 
-                        Carbon::parse($schedule->shift->start_time)->format('H:i') . ' - ' . 
+                    'time_range' => $schedule->shift ?
+                        Carbon::parse($schedule->shift->start_time)->format('H:i') . ' - ' .
                         Carbon::parse($schedule->shift->end_time)->format('H:i') : '-'
                 ];
             });
@@ -1588,13 +1476,13 @@ class ScheduleController extends Controller
         try {
             $schedule1 = Schedules::with(['user', 'shift'])->findOrFail($request->schedule_id);
             $schedule2 = Schedules::with(['user', 'shift'])->findOrFail($request->target_schedule_id);
-            
+
             // Store original values for logging
             $originalUser1 = $schedule1->user;
             $originalUser2 = $schedule2->user;
             $oldValues1 = $schedule1->toArray();
             $oldValues2 = $schedule2->toArray();
-            
+
             DB::transaction(function () use ($request, $schedule1, $schedule2, $originalUser1, $originalUser2, $oldValues1, $oldValues2) {
                 // Store original values
                 $originalUserId1 = $schedule1->user_id;
@@ -1603,7 +1491,7 @@ class ScheduleController extends Controller
                 // Swap user_id values
                 $schedule1->update(['user_id' => $originalUserId2]);
                 $schedule2->update(['user_id' => $originalUserId1]);
-                
+
                 // Log the swap for both schedules
                 AdminSchedulesLog::log(
                     'update',
@@ -1617,7 +1505,7 @@ class ScheduleController extends Controller
                     $schedule1->fresh()->toArray(),
                     "Menukar jadwal: {$originalUser1->name} → {$originalUser2->name} pada {$schedule1->schedule_date}"
                 );
-                
+
                 AdminSchedulesLog::log(
                     'update',
                     $schedule2->id,
@@ -1803,10 +1691,10 @@ class ScheduleController extends Controller
             DB::beginTransaction();
 
             $scheduleIds = $request->schedule_ids;
-            
+
             // Get schedules for logging
             $schedules = Schedules::with(['user', 'shift'])->whereIn('id', $scheduleIds)->get();
-            
+
             // Delete schedules
             $deletedCount = Schedules::whereIn('id', $scheduleIds)->delete();
 
@@ -1817,7 +1705,7 @@ class ScheduleController extends Controller
                     'action' => 'bulk_delete',
                     'resource_type' => 'Schedule',
                     'resource_id' => $schedule->id,
-                    'description' => "Bulk delete jadwal: {$schedule->user->name} - {$schedule->shift->shift_name} pada " . 
+                    'description' => "Bulk delete jadwal: {$schedule->user->name} - {$schedule->shift->shift_name} pada " .
                                    Carbon::parse($schedule->schedule_date)->format('d M Y'),
                     'old_values' => json_encode([
                         'user_name' => $schedule->user->name,
@@ -1839,7 +1727,7 @@ class ScheduleController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus jadwal: ' . $e->getMessage()
@@ -1847,4 +1735,3 @@ class ScheduleController extends Controller
         }
     }
 }
- 

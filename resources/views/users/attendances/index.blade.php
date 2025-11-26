@@ -752,7 +752,7 @@
             </button>
         </div>
 
-        <form action="{{ route('user.permissions.store') }}" method="POST" class="p-4 sm:p-5 space-y-4">
+        <form action="{{ route('user.permissions.store') }}" method="POST" enctype="multipart/form-data" class="p-4 sm:p-5 space-y-4">
             @csrf
             <input type="hidden" name="schedule_id" value="{{ $schedule?->id }}">
             <input type="hidden" name="type" value="izin">
@@ -782,6 +782,14 @@
                           placeholder="Clearly explain your permission reason..."
                           required></textarea>
                 <p class="text-xs text-gray-500">Minimum 10 characters</p>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold text-gray-900">
+                    Supporting File (Optional)
+                </label>
+                <input type="file" name="file" class="w-full text-xs text-gray-700 border border-gray-300 rounded-lg px-3 py-2 file:mr-3 file:px-3 file:py-1.5 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer">
+                <p class="text-xs text-gray-500">Allowed: JPG, JPEG, PNG, PDF. Max 2MB.</p>
             </div>
 
             <div class="flex justify-end gap-2 pt-3 border-t border-gray-200">
@@ -822,7 +830,7 @@
             </button>
         </div>
 
-        <form action="{{ route('user.permissions.store-leave') }}" method="POST" class="p-4 sm:p-5 space-y-4">
+        <form action="{{ route('user.permissions.store-leave') }}" method="POST" enctype="multipart/form-data" class="p-4 sm:p-5 space-y-4">
             @csrf
             <input type="hidden" name="type" value="cuti">
 
@@ -865,6 +873,14 @@
                           placeholder="Clearly explain your leave reason..."
                           required></textarea>
                 <p class="text-xs text-gray-500">Minimum 10 characters</p>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold text-gray-900">
+                    Supporting File (Optional)
+                </label>
+                <input type="file" name="file" class="w-full text-xs text-gray-700 border border-gray-300 rounded-lg px-3 py-2 file:mr-3 file:px-3 file:py-1.5 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer">
+                <p class="text-xs text-gray-500">Allowed: JPG, JPEG, PNG, PDF. Max 2MB.</p>
             </div>
 
             <div id="selected-summary" class="hidden bg-purple-50 rounded-lg p-3 border border-purple-200">

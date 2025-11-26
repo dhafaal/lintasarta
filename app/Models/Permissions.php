@@ -14,6 +14,7 @@ class Permissions extends Model
         'schedule_id',
         'type',
         'reason',
+        'file',
         'status',
         'approved_by',
         'approved_at',

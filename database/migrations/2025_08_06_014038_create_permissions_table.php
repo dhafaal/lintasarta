@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->foreignId('schedule_id')->constrained('schedules')->cascadeOnDelete();
             $table->enum('type', ['izin', 'sakit', 'cuti']); 
             $table->text('reason')->nullable();
+            $table->string('file')->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('approved_at')->nullable();

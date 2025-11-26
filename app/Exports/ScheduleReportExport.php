@@ -2,25 +2,24 @@
 
 namespace App\Exports;
 
-use App\Models\Schedules;
-use App\Models\User;
+use App\Services\ScheduleMonthlyDataBuilder;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use Carbon\Carbon;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithStyles
 {
     protected $month;
     protected $year;
     protected $daysInMonth;
-    protected $users;
+    protected $data = [];
     protected $grandTotalHours = 0;
 
     public function __construct($month, $year)
@@ -29,32 +28,37 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
         $this->year        = $year;
         $this->daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
         Carbon::setLocale('id');
-
-        $this->users = User::whereHas('schedules', function ($q) {
-                $q->whereYear('schedule_date', $this->year)
-                  ->whereMonth('schedule_date', $this->month);
-            })
-            ->whereIn('role', ['user', 'operator'])
-            ->get();
+        [$this->data, $this->daysInMonth] = ScheduleMonthlyDataBuilder::build($this->month, $this->year);
     }
 
     public function array(): array
     {
         $data = [];
 
-        foreach ($this->users as $index => $user) {
-            [$rowShift, $rowHours, $totalHours] = $this->generateUserRows($user, $index);
-            $this->grandTotalHours += $totalHours;
+        foreach ($this->data as $index => $row) {
+            $rowShift = ['NO' => $index + 1, 'NAMA' => $row['nama']];
+            $rowHours = ['NO' => '', 'NAMA' => 'JAM KERJA'];
+
+            for ($day = 1; $day <= $this->daysInMonth; $day++) {
+                $dayData = $row['shifts'][$day] ?? null;
+                $rowShift[$day] = ($dayData && $dayData['shift_name']) ? $dayData['shift_name'] : '-';
+                $rowHours[$day] = ($dayData && $dayData['hours']) ? $dayData['hours'] : '-';
+            }
+
+            $rowShift['TOTAL JAM'] = '';
+            $rowHours['TOTAL JAM'] = $row['total_jam'];
 
             $data[] = $rowShift;
             $data[] = $rowHours;
+
+            $this->grandTotalHours += (float) str_replace('j', '', $row['total_jam']);
         }
 
         $data[] = [];
-        $totalHoursFormatted = ($this->grandTotalHours == floor($this->grandTotalHours)) 
-            ? floor($this->grandTotalHours) . 'j' 
+        $totalHoursFormatted = ($this->grandTotalHours == floor($this->grandTotalHours))
+            ? floor($this->grandTotalHours) . 'j'
             : number_format($this->grandTotalHours, 1) . 'j';
-        
+
         $data[] = [
             'NO'   => '',
             'NAMA' => 'TOTAL JAM KERJA SEMUA PEGAWAI',
@@ -62,103 +66,6 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
         ];
 
         return $data;
-    }
-
-    private function generateUserRows($user, $index): array
-    {
-        $rowShift = ['NO' => $index + 1, 'NAMA' => $user->name];
-        $rowHours = ['NO' => '', 'NAMA' => 'JAM KERJA'];
-        $totalMinutes = 0;
-
-        for ($day = 1; $day <= $this->daysInMonth; $day++) {
-            $date = Carbon::createFromDate($this->year, $this->month, $day)->format('Y-m-d');
-            
-            // Ambil semua schedule untuk hari ini (bisa ada shift 1 dan shift 2)
-            $schedules = Schedules::with(['shift', 'attendances', 'permissions'])
-                ->where('user_id', $user->id)
-                ->whereDate('schedule_date', $date)
-                ->orderBy('id') // Gunakan id untuk ordering
-                ->get();
-
-            $shiftNames = [];
-            $dayMinutes = 0;
-            $shiftCount = 0;
-
-            foreach ($schedules as $schedule) {
-                if (!$schedule->shift) { continue; }
-
-                // Ambil attendance & permission terkait
-                $attendance = $schedule->attendances->where('user_id', $user->id)->first();
-                $permissionApproved = $schedule->permissions
-                    ->where('user_id', $user->id)
-                    ->where('status', 'approved')
-                    ->first();
-                $permissionPending = $schedule->permissions
-                    ->where('user_id', $user->id)
-                    ->where('status', 'pending')
-                    ->first();
-
-                // Hitung durasi shift (handle lintas hari)
-                $startT = Carbon::parse($schedule->shift->start_time);
-                $endT   = Carbon::parse($schedule->shift->end_time);
-                if ($endT->lt($startT)) { $endT->addDay(); }
-                $shiftMinutes = $startT->diffInMinutes($endT);
-
-                // Aturan jam kerja ekspor (selaras kalender):
-                // - Jika attendance explicit alpha => 0 menit + label (Alpha)
-                // - Jika TIDAK ada attendance DAN TIDAK ada permission pending/approved => auto-0 (Alpha)
-                // - Selain itu (hadir/telat/izin/cuti/sakit) => gunakan durasi shift
-                if ($attendance && $attendance->status === 'alpha') {
-                    $shiftNames[] = $schedule->shift->shift_name . ' (Alpha)';
-                    // 0 menit
-                } elseif (!$attendance && !$permissionApproved && !$permissionPending) {
-                    $shiftNames[] = $schedule->shift->shift_name . ' (Alpha)';
-                    // 0 menit (auto-0)
-                } else {
-                    // Gunakan durasi shift; tambahkan label izin/cuti/sakit bila ada permission
-                    if ($permissionApproved || $permissionPending) {
-                        $perm = $permissionApproved ?: $permissionPending;
-                        $permissionType = ucfirst($perm->type);
-                        $shiftNames[] = $schedule->shift->shift_name . " ({$permissionType})";
-                    } else {
-                        $shiftNames[] = $schedule->shift->shift_name;
-                    }
-                    $dayMinutes += $shiftMinutes;
-                    $shiftCount++;
-                }
-            }
-
-            // Deduct 1 hour break per day if there is any work time
-            $dayMinutesAfterBreak = $dayMinutes > 0 ? max(0, $dayMinutes - 60) : 0;
-
-            $totalMinutes += $dayMinutesAfterBreak;
-
-            if (!empty($shiftNames)) {
-                // Gabungkan shift jika ada lebih dari satu
-                $rowShift[$day] = implode(' + ', $shiftNames);
-                
-                // Format jam kerja
-                $hours = $dayMinutesAfterBreak / 60;
-                if ($hours == floor($hours)) {
-                    $rowHours[$day] = floor($hours) . 'j';
-                } else {
-                    $rowHours[$day] = number_format($hours, 1) . 'j';
-                }
-            } else {
-                $rowShift[$day] = '-';
-                $rowHours[$day] = '-';
-            }
-        }
-
-        $rowShift['TOTAL JAM'] = '';
-        $totalHours = $totalMinutes / 60;
-        if ($totalHours == floor($totalHours)) {
-            $rowHours['TOTAL JAM'] = floor($totalHours) . 'j';
-        } else {
-            $rowHours['TOTAL JAM'] = number_format($totalHours, 1) . 'j';
-        }
-
-        return [$rowShift, $rowHours, $totalHours];
     }
 
     public function headings(): array
@@ -305,7 +212,7 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithTitle, WithSt
             for ($i = 3; $i < $colCount; $i++) {
                 $col = Coordinate::stringFromColumnIndex($i);
                 $val = $sheet->getCell($col . $row)->getValue();
-                
+
                 // Deteksi berdasarkan nama shift lengkap (termasuk shift ganda)
                 if (stripos($val, 'Pagi') !== false || stripos($val, 'Morning') !== false) {
                     // Jika ada shift ganda dengan Pagi, gunakan warna campuran
