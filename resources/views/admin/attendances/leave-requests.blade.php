@@ -293,6 +293,16 @@
                                     </td>
                                     <td class="px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 hidden md:table-cell">
                                         <div class="text-sm text-gray-900 max-w-xs truncate" title="{{ $request->reason }}">{{ $request->reason }}</div>
+                                        @if($request->file && $request->file_permission_id)
+                                            <div class="mt-1">
+                                                <a href="{{ route('admin.permissions.attachment', $request->file_permission_id) }}" target="_blank" class="inline-flex items-center px-2 py-1 text-xs font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-full hover:bg-sky-100">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-paperclip mr-1">
+                                                        <path d="M13.5 3.5 5.75 11.25a3 3 0 1 0 4.25 4.25L17 8.5a1.88 1.88 0 0 0-2.65-2.65L7.5 12.5" />
+                                                    </svg>
+                                                    Lampiran
+                                                </a>
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 whitespace-nowrap">
                                         @if ($request->status === 'pending')
@@ -459,6 +469,18 @@
                                     {{ $request->reason }}
                                 </div>
                             </div>
+
+                            @if($request->file && $request->file_permission_id)
+                                <div class="mb-3 sm:mb-4">
+                                    <div class="text-xs text-gray-500 font-medium mb-1">Attachment</div>
+                                    <a href="{{ route('admin.permissions.attachment', $request->file_permission_id) }}" target="_blank" class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-lg hover:bg-sky-100">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-paperclip mr-1">
+                                            <path d="M13.5 3.5 5.75 11.25a3 3 0 1 0 4.25 4.25L17 8.5a1.88 1.88 0 0 0-2.65-2.65L7.5 12.5" />
+                                        </svg>
+                                        Lihat Lampiran
+                                    </a>
+                                </div>
+                            @endif
 
                             {{-- Actions --}}
                             <div class="flex flex-wrap gap-1 sm:gap-2">

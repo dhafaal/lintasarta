@@ -83,6 +83,8 @@ class PermissionController extends Controller
             'type' => 'required|in:cuti',
             'reason' => 'required|string|min:10|max:500',
             'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ], [
+            'schedule_ids.max' => 'Maksimal 12 hari cuti yang bisa diajukan dalam satu permintaan.',
         ]);
 
         $user = Auth::user();
@@ -109,6 +111,32 @@ class PermissionController extends Controller
 
             if ($existingPermission) {
                 return back()->with('error', "Anda sudah memiliki pengajuan untuk tanggal {$schedule->schedule_date}.");
+            }
+        }
+
+        $schedulesByYear = $schedules->groupBy(function ($schedule) {
+            return date('Y', strtotime($schedule->schedule_date));
+        });
+
+        foreach ($schedulesByYear as $year => $yearSchedules) {
+            $usedDays = Permissions::where('user_id', $user->id)
+                ->where('type', 'cuti')
+                ->whereIn('status', ['pending', 'approved'])
+                ->whereHas('schedule', function ($q) use ($year) {
+                    $q->whereYear('schedule_date', $year);
+                })
+                ->count();
+
+            $newDays = $yearSchedules->count();
+
+            if ($usedDays + $newDays > 12) {
+                $remaining = max(0, 12 - $usedDays);
+
+                if ($remaining <= 0) {
+                    return back()->with('error', "Jatah cuti Anda untuk tahun {$year} sudah habis (12 hari).");
+                }
+
+                return back()->with('error', "Pengajuan ini melebihi sisa jatah cuti tahun {$year}. Sisa jatah: {$remaining} hari.");
             }
         }
 

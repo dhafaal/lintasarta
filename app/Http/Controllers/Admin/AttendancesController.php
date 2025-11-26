@@ -485,20 +485,28 @@ class AttendancesController extends Controller
 
         $leaveRequestsData = $query->paginate(15);
 
-        // Transform the data to include user information and date ranges
+        // Transform the data to include user information, date ranges, and attachment path (if any)
         $leaveRequests = $leaveRequestsData->through(function ($item) {
             $user = User::find($item->user_id);
             $permissionIds = explode(',', $item->permission_ids);
             
-            // Get date range for this leave request
+            // Get permissions in this grouped leave request
             $permissions = Permissions::with('schedule')
                 ->whereIn('id', $permissionIds)
                 ->get();
-            
+
+            // Compute date range based on schedules
             $dates = $permissions->pluck('schedule.schedule_date')->sort();
             $dateRange = $dates->count() > 1 
                 ? $dates->first() . ' - ' . $dates->last()
                 : $dates->first();
+
+            // Use the first permission that has a non-null file as the attachment source
+            $filePermission = $permissions->first(function ($perm) {
+                return !empty($perm->file);
+            });
+            $filePath = $filePermission ? $filePermission->file : null;
+            $filePermissionId = $filePermission ? $filePermission->id : null;
 
             return (object) [
                 'id' => $item->first_permission_id,
@@ -507,6 +515,8 @@ class AttendancesController extends Controller
                 'status' => $item->status,
                 'schedules_count' => $item->schedules_count,
                 'date_range' => $dateRange,
+                'file' => $filePath,
+                'file_permission_id' => $filePermissionId,
                 'created_at' => Carbon::parse($item->created_at),
                 'permission_ids' => $permissionIds
             ];

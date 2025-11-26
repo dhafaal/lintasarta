@@ -55,6 +55,12 @@
     </div>
 </div>
 
+@php
+    $attachmentPermission = $permissions->first(function ($perm) {
+        return !empty($perm->file);
+    });
+@endphp
+
 <!-- Leave Reason -->
 <div class="bg-white border-2 border-gray-200 rounded-2xl p-6 mb-6 shadow-lg">
     <h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
@@ -67,6 +73,17 @@
     </h4>
     <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
         <p class="text-gray-700 leading-relaxed">{{ $leaveRequest->reason }}</p>
+
+        @if($attachmentPermission)
+            <div class="mt-4">
+                <a href="{{ route('admin.permissions.attachment', $attachmentPermission) }}" target="_blank" class="inline-flex items-center px-3 py-2 bg-sky-50 border border-sky-200 rounded-lg text-xs font-semibold text-sky-700 hover:bg-sky-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-paperclip mr-2">
+                        <path d="M13.5 3.5 5.75 11.25a3 3 0 1 0 4.25 4.25L17 8.5a1.88 1.88 0 0 0-2.65-2.65L7.5 12.5" />
+                    </svg>
+                    Download Attachment
+                </a>
+            </div>
+        @endif
     </div>
 </div>
 

@@ -268,6 +268,8 @@ function showAttendanceDetail(status) {
         });
 }
 
+const permissionAttachmentUrlTemplate = "{{ route('admin.permissions.attachment', ['permission' => '__PERMISSION_ID__']) }}";
+
 function renderAttendanceDetail(response) {
     const modalContent = document.getElementById('modal-content');
     const data = response.data;
@@ -495,7 +497,15 @@ function renderAttendanceDetail(response) {
                             ${badgesHtml}
                         </div>
                     </td>
-                    <td class="px-4 py-2 text-sm text-gray-700">${employee.permission_type ? employee.permission_type : '-'}</td>
+                    <td class="px-4 py-2 text-sm text-gray-700">
+                        ${employee.permission_type ? employee.permission_type : '-'}
+                        ${employee.permission_file && employee.permission_id ? `
+                            <a href="${permissionAttachmentUrlTemplate.replace('__PERMISSION_ID__', employee.permission_id)}" target="_blank" class="inline-flex items-center px-2 py-1 ml-2 text-xs font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-full hover:bg-sky-100">
+                                <i data-lucide="paperclip" class="w-3 h-3 mr-1"></i>
+                                Lampiran
+                            </a>
+                        ` : ''}
+                    </td>
                     <td class="px-4 py-2 text-sm text-gray-700">${combinedCheckIn ? combinedCheckIn : '-'}</td>
                     <td class="px-4 py-2 text-sm text-gray-700">${combinedCheckOut ? combinedCheckOut : '-'}</td>
                 </tr>

@@ -161,14 +161,13 @@ class DashboardController extends Controller
             $checkOut = $attendances->pluck('check_out_time')->filter()->sort()->last();
 
             // Flags & permissions
-            $hasApprovedPermission = Permissions::whereIn('schedule_id', $userSchedules->pluck('id'))
-                ->where('status','approved')->exists();
-            $permissionType = null;
-            if ($hasApprovedPermission) {
-                $perm = Permissions::whereIn('schedule_id', $userSchedules->pluck('id'))
-                    ->where('status','approved')->first();
-                $permissionType = optional($perm)->type;
-            }
+            $permission = Permissions::whereIn('schedule_id', $userSchedules->pluck('id'))
+                ->where('status', 'approved')
+                ->first();
+            $hasApprovedPermission = (bool) $permission;
+            $permissionType = $permission ? $permission->type : null;
+            $permissionFile = $permission ? $permission->file : null;
+            $permissionId = $permission ? $permission->id : null;
             $hasEarly = $attendances->first(function($a){ return optional($a)->status === 'early_checkout'; }) ? true : false;
             $hasForgot = $attendances->first(function($a){ return optional($a)->status === 'forgot_checkout'; }) ? true : false;
 
@@ -236,6 +235,8 @@ class DashboardController extends Controller
                 'check_out' => $checkOut ?: null,
                 'is_early_checkout' => $hasEarly,
                 'permission_type' => $permissionType,
+                'permission_file' => $permissionFile,
+                'permission_id' => $permissionId,
                 'shifts' => $allShifts,
             ];
         }
@@ -267,6 +268,8 @@ class DashboardController extends Controller
                 'check_out' => $emp['check_out'] ?: null,
                 'is_early_checkout' => $emp['is_early_checkout'],
                 'permission_type' => $emp['permission_type'],
+                'permission_file' => $emp['permission_file'] ?? null,
+                'permission_id' => $emp['permission_id'] ?? null,
                 'shifts' => $emp['shifts'] ?? [],
             ];
         }

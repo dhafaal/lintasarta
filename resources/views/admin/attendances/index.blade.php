@@ -518,7 +518,15 @@
 
                                 <!-- Actions -->
                                 @if($earlyPending || $otherPending)
-                                <div class="pt-3 border-t border-gray-100 flex gap-2">
+                                @php $attachmentPermission = $otherPending ?? $earlyPending; @endphp
+                                <div class="pt-3 border-t border-gray-100 flex gap-2 flex-wrap">
+                                    @if($attachmentPermission && $attachmentPermission->file)
+                                        <a href="{{ route('admin.permissions.attachment', $attachmentPermission) }}" target="_blank" class="inline-flex items-center px-3 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold text-xs rounded-lg border border-sky-200 transition-all">
+                                            <i data-lucide="paperclip" class="w-3 h-3 mr-1"></i>
+                                            Lihat Lampiran
+                                        </a>
+                                    @endif
+
                                     @if($earlyPending)
                                         <form action="{{ route('admin.attendances.permission.approve', $earlyPending) }}" method="post" class="flex-1" onsubmit="return confirm('Setujui early checkout ini?')">
                                             @csrf
@@ -825,11 +833,21 @@
                                         @endif
                                     </td>
                                     <td class="px-3 py-4 whitespace-nowrap text-left">
-                                        <div class="flex items-center justify-start space-x-1">
+                                        <div class="flex items-center justify-start space-x-1 flex-wrap">
+                                            @php $attachmentPermission = $otherPending ?? $earlyPending; @endphp
+                                            @if($attachmentPermission && $attachmentPermission->file)
+                                                <a href="{{ route('admin.permissions.attachment', $attachmentPermission) }}" target="_blank" class="inline-flex items-center px-2 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold text-xs rounded-lg border border-sky-200 transition-all duration-200 mr-1 mb-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-paperclip mr-1">
+                                                        <path d="M13.5 3.5 5.75 11.25a3 3 0 1 0 4.25 4.25L17 8.5a1.88 1.88 0 0 0-2.65-2.65L7.5 12.5" />
+                                                    </svg>
+                                                    Lihat Lampiran
+                                                </a>
+                                            @endif
+
                                             @if($earlyPending)
                                                 <form action="{{ route('admin.attendances.permission.approve', $earlyPending) }}" method="post" class="inline" onsubmit="return confirm('Setujui early checkout ini?')">
                                                     @csrf
-                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200 mr-1 mb-1">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
                                                             <polyline points="20 6 9 17 4 12"/>
                                                         </svg>
@@ -838,7 +856,7 @@
                                                 </form>
                                                 <form action="{{ route('admin.attendances.permission.reject', $earlyPending) }}" method="post" class="inline" onsubmit="return confirm('Tolak early checkout ini?')">
                                                     @csrf
-                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200 mr-1 mb-1">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
                                                             <path d="M18 6 6 18"/>
                                                             <path d="m6 6 12 12"/>
@@ -849,7 +867,7 @@
                                             @elseif($otherPending)
                                                 <form action="{{ route('admin.attendances.permission.approve', $otherPending) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menyetujui izin ini?')">
                                                     @csrf
-                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200 mr-1 mb-1">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
                                                             <polyline points="20 6 9 17 4 12"/>
                                                         </svg>
@@ -858,7 +876,7 @@
                                                 </form>
                                                 <form action="{{ route('admin.attendances.permission.reject', $otherPending) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menolak izin ini?')">
                                                     @csrf
-                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200 mr-1 mb-1">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
                                                             <path d="M18 6 6 18"/>
                                                             <path d="m6 6 12 12"/>

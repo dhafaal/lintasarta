@@ -37,6 +37,42 @@
 @endpush
 
 @section('content')
+@php
+    $user = Auth::user();
+    $now = \Carbon\Carbon::now();
+    $startOfMonth = $now->copy()->startOfMonth()->toDateString();
+    $endOfMonth = $now->copy()->endOfMonth()->toDateString();
+
+    $monthlySchedules = \App\Models\Schedules::with('shift')
+        ->where('user_id', $user->id)
+        ->whereBetween('schedule_date', [$startOfMonth, $endOfMonth])
+        ->get();
+
+    $shiftPagi = $monthlySchedules->filter(function ($schedule) {
+        return optional($schedule->shift)->category === 'Pagi';
+    })->count();
+
+    $shiftSiang = $monthlySchedules->filter(function ($schedule) {
+        return optional($schedule->shift)->category === 'Siang';
+    })->count();
+
+    $shiftMalam = $monthlySchedules->filter(function ($schedule) {
+        return optional($schedule->shift)->category === 'Malam';
+    })->count();
+
+    $leaveQuota = 12;
+
+    $usedLeaveDays = \App\Models\Permissions::where('user_id', $user->id)
+        ->where('type', 'cuti')
+        ->whereIn('status', ['pending', 'approved'])
+        ->whereHas('schedule', function ($q) use ($now) {
+            $q->whereYear('schedule_date', $now->year);
+        })
+        ->count();
+
+    $remainingLeave = max(0, $leaveQuota - $usedLeaveDays);
+@endphp
+
 <div class="min-h-screen bg-white">
     <div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {{-- Hero Welcome Section --}}
@@ -57,11 +93,12 @@
             <div class="bg-white rounded-xl border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-medium text-gray-600 mb-1">This Month</p>
-                        <p class="text-xl font-bold text-gray-900">{{ now()->format('M Y') }}</p>
+                        <p class="text-xs font-medium text-gray-600 mb-1">Shift Pagi Bulan Ini</p>
+                        <p class="text-xl font-bold text-gray-900">{{ $shiftPagi }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Periode {{ $now->format('M Y') }}</p>
                     </div>
                     <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
-                        <i data-lucide="calendar" class="w-5 h-5 text-sky-600"></i>
+                        <i data-lucide="sunrise" class="w-5 h-5 text-sky-600"></i>
                     </div>
                 </div>
             </div>
@@ -69,11 +106,12 @@
             <div class="bg-white rounded-xl border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-medium text-gray-600 mb-1">Today</p>
-                        <p class="text-xl font-bold text-gray-900">{{ now()->format('d') }}</p>
+                        <p class="text-xs font-medium text-gray-600 mb-1">Shift Siang Bulan Ini</p>
+                        <p class="text-xl font-bold text-gray-900">{{ $shiftSiang }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Periode {{ $now->format('M Y') }}</p>
                     </div>
                     <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
-                        <i data-lucide="calendar-check" class="w-5 h-5 text-sky-600"></i>
+                        <i data-lucide="sun" class="w-5 h-5 text-sky-600"></i>
                     </div>
                 </div>
             </div>
@@ -81,11 +119,12 @@
             <div class="bg-white rounded-xl border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-medium text-gray-600 mb-1">Week</p>
-                        <p class="text-xl font-bold text-gray-900">{{ now()->weekOfYear }}</p>
+                        <p class="text-xs font-medium text-gray-600 mb-1">Shift Malam Bulan Ini</p>
+                        <p class="text-xl font-bold text-gray-900">{{ $shiftMalam }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Periode {{ $now->format('M Y') }}</p>
                     </div>
                     <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
-                        <i data-lucide="calendar-days" class="w-5 h-5 text-sky-600"></i>
+                        <i data-lucide="moon" class="w-5 h-5 text-sky-600"></i>
                     </div>
                 </div>
             </div>
@@ -93,11 +132,12 @@
             <div class="bg-white rounded-xl border border-gray-200 p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-medium text-gray-600 mb-1">Days in Month</p>
-                        <p class="text-xl font-bold text-gray-900">{{ now()->daysInMonth }}</p>
+                        <p class="text-xs font-medium text-gray-600 mb-1">Sisa Jatah Cuti Tahun Ini</p>
+                        <p class="text-xl font-bold text-gray-900">{{ $remainingLeave }}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Dari total {{ $leaveQuota }} hari</p>
                     </div>
                     <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
-                        <i data-lucide="hash" class="w-5 h-5 text-sky-600"></i>
+                        <i data-lucide="briefcase" class="w-5 h-5 text-sky-600"></i>
                     </div>
                 </div>
             </div>

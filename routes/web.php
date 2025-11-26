@@ -115,6 +115,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         // Permissions (Admin)
         Route::prefix('permissions')->name('permissions.')->group(function () {
             Route::post('/{permission}/approve', [AdminPermissionController::class, 'approve'])->name('approve');
+            Route::get('/{permission}/attachment', [AdminPermissionController::class, 'downloadAttachment'])->name('attachment');
         });
 
         // Activity Logs
