@@ -16,6 +16,8 @@ use App\Services\ScheduleMonthlyDataBuilder;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Validation\ValidationException;
+use App\Imports\SchedulesImport;
+use App\Exports\ScheduleTemplateExport;
 
 class ScheduleController extends Controller
 {
@@ -1392,7 +1394,121 @@ class ScheduleController extends Controller
 
     private function buildMonthlyTableData(int $month, int $year): array
     {
-        return ScheduleMonthlyDataBuilder::build($month, $year);
+        $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
+
+        $users = User::whereHas('schedules', function ($q) use ($year, $month) {
+            $q->whereYear('schedule_date', $year)->whereMonth('schedule_date', $month);
+        })
+            ->whereIn('role', ['user', 'operator'])
+            ->orderBy('name')
+            ->get();
+
+        $data = [];
+        foreach ($users as $user) {
+            $row = [
+                'nama' => $user->name,
+                'shifts' => [],
+                'total_jam' => '0j'
+            ];
+
+            $totalMinutes = 0;
+
+            for ($day = 1; $day <= $daysInMonth; $day++) {
+                $date = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
+                // Load shift + attendance(s) + permissions; hours use SHIFT DURATION (not actual checkin/checkout)
+                $schedules = Schedules::with(['shift', 'attendances', 'permissions'])
+                    ->where('user_id', $user->id)
+                    ->whereDate('schedule_date', $date)
+                    ->get();
+
+                if ($schedules->isNotEmpty()) {
+                    $shiftLetters = [];
+                    $shiftNames = [];
+                    $attendanceStatuses = [];
+                    $dayMinutesAcc = 0; // accumulate minutes for the whole day
+
+                    foreach ($schedules as $schedule) {
+                        if (!$schedule->shift) continue;
+                        // Determine minutes based on SHIFT DURATION by default
+                        // Then apply business rules: alpha => 0, approved permission => 0
+                        $attendance = null;
+                        if (isset($schedule->attendances) && $schedule->attendances) {
+                            $attendance = $schedule->attendances->firstWhere('user_id', $user->id) ?? $schedule->attendances->first();
+                        } elseif (isset($schedule->attendance)) { // backward compatibility
+                            $attendance = $schedule->attendance;
+                        }
+
+                        // Permissions presence for this schedule (to avoid auto-alpha for izin/cuti)
+                        $permissionApproved = null;
+                        $permissionPending = null;
+                        if (isset($schedule->permissions) && $schedule->permissions) {
+                            $permissionApproved = $schedule->permissions->firstWhere('status', 'approved');
+                            $permissionPending = $schedule->permissions->firstWhere('status', 'pending');
+                        }
+
+                        // Compute shift duration in minutes (handle crossing midnight)
+                        $start = Carbon::parse($schedule->shift->start_time);
+                        $end = Carbon::parse($schedule->shift->end_time);
+                        if ($end->lt($start)) { $end->addDay(); }
+                        $shiftMinutes = $start->diffInMinutes($end);
+
+                        // Apply rules:
+                        // - If explicit alpha attendance: 0
+                        // - Else if NO attendance AND NO pending/approved permission: auto-alpha => 0
+                        // - Else: use shift duration MINUS 1 hour break per shift
+                        if ($attendance && $attendance->status === 'alpha') {
+                            $minutes = 0; // explicit alpha
+                            $forcedAlpha = true;
+                        } elseif (!$attendance && !$permissionApproved && !$permissionPending) {
+                            $minutes = 0; // auto-alpha when truly absent without izin/cuti
+                            $forcedAlpha = true;
+                        } else {
+                            // Deduct 1 hour (60 minutes) break per shift
+                            $minutes = max(0, $shiftMinutes - 60);
+                            $forcedAlpha = false;
+                        }
+
+                        // accumulate per-day with break already deducted per shift
+                        $dayMinutesAcc += $minutes;
+
+                        $shiftLetters[] = strtoupper(substr($schedule->shift->shift_name, 0, 1));
+                        $shiftNames[] = $schedule->shift->shift_name; // full shift names
+                        $hoursList[] = round($minutes / 60, 1) . 'j';
+
+                        // Determine primary attendance status for coloring
+                        $attendanceStatus = $attendance->status ?? (($permissionApproved || $permissionPending) ? 'izin' : null);
+                        if ($forcedAlpha && !$attendanceStatus) { $attendanceStatus = 'alpha'; }
+                        $attendanceStatuses[] = $attendanceStatus;
+                    }
+
+                    // Break already deducted per shift, so just use accumulated minutes
+                    $dayMinutesAfterBreak = $dayMinutesAcc;
+                    // Add to monthly total
+                    $totalMinutes += $dayMinutesAfterBreak;
+
+                    $row['shifts'][$day] = [
+                        'shift' => implode(',', $shiftLetters), // contoh: "P,M"
+                        'shift_name' => implode(' + ', $shiftNames), // contoh: "Pagi + Malam"
+                        'hours' => (function($m){ $h = $m/60; return ($h==floor($h)) ? floor($h).'j' : number_format($h,1).'j'; })($dayMinutesAfterBreak),
+                        'attendance_statuses' => $attendanceStatuses, // array of attendance statuses for each shift
+                        'primary_attendance' => $attendanceStatuses[0] ?? null, // primary attendance status for coloring
+                    ];
+                } else {
+                    $row['shifts'][$day] = [
+                        'shift' => '',
+                        'shift_name' => '',
+                        'hours' => '',
+                        'attendance_statuses' => [],
+                        'primary_attendance' => null,
+                    ];
+                }
+            }
+
+            $row['total_jam'] = round($totalMinutes / 60, 1) . 'j';
+            $data[] = $row;
+        }
+
+        return [$data, $daysInMonth];
     }
 
     public function history(Request $request, User $user)
@@ -1733,5 +1849,186 @@ class ScheduleController extends Controller
                 'message' => 'Gagal menghapus jadwal: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Download template Excel untuk import schedules
+     */
+    public function downloadTemplate()
+    {
+        return Excel::download(new ScheduleTemplateExport, 'template_jadwal.xlsx');
+    }
+
+    /**
+     * Preview import schedules dari Excel
+     */
+    public function previewImport(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:2048',
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer|min:2020|max:2100',
+        ]);
+
+        try {
+            // Import dalam preview mode (tidak menyimpan ke database)
+            $import = new SchedulesImport($request->month, $request->year, true);
+            Excel::import($import, $request->file('excel_file'));
+
+            $previewData = $import->getPreviewData();
+            $successCount = $import->getSuccessCount();
+            $skipCount = $import->getSkipCount();
+            $errors = $import->getErrors();
+
+            // Simpan file Excel ke temporary storage untuk digunakan saat confirm
+            $fileName = 'import_' . time() . '_' . $request->file('excel_file')->getClientOriginalName();
+            $filePath = $request->file('excel_file')->storeAs('temp/imports', $fileName);
+
+            // Simpan data preview ke session
+            session([
+                'import_preview' => [
+                    'file_path' => $filePath,
+                    'month' => $request->month,
+                    'year' => $request->year,
+                    'preview_data' => $previewData,
+                    'success_count' => $successCount,
+                    'skip_count' => $skipCount,
+                    'errors' => $errors,
+                ]
+            ]);
+
+            return redirect()->route('admin.schedules.import-preview');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memproses Excel: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Tampilkan halaman preview import
+     */
+    public function showImportPreview()
+    {
+        if (!session()->has('import_preview')) {
+            return redirect()->route('admin.schedules.create')->with('error', 'Tidak ada data preview');
+        }
+
+        $previewData = session('import_preview');
+
+        return view('admin.schedules.import-preview', [
+            'previewData' => $previewData['preview_data'],
+            'month' => $previewData['month'],
+            'year' => $previewData['year'],
+            'successCount' => $previewData['success_count'],
+            'skipCount' => $previewData['skip_count'],
+            'importErrors' => $previewData['errors'],
+        ]);
+    }
+
+    /**
+     * Konfirmasi dan simpan import schedules
+     */
+    public function confirmImport(Request $request)
+    {
+        if (!session()->has('import_preview')) {
+            return redirect()->route('admin.schedules.create')->with('error', 'Tidak ada data preview');
+        }
+
+        $previewData = session('import_preview');
+
+        try {
+            // Pastikan file temporary masih ada (gunakan Storage agar path OS-agnostic)
+            $relative = $previewData['file_path'];
+            if (!\Storage::disk('local')->exists($relative)) {
+                return back()->with('error', 'File sementara import tidak ditemukan. Silakan ulangi proses import.');
+            }
+            $tempPath = \Storage::disk('local')->path($relative);
+
+            // Import dengan mode normal (simpan ke database)
+            $import = new SchedulesImport($previewData['month'], $previewData['year'], false);
+            Excel::import($import, $tempPath);
+
+            $successCount = $import->getSuccessCount();
+            $skipCount = $import->getSkipCount();
+            $errors = $import->getErrors();
+
+            $message = "Import selesai: {$successCount} jadwal berhasil ditambahkan";
+            if ($skipCount > 0) {
+                $message .= ", {$skipCount} dilewati (sudah ada)";
+            }
+
+            // Log activity (best effort)
+            try {
+                if (method_exists(AdminSchedulesLog::class, 'log')) {
+                    AdminSchedulesLog::log(
+                        'import',
+                        null,
+                        Auth::id(),
+                        Auth::user()->name ?? '-',
+                        null,
+                        null,
+                        null,
+                        null,
+                        [
+                            'month' => $previewData['month'],
+                            'year' => $previewData['year'],
+                            'success_count' => $successCount,
+                            'skip_count' => $skipCount,
+                        ],
+                        "Import jadwal dari Excel untuk {$previewData['month']}/{$previewData['year']}"
+                    );
+                } else {
+                    AdminSchedulesLog::create([
+                        'user_id' => Auth::id(),
+                        'action' => 'import',
+                        'resource_type' => 'Schedule',
+                        'resource_id' => null,
+                        'description' => "Import jadwal dari Excel untuk bulan {$previewData['month']}/{$previewData['year']}",
+                        'old_values' => null,
+                        'new_values' => json_encode([
+                            'month' => $previewData['month'],
+                            'year' => $previewData['year'],
+                            'success_count' => $successCount,
+                            'skip_count' => $skipCount,
+                        ]),
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->userAgent(),
+                    ]);
+                }
+            } catch (\Throwable $logEx) {
+                // Do not block the flow if logging fails
+            }
+
+            // Hapus file temporary
+            try { \Storage::disk('local')->delete($previewData['file_path']); } catch (\Throwable $e) {}
+
+            // Hapus session preview
+            session()->forget('import_preview');
+
+            // Redirect dengan session data untuk auto-load calendar
+            return redirect()->route('admin.schedules.create')->with([
+                'success' => $message,
+                'auto_load_month' => $previewData['month'],
+                'auto_load_year' => $previewData['year'],
+            ]);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menyimpan import: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Batalkan preview import
+     */
+    public function cancelImport()
+    {
+        if (session()->has('import_preview')) {
+            $previewData = session('import_preview');
+            // Hapus file temporary
+            \Storage::delete($previewData['file_path']);
+            session()->forget('import_preview');
+        }
+
+        return redirect()->route('admin.schedules.create')->with('info', 'Import dibatalkan');
     }
 }

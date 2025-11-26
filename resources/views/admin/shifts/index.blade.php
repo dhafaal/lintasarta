@@ -221,8 +221,7 @@
                                             </div>
                                             <div>
                                                 <div class="text-base font-bold text-gray-900">{{ $shift->shift_name }}</div>
-                                                <div class="text-sm text-gray-500">{{ $shift->category }}
-                                                </div>
+                                                <div class="text-sm text-gray-500">ID: {{ $shift->id }}</div>
                                             </div>
                                         </div>
                                     </td>

@@ -3,6 +3,14 @@
 @section('title', 'Tambah Jadwal')
 
 @section('content')
+    {{-- Debug Session Data --}}
+    @if(session('auto_load_month') && session('auto_load_year'))
+        <div class="fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg" role="alert">
+            <strong class="font-bold">Import Success!</strong>
+            <span class="block sm:inline">Data untuk bulan {{ session('auto_load_month') }}/{{ session('auto_load_year') }} akan dimuat...</span>
+        </div>
+    @endif
+
     <div class="min-h-screen bg-white">
         {{-- Header Section --}}
         <div class="bg-white px-6 py-4">
@@ -28,6 +36,210 @@
 
         {{-- Main Content --}}
         <div class="mx-auto px-6 py-6">
+            {{-- Import Excel Section --}}
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 overflow-hidden shadow-sm mb-6">
+                <div class="px-6 py-4 border-b border-emerald-200 bg-white/50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-lg flex items-center justify-center">
+                            <i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-600"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-800">Import dari Excel</h2>
+                            <p class="text-sm text-gray-500">Upload file Excel untuk mengisi jadwal bulanan secara otomatis</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    {{-- Success/Warning Messages for Import --}}
+                    @if (session('import_errors'))
+                        <div class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-amber-800 mb-2">Beberapa baris memiliki error:</p>
+                                    <ul class="list-disc ml-5 text-sm text-amber-700 space-y-1">
+                                        @foreach (session('import_errors') as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Import Form Errors --}}
+                    @if (session('error'))
+                        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600 mt-0.5"></i>
+                                <div>{{ session('error') }}</div>
+                            </div>
+                        </div>
+                    @endif
+                    @php
+                        $importErrors = [];
+                        if ($errors->has('excel_file')) $importErrors[] = $errors->first('excel_file');
+                        if ($errors->has('month')) $importErrors[] = $errors->first('month');
+                        if ($errors->has('year')) $importErrors[] = $errors->first('year');
+                    @endphp
+                    @if (!empty($importErrors))
+                        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="x-circle" class="w-5 h-5 text-red-600 mt-0.5"></i>
+                                <ul class="list-disc ml-5">
+                                    @foreach ($importErrors as $err)
+                                        <li>{{ $err }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+
+                    <form action="{{ route('admin.schedules.import-preview.submit') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                        @csrf
+                        
+                        {{-- Month and Year for Import --}}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="calendar" class="w-4 h-4 text-emerald-600"></i>
+                                        <span>Bulan <span class="text-red-500">*</span></span>
+                                    </div>
+                                </label>
+                                <select name="month" required
+                                    class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                                    <option value="">Pilih Bulan</option>
+                                    @for ($m = 1; $m <= 12; $m++)
+                                        <option value="{{ $m }}" {{ $m == date('n') ? 'selected' : '' }}>
+                                            {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="calendar" class="w-4 h-4 text-emerald-600"></i>
+                                        <span>Tahun <span class="text-red-500">*</span></span>
+                                    </div>
+                                </label>
+                                <select name="year" required
+                                    class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                                    @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
+                                        <option value="{{ $y }}" {{ $y == date('Y') ? 'selected' : '' }}>{{ $y }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- File Upload --}}
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="upload" class="w-4 h-4 text-emerald-600"></i>
+                                    <span>File Excel <span class="text-red-500">*</span></span>
+                                </div>
+                            </label>
+                            <input type="file" name="excel_file" accept=".xlsx,.xls" required
+                                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 p-2.5">
+                            <p class="mt-1 text-xs text-gray-500">Format: .xlsx atau .xls (Maksimal 2MB)</p>
+                        </div>
+
+                        {{-- Info Box --}}
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="info" class="w-5 h-5 text-blue-600 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-blue-800 mb-2">Format Excel:</p>
+                                    <ul class="list-disc ml-5 text-sm text-blue-700 space-y-1 mb-3">
+                                        <li><strong>user_id</strong>: ID user (contoh: 3 untuk Mursidi)</li>
+                                        <li><strong>tanggal</strong>: Tanggal dalam bulan (1-31)</li>
+                                        <li><strong>shift_id</strong>: ID shift (lihat daftar shift di bawah)</li>
+                                    </ul>
+                                    
+                                    <div class="bg-blue-100 border border-blue-300 rounded p-3 mb-2">
+                                        <p class="text-sm font-semibold text-blue-900 mb-2">📋 Cara Mengisi 2 Shift dalam 1 Hari:</p>
+                                        <p class="text-xs text-blue-800 mb-2">Untuk mengisi 2 shift di tanggal yang sama, buat <strong>2 baris</strong> dengan <strong>user_id</strong> dan <strong>tanggal</strong> yang sama:</p>
+                                        <div class="bg-white rounded p-2 font-mono text-xs">
+                                            <div class="grid grid-cols-3 gap-2 font-bold text-blue-900 mb-1">
+                                                <span>user_id</span>
+                                                <span>tanggal</span>
+                                                <span>shift_id</span>
+                                            </div>
+                                            <div class="grid grid-cols-3 gap-2 text-gray-700">
+                                                <span>3</span>
+                                                <span>23</span>
+                                                <span>1</span>
+                                            </div>
+                                            <div class="grid grid-cols-3 gap-2 text-gray-700">
+                                                <span>3</span>
+                                                <span>23</span>
+                                                <span>2</span>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-blue-700 mt-2">
+                                            ✅ Baris pertama = Shift 1 (Pagi)<br>
+                                            ✅ Baris kedua = Shift 2 (Siang)
+                                        </p>
+                                    </div>
+                                    
+                                    <p class="text-xs text-blue-600 mt-2">💡 Tip: Download template untuk melihat contoh format yang benar</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Shift Reference --}}
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="list" class="w-5 h-5 text-purple-600 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-purple-800 mb-2">Daftar Shift ID:</p>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                        @php
+                                            $shifts = \App\Models\Shift::orderBy('id')->get();
+                                        @endphp
+                                        @foreach($shifts as $shift)
+                                            <div class="flex items-center gap-2 bg-white rounded px-3 py-2 border border-purple-100">
+                                                <span class="font-bold text-purple-700">ID {{ $shift->id }}:</span>
+                                                <span class="text-sm text-gray-700">{{ $shift->shift_name }}</span>
+                                                <span class="text-xs text-gray-500">({{ $shift->category }})</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div class="flex items-center gap-3">
+                            <button type="submit"
+                                class="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                                <span>Import Excel</span>
+                            </button>
+                            <a href="{{ route('admin.schedules.download-template') }}"
+                                class="inline-flex items-center gap-2 px-6 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-lg border border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                <span>Download Template</span>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {{-- Divider --}}
+            <div class="relative my-8">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-4 bg-white text-gray-500 font-medium">ATAU</span>
+                </div>
+            </div>
+
             {{-- Form Card --}}
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-blue-50">
@@ -377,6 +589,50 @@
             
             let currentCalendarData = null;
             let currentExistingSchedules = {};
+
+            // Auto-load calendar after import
+            @if(session('auto_load_month') && session('auto_load_year'))
+                console.log('=== AUTO-LOAD CALENDAR AFTER IMPORT ===');
+                console.log('Session month:', "{{ session('auto_load_month') }}");
+                console.log('Session year:', "{{ session('auto_load_year') }}");
+                console.log('Month select element:', monthSelect);
+                console.log('Year select element:', yearSelect);
+                
+                monthSelect.value = "{{ session('auto_load_month') }}";
+                yearSelect.value = "{{ session('auto_load_year') }}";
+                
+                console.log('Month select value set to:', monthSelect.value);
+                console.log('Year select value set to:', yearSelect.value);
+                
+                // Trigger change event to reload calendar
+                monthSelect.dispatchEvent(new Event('change'));
+                
+                // Scroll to "Informasi Jadwal" section after calendar loads
+                setTimeout(() => {
+                    console.log('Scrolling to Informasi Jadwal section...');
+                    const jadwalSection = document.querySelector('.bg-white.rounded-xl.border.border-gray-200');
+                    console.log('Jadwal section found:', jadwalSection);
+                    
+                    if (jadwalSection) {
+                        jadwalSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        
+                        // Add highlight effect
+                        jadwalSection.style.transition = 'all 0.3s ease';
+                        jadwalSection.style.boxShadow = '0 0 20px rgba(14, 165, 233, 0.3)';
+                        setTimeout(() => {
+                            jadwalSection.style.boxShadow = '';
+                        }, 2000);
+                        
+                        console.log('Highlight effect applied!');
+                    } else {
+                        console.error('Jadwal section not found!');
+                    }
+                }, 1500);
+                
+                console.log('=== END AUTO-LOAD ===');
+            @else
+                console.log('No auto-load data in session');
+            @endif
 
             async function loadCalendar() {
                 try {
@@ -1060,6 +1316,41 @@
             if (scheduleForm) {
                 scheduleForm.submit();
             }
+        }
+    });
+
+    // Debug import form
+    document.addEventListener('DOMContentLoaded', function() {
+        const importForm = document.getElementById('importForm');
+        
+        if (importForm) {
+            console.log('Import form found:', importForm);
+            
+            importForm.addEventListener('submit', function(e) {
+                console.log('=== IMPORT FORM SUBMIT ===');
+                console.log('Form action:', this.action);
+                console.log('Form method:', this.method);
+                
+                const formData = new FormData(this);
+                console.log('Form data:');
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ':', pair[1]);
+                }
+                
+                // Check if file is selected
+                const fileInput = this.querySelector('input[type="file"]');
+                if (fileInput && fileInput.files.length === 0) {
+                    e.preventDefault();
+                    alert('Silakan pilih file Excel terlebih dahulu!');
+                    console.log('No file selected');
+                    return false;
+                }
+                
+                console.log('File selected:', fileInput.files[0].name);
+                console.log('Form will be submitted...');
+            });
+        } else {
+            console.error('Import form NOT found!');
         }
     });
     </script>

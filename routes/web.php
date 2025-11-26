@@ -64,6 +64,20 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         // Get available shifts for second shift based on first shift
         Route::post('schedules/get-available-shifts', [ScheduleController::class, 'getAvailableShifts'])
             ->name('schedules.get-available-shifts');
+        
+        // Import Excel routes
+        Route::get('schedules/download-template', [ScheduleController::class, 'downloadTemplate'])
+            ->name('schedules.download-template');
+        // POST to generate preview (unique name)
+        Route::post('schedules/import-preview', [ScheduleController::class, 'previewImport'])
+            ->name('schedules.import-preview.submit');
+        // GET to show preview page
+        Route::get('schedules/import-preview', [ScheduleController::class, 'showImportPreview'])
+            ->name('schedules.import-preview');
+        Route::post('schedules/import-confirm', [ScheduleController::class, 'confirmImport'])
+            ->name('schedules.import-confirm');
+        Route::post('schedules/import-cancel', [ScheduleController::class, 'cancelImport'])
+            ->name('schedules.import-cancel');
 
         // Kalender untuk admin
         Route::prefix('calendar')->name('calendar.')->group(function () {

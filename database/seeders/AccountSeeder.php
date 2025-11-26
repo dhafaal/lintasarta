@@ -51,5 +51,18 @@ class AccountSeeder extends Seeder {
             'password' => Hash::make('password'),
             'role' => 'User',
         ]);
+        User::create([
+            'name' => 'Asep',
+            'email' => 'Asep@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'User',
+        ]);
+        User::create([
+            'name' => 'Bambang',
+            'email' => 'Bambang@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'User',
+        ]);
+
     }
 }
