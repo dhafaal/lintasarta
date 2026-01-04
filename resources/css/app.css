@@ -39,7 +39,7 @@
   --sidebar-ring: oklch(0.55 0.15 200 / 0.3);
 }
 
-/* Dark mode */
+
 .dark {
   --background: oklch(0.08 0.01 220);
   --foreground: oklch(0.95 0.01 200);
@@ -70,7 +70,6 @@
   --sidebar-ring: oklch(0.65 0.18 200 / 0.4);
 }
 
-/* Theme mapping */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -110,7 +109,6 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Base layer */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -119,4 +117,15 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.input-style {
+  @apply w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-sky-100 focus:outline-none focus:border focus:border-sky-300 ;
+}
+.button-style {
+  @apply w-full bg-sky-600 text-white py-2 rounded-lg font-semibold hover:bg-sky-700 disabled:opacity-60;
+}
+
+.icon-bg-style {
+  @apply bg-sky-100 border border-sky-200 rounded-lg;
 }

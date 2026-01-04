@@ -9,7 +9,6 @@
     <link rel="icon" href="">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script>
-        // Initialize Alpine.js store for global state
         document.addEventListener('alpine:init', () => {
             Alpine.store('badges', {
                 izin: 0,
@@ -85,7 +84,6 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-
         ::-webkit-scrollbar{
             width: 5px;
         }
@@ -427,35 +425,46 @@
             class="bg-white/95 backdrop-blur-lg border-r border-sky-200 sidebar-transition fixed top-0 left-0 h-screen z-30 flex flex-col shadow-xl md:shadow-none">
 
             <!-- Sidebar Header -->
-            <div :class="sidebarCollapsed && !isMobile ? 'p-4' : 'p-4 sm:p-6'" class="border-b border-sky-200 flex-shrink-0">
-                <div class="flex items-center" :class="(sidebarCollapsed && !isMobile) ? 'justify-center' : 'justify-between mb-2'">
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-3"
-                        x-show="!sidebarCollapsed || isMobile" x-transition:enter="transition ease-out duration-300"
-                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
-                        <div>
-                            <h1 class="text-2xl font-semibold text-gray-700 tracking-tight">Admin Panel</h1>
-                            <p class="text-sm text-gray-500 font-medium">v1.0.0</p>
-                        </div>
-                    </a>
+            <div :class="sidebarCollapsed && !isMobile ? 'p-4' : 'p-4 sm:p-6'" class="border-b border-gray-200 flex-shrink-0">
 
-                    <button @click="toggleSidebar()" 
-                        :class="(sidebarCollapsed && !isMobile) ? 'mx-auto' : ''"
-                        x-show="!isMobile"
-                        class="sidebar-toggle p-2.5 rounded-xl hover:bg-sky-100 text-gray-600 menu-item-transition focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 group"
-                        aria-label="Toggle sidebar">
-                        <i :data-lucide="sidebarCollapsed ? 'panel-right-open' : 'panel-left-close'"
-                            class="w-5 h-5 icon-transition group-hover:scale-110"></i>
-                    </button>
-                    
-                    <!-- Mobile Close Button -->
-                    <button @click="closeMobileMenu()" 
-                        x-show="isMobile"
-                        class="p-2.5 rounded-xl hover:bg-sky-100 text-gray-600 menu-item-transition focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 group md:hidden"
-                        aria-label="Close menu">
-                        <i data-lucide="x" class="w-5 h-5 icon-transition group-hover:scale-110"></i>
-                    </button>
-                </div>
-            </div>
+    <div class="flex items-center"
+         :class="(sidebarCollapsed && !isMobile) ? 'justify-center' : 'justify-between'">
+
+        <!-- Logo -->
+        <a href="{{ route('admin.dashboard') }}"
+           class="flex items-center gap-2 overflow-hidden"
+           x-show="!sidebarCollapsed || isMobile">
+
+            <img src="/Logo-Lintasarta-new.webp"
+                 alt="Admin"
+                 class="h-14 w-auto shrink-0" />
+        </a>
+
+        <!-- Toggle Desktop -->
+        <button
+            x-show="!isMobile"
+            @click="toggleSidebar()"
+            :class="(sidebarCollapsed && !isMobile) ? 'mx-auto' : ''"
+            class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
+            aria-label="Toggle sidebar">
+
+            <i :data-lucide="sidebarCollapsed ? 'panel-right-open' : 'panel-left-close'"
+               class="w-5 h-5"></i>
+        </button>
+
+        <!-- Close Mobile -->
+        <button
+            x-show="isMobile"
+            @click="closeMobileMenu()"
+            class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-400 md:hidden"
+            aria-label="Close menu">
+
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+    </div>
+</div>
+
 
             <!-- Sidebar Navigation -->
             <nav class="flex-1 space-y-2 p-3 overflow-y-auto" role="navigation">
@@ -484,272 +493,113 @@
                 </a>
 
                 <!-- Users -->
-                <div class="space-y-1 relative">
-                    <button
-                        @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.users.index') }}' : toggleUsers()"
-                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
-                        class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
-                {{ request()->routeIs('admin.users.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                        :aria-label="(sidebarCollapsed && !isMobile) ? 'Users' : ''">
-                        <i data-lucide="users"
-                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.users.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed || isMobile" class="flex-1 text-left" x-transition>Users</span>
-                        <i x-show="(!sidebarCollapsed || isMobile)" data-lucide="chevron-right"
-                            :class="usersExpanded ? 'rotate-90' : 'rotate-0'"
-                            class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
+                <x-admin.sidebar-collapsible
+    label="Users"
+    icon="users"
+    main-route="admin.users.index"
+    active-pattern="admin.users.*"
+>
+    <x-admin.sidebar-link
+        route="admin.users.index"
+        active="admin.users.index">
+        Manage Users
+    </x-admin.sidebar-link>
 
-                        <div x-show="sidebarCollapsed"
-                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                            Users Management
-                            <div
-                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
-                            </div>
-                        </div>
-                    </button>
+    <x-admin.sidebar-link
+        route="admin.users.create"
+        active="admin.users.create">
+        Add User
+    </x-admin.sidebar-link>
+</x-admin.sidebar-collapsible>
 
-                    <div x-show="usersExpanded && ((!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen))"
-                        x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 -translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 -translate-y-2"
-                        class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
-                        <a href="{{ route('admin.users.index') }}"
-                            @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.users.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="users" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Manage Users</span>
-                        </a>
-                        <a href="{{ route('admin.users.create') }}"
-                            @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.users.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="user-plus" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Add User</span>
-                        </a>
-                    </div>
-                </div>
 
                 <!-- Shifts -->
-                <div class="space-y-1 relative">
-                    <button
-                        @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.shifts.index') }}' : toggleShifts()"
-                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
-                        class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
-                {{ request()->routeIs('admin.shifts.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                        :aria-label="sidebarCollapsed ? 'Shifts' : ''">
-                        <i data-lucide="clock"
-                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.shifts.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed || isMobile" class="flex-1 text-left" x-transition>Shifts</span>
-                        <i x-show="(!sidebarCollapsed || isMobile)" data-lucide="chevron-right"
-                            :class="shiftsExpanded ? 'rotate-90' : 'rotate-0'"
-                            class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
+                <x-admin.sidebar-collapsible
+    label="Shifts"
+    icon="clock"
+    main-route="admin.shifts.index"
+    active-pattern="admin.shifts.*"
+>
+    <x-admin.sidebar-link
+        route="admin.shifts.index"
+        active="admin.shifts.index">
+        Manage Shifts
+    </x-admin.sidebar-link>
 
-                        <div x-show="sidebarCollapsed"
-                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                            Shift Management
-                            <div
-                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
-                            </div>
-                        </div>
-                    </button>
+    <x-admin.sidebar-link
+        route="admin.shifts.create"
+        active="admin.shifts.create">
+        Add Shift
+    </x-admin.sidebar-link>
+</x-admin.sidebar-collapsible>
 
-                    <div x-show="shiftsExpanded && ((!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen))"
-                        x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 -translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 -translate-y-2"
-                        class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
-                        <a href="{{ route('admin.shifts.index') }}"
-                            @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.shifts.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="clock-4" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Manage Shifts</span>
-                        </a>
-                        <a href="{{ route('admin.shifts.create') }}"
-                            @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.shifts.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="plus-circle"
-                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Add Shift</span>
-                        </a>
-                    </div>
-                </div>
 
-                <!-- Schedules -->
-                <div class="space-y-1 relative">
-                    <button
-                        @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.schedules.index') }}' : toggleSchedules()"
-                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
-                        class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
-                {{ request()->routeIs('admin.schedules.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                        :aria-label="sidebarCollapsed ? 'Schedules' : ''">
-                        <i data-lucide="calendar"
-                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.schedules.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed || isMobile" class="flex-1 text-left" x-transition>Schedules</span>
-                        <i x-show="(!sidebarCollapsed || isMobile)" data-lucide="chevron-right"
-                            :class="schedulesExpanded ? 'rotate-90' : 'rotate-0'"
-                            class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
+                <x-admin.sidebar-collapsible
+    label="Schedules"
+    icon="calendar"
+    main-route="admin.schedules.index"
+    active-pattern="admin.schedules.*"
+>
+    <x-admin.sidebar-link
+        route="admin.schedules.index"
+        active="admin.schedules.index">
+        Manage Schedules
+    </x-admin.sidebar-link>
 
-                        <div x-show="sidebarCollapsed"
-                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                            Schedule Management
-                            <div
-                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
-                            </div>
-                        </div>
-                    </button>
+    <x-admin.sidebar-link
+        route="admin.schedules.create"
+        active="admin.schedules.create">
+        Add Schedules
+    </x-admin.sidebar-link>
 
-                    <div x-show="schedulesExpanded && ((!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen))"
-                        x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 -translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 -translate-y-2"
-                        class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
-                        <a href="{{ route('admin.schedules.index') }}"
-                            @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.schedules.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="calendar-days"
-                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Manage Schedules</span>
-                        </a>
-                        <a href="{{ route('admin.schedules.create') }}"
-                            @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.schedules.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="calendar-plus"
-                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Add Schedules</span>
-                        </a>
-                        <a href="{{ route('admin.calendar.view') }}"
-                            @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.calendar.view') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="calendar-range"
-                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Schedules Table</span>
-                        </a>
-                    </div>
-                </div>
+    <x-admin.sidebar-link
+        route="admin.calendar.view"
+        active="admin.calendar.view">
+        Schedules Table
+    </x-admin.sidebar-link>
+</x-admin.sidebar-collapsible>
+
 
                 <!-- Locations -->
-                <div class="space-y-1 relative">
-                    <button
-                        @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.locations.index') }}' : toggleLocations()"
-                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
-                        class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
-                {{ request()->routeIs('admin.locations.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                        :aria-label="sidebarCollapsed ? 'Locations' : ''">
-                        <i data-lucide="map-pin"
-                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.locations.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed || isMobile" class="flex-1 text-left" x-transition>Locations</span>
-                        <i x-show="(!sidebarCollapsed || isMobile)" data-lucide="chevron-right"
-                            :class="locationsExpanded ? 'rotate-90' : 'rotate-0'"
-                            class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
+                <x-admin.sidebar-collapsible
+    label="Locations"
+    icon="map-pin"
+    main-route="admin.locations.index"
+    active-pattern="admin.locations.*"
+>
+    <x-admin.sidebar-link
+        route="admin.locations.index"
+        active="admin.locations.index">
+        Manage Locations
+    </x-admin.sidebar-link>
 
-                        <div x-show="sidebarCollapsed"
-                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                            Location Management
-                            <div
-                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
-                            </div>
-                        </div>
-                    </button>
+    <x-admin.sidebar-link
+        route="admin.locations.create"
+        active="admin.locations.create">
+        Add Location
+    </x-admin.sidebar-link>
+</x-admin.sidebar-collapsible>
 
-                    <div x-show="locationsExpanded && ((!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen))"
-                        x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 -translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 -translate-y-2"
-                        class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
-                        <a href="{{ route('admin.locations.index') }}"
-                            @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.locations.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="map" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Manage Locations</span>
-                        </a>
-                        <a href="{{ route('admin.locations.create') }}"
-                            @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.locations.create') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="plus-circle"
-                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Add Location</span>
-                        </a>
-                    </div>
-                </div>
 
                 <!-- Attendances -->
-                <div class="space-y-1 relative">
-                    <button
-                        @click="(sidebarCollapsed && !isMobile) ? window.location.href = '{{ route('admin.attendances.index') }}' : toggleAttendances()"
-                        :class="(sidebarCollapsed && !isMobile) ? 'justify-center px-2 py-4 relative group' : 'px-4 py-3'"
-                        class="menu-item group flex items-center w-full text-sm font-semibold rounded-xl menu-item-transition
-                {{ request()->routeIs('admin.attendances.*') ? 'bg-sky-100 text-sky-700 border border-sky-200' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700 border border-transparent hover:border-sky-200' }}"
-                        :aria-label="sidebarCollapsed ? 'Attendances' : ''">
-                        <i data-lucide="user-check"
-                            class="icon-hover w-5 h-5 icon-transition {{ request()->routeIs('admin.attendances.*') ? 'text-sky-700' : 'text-gray-500 group-hover:text-sky-700' }}"
-                            :class="(sidebarCollapsed && !isMobile) ? 'mr-0' : 'mr-3'"></i>
-                        <span x-show="!sidebarCollapsed || isMobile" class="flex-1 text-left" x-transition>Attendances</span>
-                        <i x-show="(!sidebarCollapsed || isMobile)" data-lucide="chevron-right"
-                            :class="attendancesExpanded ? 'rotate-90' : 'rotate-0'"
-                            class="w-4 h-4 text-gray-500 group-hover:text-sky-700 sidebar-transition"></i>
-
-                        <div x-show="sidebarCollapsed"
-                            class="tooltip tooltip-right absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                            Attendance Management
-                            <div
-                                class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-800 rotate-45">
-                            </div>
-                        </div>
-                    </button>
-
-                    <div x-show="attendancesExpanded && ((!sidebarCollapsed && !isMobile) || (isMobile && mobileMenuOpen))"
-                        x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 -translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 -translate-y-2"
-                        class="ml-8 space-y-1 border-l-2 border-sky-200 border-opacity-30 pl-4">
-                        <a href="{{ route('admin.attendances.index') }}"
-                            @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.attendances.index') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="book-check" class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>View Attendances</span>
-                            <span x-data="{}"
-                                  x-show="$store.badges.izin > 0"
-                                  x-transition:enter="transition ease-out duration-300"
-                                  x-transition:enter-start="opacity-0 scale-50"
-                                  x-transition:enter-end="opacity-100 scale-100"
-                                  class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-red-600 text-white animate-pulse">
-                                <span x-text="$store.badges.izin"></span>
-                            </span>
-                        </a>
-                        <a href="{{ route('admin.attendances.leave-requests') }}"
-                            @click="closeMobileMenu()"
-                            class="group flex items-center px-3 py-2 text-sm font-semibold rounded-xl menu-item-transition {{ request()->routeIs('admin.attendances.leave-requests') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }}">
-                            <i data-lucide="book-open"
-                                class="w-4 h-4 mr-3 text-gray-500 group-hover:text-sky-700"></i>
-                            <span>Leave Requests</span>
-                            <span x-data="{}"
-                                  x-show="$store.badges.cuti > 0"
-                                  x-transition:enter="transition ease-out duration-300"
-                                  x-transition:enter-start="opacity-0 scale-50"
-                                  x-transition:enter-end="opacity-100 scale-100"
-                                  class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-red-600 text-white animate-pulse">
-                                <span x-text="$store.badges.cuti"></span>
-                            </span>
-                        </a>
-                    </div>
-                </div>
+                <x-admin.sidebar-collapsible
+    label="Attendances"
+    icon="user-check"
+    main-route="admin.attendances.index"
+    active-pattern="admin.attendances.*"
+>
+    <a href="{{ route('admin.attendances.index') }}"
+       class="flex items-center justify-between px-3 py-2 rounded-md text-sm
+       {{ request()->routeIs('admin.attendances.index')
+            ? 'bg-sky-100 text-sky-700'
+            : 'text-gray-600 hover:bg-gray-100' }}">
+        View Attendances
+        <span x-show="$store.badges.izin > 0"
+              class="ml-2 px-2 text-xs rounded-full bg-red-600 text-white">
+            <span x-text="$store.badges.izin"></span>
+        </span>
+    </a>
+</x-admin.sidebar-collapsible>
 
                 <!-- Divider -->
                 <div class="my-4 border-t border-sky-200 border-opacity-30"></div>
@@ -1020,17 +870,14 @@
     </div>
 
     <script>
-        // Initialize Lucide icons after DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
 
-            // Initialize live clock
             initializeLiveClock();
         });
 
-        // Re-initialize icons when Alpine updates the DOM
         document.addEventListener('alpine:init', () => {
             setTimeout(() => {
                 if (typeof lucide !== 'undefined') {
@@ -1039,12 +886,10 @@
             }, 100);
         });
 
-        // Live Clock with Indonesian Time Format
         function initializeLiveClock() {
             function updateClock() {
                 const now = new Date();
 
-                // Indonesian time options
                 const timeOptions = {
                     timeZone: 'Asia/Jakarta',
                     hour: '2-digit',
@@ -1061,17 +906,14 @@
                     year: 'numeric'
                 };
 
-                // Format time and date in Indonesian locale
                 const timeString = now.toLocaleTimeString('id-ID', timeOptions);
                 const dateString = now.toLocaleDateString('id-ID', dateOptions);
 
-                // Update DOM elements
                 const timeElement = document.getElementById('live-time');
                 const dateElement = document.getElementById('live-date');
 
                 if (timeElement) {
                     timeElement.textContent = timeString;
-                    // Add subtle animation on second change
                     timeElement.style.transform = 'scale(1.05)';
                     setTimeout(() => {
                         timeElement.style.transform = 'scale(1)';
@@ -1082,25 +924,19 @@
                     dateElement.textContent = dateString;
                 }
             }
-
-            // Update immediately and then every second
             updateClock();
             setInterval(updateClock, 1000);
         }
 
-        // Enhanced keyboard navigation
         document.addEventListener('keydown', function(e) {
-            // ESC key to close dropdowns and remove focus
             if (e.key === 'Escape') {
                 document.activeElement.blur();
-                // Close mobile menu if open
                 const mobileMenuToggle = document.querySelector('[x-data]');
                 if (mobileMenuToggle && window.innerWidth < 768) {
                     mobileMenuToggle.__x.$data.mobileMenuOpen = false;
                 }
             }
 
-            // Alt + S to toggle sidebar
             if (e.altKey && e.key === 's') {
                 e.preventDefault();
                 const sidebarToggle = document.querySelector('.sidebar-toggle');
@@ -1109,7 +945,6 @@
                 }
             }
 
-            // Alt + M to toggle mobile menu
             if (e.altKey && e.key === 'm' && window.innerWidth < 768) {
                 e.preventDefault();
                 const mobileToggle = document.querySelector('[x-show="isMobile"]');
@@ -1119,7 +954,6 @@
             }
         });
 
-        // Add smooth scrolling for better UX
         document.documentElement.style.scrollBehavior = 'smooth';
     </script>
 

@@ -6,20 +6,19 @@
     <div class="min-h-screen bg-white p-4 sm:p-6 lg:p-8">
         <!-- Header -->
         <div class="mb-6 sm:mb-8">
-            <div class="bg-gradient-to-r from-sky-50 to-sky-100 rounded-xl p-4 sm:p-6 border border-sky-200 shadow-sm">
+            <div class="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-xs">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                     <div class="flex items-center space-x-3 sm:space-x-4">
-                        <div class="p-2 sm:p-3 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl shadow-sm">
+                        <div class="p-2 sm:p-3 icon-bg-style shadow-sm">
                             <i data-lucide="layout-dashboard" class="w-6 h-6 sm:w-8 sm:h-8 text-sky-600"></i>
                         </div>
                         <div>
-                            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Dashboard</h1>
-                            <p class="text-sm sm:text-base text-gray-600">Monitor attendance and manage your workforce</p>
+                            <h1 class="text-xl sm:text-2xl font-bold text-gray-600">Dashboard</h1>
+                            <p class="text-sm sm:text-base text-gray-400">Monitor attendance and manage your workforce</p>
                         </div>
                     </div>
                     <div class="text-left sm:text-right">
-                        <div class="text-sm font-medium text-gray-700">{{ now()->format('l, d F Y') }}</div>
-                        <div class="text-xs text-gray-500">Last updated: {{ now()->format('H:i') }}</div>
+                        <div class="text-sm font-medium text-gray-600">{{ now()->format('l, d F Y') }}</div>
                     </div>
                 </div>
             </div>
@@ -42,79 +41,14 @@
         <!-- Today's Attendance Summary -->
         <div class="mb-8 space-y-7">
             <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <i data-lucide="clipboard-check" class="w-5 h-5 text-sky-600 mr-2"></i>
                 Today's Attendance
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-                <!-- Total Schedules -->
-                <div onclick="showAttendanceDetail('all')"
-                    class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 hover:shadow-gray-100 hover:shadow-md  transition-all cursor-pointer transform">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs sm:text-sm font-medium text-gray-600">Total Schedules</p>
-                            <p class="text-xl sm:text-2xl font-bold text-gray-900">{{ $todaySchedules }}</p>
-                        </div>
-                        <div class="p-2 sm:p-3 bg-gray-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
-                            <i data-lucide="calendar" class="w-5 h-5 sm:w-6 sm:h-6 text-gray-600"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Hadir -->
-                <div onclick="showAttendanceDetail('hadir')"
-                    class="bg-white rounded-xl border border-green-200 p-4 sm:p-6 hover:shadow-green-100 hover:shadow-md  transition-all cursor-pointer transform">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs sm:text-sm font-medium text-green-600">Hadir</p>
-                            <p class="text-xl sm:text-2xl font-bold text-green-700">{{ $todayHadir }}</p>
-                        </div>
-                        <div class="p-2 sm:p-3 bg-green-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
-                            <i data-lucide="check-circle" class="w-5 h-5 sm:w-6 sm:h-6 text-green-600"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Telat -->
-                <div onclick="showAttendanceDetail('telat')"
-                    class="bg-white rounded-xl border border-orange-200 p-4 sm:p-6 hover:shadow-orange-100 hover:shadow-md  transition-all cursor-pointer transform">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs sm:text-sm font-medium text-orange-600">Telat</p>
-                            <p class="text-xl sm:text-2xl font-bold text-orange-700">{{ $todayTelat }}</p>
-                        </div>
-                        <div class="p-2 sm:p-3 bg-orange-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
-                            <i data-lucide="clock-alert" class="w-5 h-5 sm:w-6 sm:h-6 text-orange-600"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Izin -->
-                <div onclick="showAttendanceDetail('izin')"
-                    class="bg-white rounded-xl border border-yellow-200 p-4 sm:p-6 hover:shadow-yellow-100 hover:shadow-md  transition-all cursor-pointer transform">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs sm:text-sm font-medium text-yellow-600">Izin</p>
-                            <p class="text-xl sm:text-2xl font-bold text-yellow-700">{{ $todayIzin }}</p>
-                        </div>
-                        <div class="p-2 sm:p-3 bg-yellow-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
-                            <i data-lucide="clock" class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Alpha -->
-                <div onclick="showAttendanceDetail('alpha')"
-                    class="bg-white rounded-xl border border-red-200 p-4 sm:p-6 hover:shadow-red-100 hover:shadow-md transition-all cursor-pointer transform">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs sm:text-sm font-medium text-red-600">Alpha</p>
-                            <p class="text-xl sm:text-2xl font-bold text-red-700">{{ $todayAlpha }}</p>
-                        </div>
-                        <div class="p-2 sm:p-3 bg-red-100 rounded-lg self-end sm:self-auto flex-shrink-0 mt-2 sm:mt-0">
-                            <i data-lucide="x-circle" class="w-5 h-5 sm:w-6 sm:h-6 text-red-600"></i>
-                        </div>
-                    </div>
-                </div>
+                <x-admin.attendance-dashboard-stats title="Total Schedules" :value="$todaySchedules" color="gray" icon="calendar" />
+                <x-admin.attendance-dashboard-stats title="Hadir" :value="$todayHadir" color="green" icon="check-circle" />
+                <x-admin.attendance-dashboard-stats title="Izin" :value="$todayIzin" color="yellow" icon="clock" />
+                <x-admin.attendance-dashboard-stats title="Telat" :value="$todayTelat" color="orange" icon="clock-alert" />
+                <x-admin.attendance-dashboard-stats title="Alpha" :value="$todayAlpha" color="red" icon="x-circle" />
             </div>
 
             <!-- Monthly Attendance Chart -->
@@ -122,12 +56,12 @@
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
                     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 mb-6">
                         <div class="flex items-center space-x-3">
-                            <div class="p-2 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg">
+                            <div class="p-2 icon-bg-style">
                                 <i data-lucide="bar-chart-3" class="w-5 h-5 sm:w-6 sm:h-6 text-sky-600"></i>
                             </div>
                             <div>
-                                <h2 class="text-base sm:text-lg font-semibold text-gray-800">Attendance Statistics</h2>
-                                <p class="text-xs sm:text-sm text-gray-600">{{ $currentMonth }} - Daily attendance overview
+                                <h2 class="text-base sm:text-lg font-semibold text-gray-600">Attendance Statistics</h2>
+                                <p class="text-xs sm:text-sm text-gray-400">{{ $currentMonth }} - Daily attendance overview
                                 </p>
                             </div>
                         </div>
@@ -141,22 +75,17 @@
                                         class="w-full sm:w-auto px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                                         onchange="this.form.submit()">
                                         <option value="1" {{ $selectedMonth == 1 ? 'selected' : '' }}>January</option>
-                                        <option value="2" {{ $selectedMonth == 2 ? 'selected' : '' }}>February
-                                        </option>
+                                        <option value="2" {{ $selectedMonth == 2 ? 'selected' : '' }}>February</option>
                                         <option value="3" {{ $selectedMonth == 3 ? 'selected' : '' }}>March</option>
                                         <option value="4" {{ $selectedMonth == 4 ? 'selected' : '' }}>April</option>
                                         <option value="5" {{ $selectedMonth == 5 ? 'selected' : '' }}>May</option>
                                         <option value="6" {{ $selectedMonth == 6 ? 'selected' : '' }}>June</option>
                                         <option value="7" {{ $selectedMonth == 7 ? 'selected' : '' }}>July</option>
                                         <option value="8" {{ $selectedMonth == 8 ? 'selected' : '' }}>August</option>
-                                        <option value="9" {{ $selectedMonth == 9 ? 'selected' : '' }}>September
-                                        </option>
-                                        <option value="10" {{ $selectedMonth == 10 ? 'selected' : '' }}>October
-                                        </option>
-                                        <option value="11" {{ $selectedMonth == 11 ? 'selected' : '' }}>November
-                                        </option>
-                                        <option value="12" {{ $selectedMonth == 12 ? 'selected' : '' }}>December
-                                        </option>
+                                        <option value="9" {{ $selectedMonth == 9 ? 'selected' : '' }}>September</option>
+                                        <option value="10" {{ $selectedMonth == 10 ? 'selected' : '' }}>October</option>
+                                        <option value="11" {{ $selectedMonth == 11 ? 'selected' : '' }}>November</option>
+                                        <option value="12" {{ $selectedMonth == 12 ? 'selected' : '' }}>December</option>
                                     </select>
                                 </div>
                                 <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
