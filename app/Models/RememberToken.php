@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class RememberToken extends Model
 {
@@ -25,9 +25,9 @@ class RememberToken extends Model
     ];
 
     protected $casts = [
-        'expires_at' => 'datetime',
+        'expires_at'   => 'datetime',
         'last_used_at' => 'datetime',
-        'is_revoked' => 'boolean',
+        'is_revoked'   => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -41,20 +41,20 @@ class RememberToken extends Model
     public static function generateToken(int $userId, string $ipAddress, string $userAgent): array
     {
         // Generate a cryptographically secure token
-        $token = Str::random(64);
-        $tokenHash = Hash::make($token);
+        $token             = Str::random(64);
+        $tokenHash         = Hash::make($token);
         $deviceFingerprint = self::generateDeviceFingerprint($userAgent, $ipAddress);
 
         // Create token record
         $rememberToken = self::create([
-            'user_id' => $userId,
-            'token_hash' => $tokenHash,
+            'user_id'            => $userId,
+            'token_hash'         => $tokenHash,
             'device_fingerprint' => $deviceFingerprint,
-            'ip_address' => $ipAddress,
-            'user_agent' => $userAgent,
-            'expires_at' => Carbon::now()->addDays(30), // 30 days expiry
-            'last_used_at' => Carbon::now(),
-            'is_revoked' => false,
+            'ip_address'         => $ipAddress,
+            'user_agent'         => $userAgent,
+            'expires_at'         => Carbon::now()->addDays(30), // 30 days expiry
+            'last_used_at'       => Carbon::now(),
+            'is_revoked'         => false,
         ]);
 
         return [
@@ -69,7 +69,7 @@ class RememberToken extends Model
     public static function validateToken(string $token, string $ipAddress, string $userAgent): ?User
     {
         $deviceFingerprint = self::generateDeviceFingerprint($userAgent, $ipAddress);
-        
+
         // Find all non-revoked tokens for this device
         $rememberTokens = self::where('is_revoked', false)
             ->where('expires_at', '>', Carbon::now())
@@ -81,7 +81,7 @@ class RememberToken extends Model
                 // Update last used
                 $rememberToken->update([
                     'last_used_at' => Carbon::now(),
-                    'ip_address' => $ipAddress, // Update IP if changed
+                    'ip_address'   => $ipAddress, // Update IP if changed
                 ]);
 
                 return $rememberToken->user;
@@ -130,7 +130,7 @@ class RememberToken extends Model
      */
     public static function generateDeviceFingerprint(string $userAgent, string $ipAddress): string
     {
-        return hash('sha256', $userAgent . '|' . $ipAddress);
+        return hash('sha256', $userAgent.'|'.$ipAddress);
     }
 
     /**
@@ -138,9 +138,7 @@ class RememberToken extends Model
      */
     public function isValid(): bool
     {
-        return !$this->is_revoked && 
-               $this->expires_at->isFuture() &&
-               $this->last_used_at->diffInDays(Carbon::now()) <= 7; // Auto-expire if not used for 7 days
+        return ! $this->is_revoked && $this->expires_at->isFuture() && $this->last_used_at->diffInDays(Carbon::now()) <= 7; // Auto-expire if not used for 7 days
     }
 
     /**

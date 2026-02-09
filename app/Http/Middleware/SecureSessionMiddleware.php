@@ -2,16 +2,16 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AuthActivityLog;
+use App\Models\BlockedIP;
+use App\Models\RememberToken;
+use App\Models\User;
+use App\Models\UserSession;
+use Carbon\Carbon;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
-use App\Models\User;
-use App\Models\UserSession;
-use App\Models\RememberToken;
-use App\Models\AuthActivityLog;
-use App\Models\BlockedIP;
-use Carbon\Carbon;
 
 class SecureSessionMiddleware
 {
@@ -27,14 +27,15 @@ class SecureSessionMiddleware
         if (BlockedIP::isBlocked($ipAddress)) {
             Auth::logout();
             Session::flush();
+
             return redirect()->route('login')->withErrors([
-                'security' => 'Access denied from this IP address.'
+                'security' => 'Access denied from this IP address.',
             ]);
         }
 
         // If user is authenticated
         if (Auth::check()) {
-            $user = Auth::user();
+            $user      = Auth::user();
             $sessionId = Session::getId();
 
             // Validate current session
@@ -42,25 +43,26 @@ class SecureSessionMiddleware
                 ->where('user_id', $user->id)
                 ->first();
 
-            if (!$userSession) {
+            if (! $userSession) {
                 // Session not found in database, create new one
                 $deviceFingerprint = UserSession::generateDeviceFingerprint($userAgent, $ipAddress);
                 UserSession::createOrUpdate($user->id, $sessionId, $ipAddress, $userAgent, $deviceFingerprint);
             } else {
                 // Validate session integrity
-                if (!$this->validateSessionIntegrity($userSession, $request)) {
+                if (! $this->validateSessionIntegrity($userSession, $request)) {
                     $this->logSuspiciousActivity($user, $request, 'Session integrity validation failed');
                     Auth::logout();
                     Session::flush();
+
                     return redirect()->route('login')->withErrors([
-                        'security' => 'Session validation failed. Please login again.'
+                        'security' => 'Session validation failed. Please login again.',
                     ]);
                 }
 
                 // Update last activity
                 $userSession->update([
                     'last_activity' => Carbon::now(),
-                    'ip_address' => $ipAddress, // Update IP if changed
+                    'ip_address'    => $ipAddress, // Update IP if changed
                 ]);
             }
 
@@ -70,8 +72,9 @@ class SecureSessionMiddleware
                 $this->logSuspiciousActivity($user, $request, 'Session timeout exceeded');
                 Auth::logout();
                 Session::flush();
+
                 return redirect()->route('login')->withErrors([
-                    'security' => 'Session expired due to inactivity.'
+                    'security' => 'Session expired due to inactivity.',
                 ]);
             }
 
@@ -80,7 +83,7 @@ class SecureSessionMiddleware
         }
 
         // Handle remember me token validation
-        if (!Auth::check() && $request->hasCookie('remember_token')) {
+        if (! Auth::check() && $request->hasCookie('remember_token')) {
             $this->handleRememberToken($request);
         }
 
@@ -98,7 +101,7 @@ class SecureSessionMiddleware
         );
 
         // Allow some flexibility for IP changes (mobile users)
-        $ipChanged = $userSession->ip_address !== $request->ip();
+        $ipChanged        = $userSession->ip_address !== $request->ip();
         $userAgentChanged = $userSession->user_agent !== $request->userAgent();
 
         // If both IP and User Agent changed, it's suspicious
@@ -109,7 +112,7 @@ class SecureSessionMiddleware
         // If device fingerprint completely changed, it's suspicious
         if ($userSession->device_fingerprint !== $currentFingerprint) {
             // Allow if it's a trusted device
-            if (!$userSession->is_trusted_device) {
+            if (! $userSession->is_trusted_device) {
                 return false;
             }
         }
@@ -123,7 +126,7 @@ class SecureSessionMiddleware
     private function handleRememberToken(Request $request): void
     {
         $token = $request->cookie('remember_token');
-        
+
         if ($token) {
             $user = RememberToken::validateToken(
                 $token,
@@ -133,13 +136,13 @@ class SecureSessionMiddleware
 
             if ($user) {
                 Auth::login($user);
-                
+
                 // Create new session
                 $deviceFingerprint = UserSession::generateDeviceFingerprint(
                     $request->userAgent(),
                     $request->ip()
                 );
-                
+
                 UserSession::createOrUpdate(
                     $user->id,
                     Session::getId(),
@@ -159,13 +162,13 @@ class SecureSessionMiddleware
             } else {
                 // Invalid token, remove cookie
                 cookie()->queue(cookie()->forget('remember_token'));
-                
+
                 AuthActivityLog::log(
                     'invalid_remember_token',
                     'warning',
                     null,
                     null,
-                    'Invalid remember me token attempted from IP: ' . $request->ip()
+                    'Invalid remember me token attempted from IP: '.$request->ip()
                 );
             }
         }
@@ -177,7 +180,7 @@ class SecureSessionMiddleware
     private function checkConcurrentSessions(User $user, string $currentSessionId): void
     {
         $maxConcurrentSessions = config('auth.max_concurrent_sessions', 3);
-        
+
         $activeSessions = UserSession::where('user_id', $user->id)
             ->where('last_activity', '>', Carbon::now()->subMinutes(config('session.lifetime', 120)))
             ->where('session_id', '!=', $currentSessionId)

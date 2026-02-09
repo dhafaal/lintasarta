@@ -4,32 +4,32 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminActivityLog;
+use App\Models\AdminPermissionsLog;
+use App\Models\AdminSchedulesLog;
 use App\Models\AdminShiftsLog;
 use App\Models\AdminUsersLog;
-use App\Models\AdminSchedulesLog;
-use App\Models\AdminPermissionsLog;
-use App\Models\UserActivityLog;
 use App\Models\AuthActivityLog;
+use App\Models\UserActivityLog;
 use Illuminate\Http\Request;
 
 class ActivityLogController extends Controller
 {
     public function index(Request $request)
     {
-        $type = $request->get('type', 'all');
-        $subType = $request->get('sub_type', 'all'); // shifts, users, schedules, permissions, locations
-        $search = $request->get('search');
+        $type     = $request->get('type', 'all');
+        $subType  = $request->get('sub_type', 'all'); // shifts, users, schedules, permissions, locations
+        $search   = $request->get('search');
         $dateFrom = $request->get('date_from');
-        $dateTo = $request->get('date_to');
+        $dateTo   = $request->get('date_to');
 
-        $shiftsLogs = collect();
-        $usersLogs = collect();
-        $schedulesLogs = collect();
+        $shiftsLogs      = collect();
+        $usersLogs       = collect();
+        $schedulesLogs   = collect();
         $permissionsLogs = collect();
-        $locationLogs = collect();
-        $userLogs = collect();
-        $attendanceLogs = collect();
-        $authLogs = collect();
+        $locationLogs    = collect();
+        $userLogs        = collect();
+        $attendanceLogs  = collect();
+        $authLogs        = collect();
 
         if ($type === 'all' || $type === 'admin') {
             // Admin Shifts Logs
@@ -37,10 +37,10 @@ class ActivityLogController extends Controller
                 $shiftsQuery = AdminShiftsLog::with('user')
                     ->when($search, function ($q) use ($search) {
                         $q->where('description', 'like', "%{$search}%")
-                          ->orWhere('shift_name', 'like', "%{$search}%")
-                          ->orWhereHas('user', function ($q) use ($search) {
-                              $q->where('name', 'like', "%{$search}%");
-                          });
+                            ->orWhere('shift_name', 'like', "%{$search}%")
+                            ->orWhereHas('user', function ($q) use ($search) {
+                                $q->where('name', 'like', "%{$search}%");
+                            });
                     })
                     ->when($dateFrom, function ($q) use ($dateFrom) {
                         $q->whereDate('created_at', '>=', $dateFrom);
@@ -57,10 +57,10 @@ class ActivityLogController extends Controller
                 $usersQuery = AdminUsersLog::with('user')
                     ->when($search, function ($q) use ($search) {
                         $q->where('description', 'like', "%{$search}%")
-                          ->orWhere('target_user_name', 'like', "%{$search}%")
-                          ->orWhereHas('user', function ($q) use ($search) {
-                              $q->where('name', 'like', "%{$search}%");
-                          });
+                            ->orWhere('target_user_name', 'like', "%{$search}%")
+                            ->orWhereHas('user', function ($q) use ($search) {
+                                $q->where('name', 'like', "%{$search}%");
+                            });
                     })
                     ->when($dateFrom, function ($q) use ($dateFrom) {
                         $q->whereDate('created_at', '>=', $dateFrom);
@@ -77,11 +77,11 @@ class ActivityLogController extends Controller
                 $schedulesQuery = AdminSchedulesLog::with('user')
                     ->when($search, function ($q) use ($search) {
                         $q->where('description', 'like', "%{$search}%")
-                          ->orWhere('target_user_name', 'like', "%{$search}%")
-                          ->orWhere('shift_name', 'like', "%{$search}%")
-                          ->orWhereHas('user', function ($q) use ($search) {
-                              $q->where('name', 'like', "%{$search}%");
-                          });
+                            ->orWhere('target_user_name', 'like', "%{$search}%")
+                            ->orWhere('shift_name', 'like', "%{$search}%")
+                            ->orWhereHas('user', function ($q) use ($search) {
+                                $q->where('name', 'like', "%{$search}%");
+                            });
                     })
                     ->when($dateFrom, function ($q) use ($dateFrom) {
                         $q->whereDate('created_at', '>=', $dateFrom);
@@ -98,11 +98,11 @@ class ActivityLogController extends Controller
                 $permissionsQuery = AdminPermissionsLog::with('user')
                     ->when($search, function ($q) use ($search) {
                         $q->where('description', 'like', "%{$search}%")
-                          ->orWhere('target_user_name', 'like', "%{$search}%")
-                          ->orWhere('permission_type', 'like', "%{$search}%")
-                          ->orWhereHas('user', function ($q) use ($search) {
-                              $q->where('name', 'like', "%{$search}%");
-                          });
+                            ->orWhere('target_user_name', 'like', "%{$search}%")
+                            ->orWhere('permission_type', 'like', "%{$search}%")
+                            ->orWhereHas('user', function ($q) use ($search) {
+                                $q->where('name', 'like', "%{$search}%");
+                            });
                     })
                     ->when($dateFrom, function ($q) use ($dateFrom) {
                         $q->whereDate('created_at', '>=', $dateFrom);
@@ -120,11 +120,11 @@ class ActivityLogController extends Controller
                     ->where('resource_type', 'Location')
                     ->when($search, function ($q) use ($search) {
                         $q->where('description', 'like', "%{$search}%")
-                          ->orWhere('old_values', 'like', "%{$search}%")
-                          ->orWhere('new_values', 'like', "%{$search}%")
-                          ->orWhereHas('user', function ($q) use ($search) {
-                              $q->where('name', 'like', "%{$search}%");
-                          });
+                            ->orWhere('old_values', 'like', "%{$search}%")
+                            ->orWhere('new_values', 'like', "%{$search}%")
+                            ->orWhereHas('user', function ($q) use ($search) {
+                                $q->where('name', 'like', "%{$search}%");
+                            });
                     })
                     ->when($request->get('action'), function ($q) use ($request) {
                         $q->where('action', $request->get('action'));
@@ -144,10 +144,10 @@ class ActivityLogController extends Controller
             $userQuery = UserActivityLog::with('user')
                 ->when($search, function ($q) use ($search) {
                     $q->where('description', 'like', "%{$search}%")
-                      ->orWhere('resource_name', 'like', "%{$search}%")
-                      ->orWhereHas('user', function ($q) use ($search) {
-                          $q->where('name', 'like', "%{$search}%");
-                      });
+                        ->orWhere('resource_name', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%");
+                        });
                 })
                 ->when($dateFrom, function ($q) use ($dateFrom) {
                     $q->whereDate('created_at', '>=', $dateFrom);
@@ -163,10 +163,10 @@ class ActivityLogController extends Controller
             $attendanceQuery = UserActivityLog::with('user')
                 ->when($search, function ($q) use ($search) {
                     $q->where('description', 'like', "%{$search}%")
-                      ->orWhere('resource_name', 'like', "%{$search}%")
-                      ->orWhereHas('user', function ($q) use ($search) {
-                          $q->where('name', 'like', "%{$search}%");
-                      });
+                        ->orWhere('resource_name', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%");
+                        });
                 })
                 ->when($dateFrom, function ($q) use ($dateFrom) {
                     $q->whereDate('created_at', '>=', $dateFrom);
@@ -176,9 +176,9 @@ class ActivityLogController extends Controller
                 })
                 ->where(function ($q) {
                     $q->where('resource_type', 'Attendance')
-                      ->orWhere('description', 'like', '%Check In%')
-                      ->orWhere('description', 'like', '%Check Out%')
-                      ->orWhere('description', 'like', '%Absent%');
+                        ->orWhere('description', 'like', '%Check In%')
+                        ->orWhere('description', 'like', '%Check Out%')
+                        ->orWhere('description', 'like', '%Absent%');
                 })
                 ->orderBy('created_at', 'desc');
 
@@ -189,10 +189,10 @@ class ActivityLogController extends Controller
             $authQuery = AuthActivityLog::with('user')
                 ->when($search, function ($q) use ($search) {
                     $q->where('description', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhereHas('user', function ($q) use ($search) {
-                          $q->where('name', 'like', "%{$search}%");
-                      });
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%");
+                        });
                 })
                 ->when($dateFrom, function ($q) use ($dateFrom) {
                     $q->whereDate('created_at', '>=', $dateFrom);
@@ -225,13 +225,13 @@ class ActivityLogController extends Controller
     public function show($type, $id)
     {
         $log = match ($type) {
-            'shifts' => AdminShiftsLog::with('user')->findOrFail($id),
-            'users' => AdminUsersLog::with('user')->findOrFail($id),
-            'schedules' => AdminSchedulesLog::with('user')->findOrFail($id),
+            'shifts'      => AdminShiftsLog::with('user')->findOrFail($id),
+            'users'       => AdminUsersLog::with('user')->findOrFail($id),
+            'schedules'   => AdminSchedulesLog::with('user')->findOrFail($id),
             'permissions' => AdminPermissionsLog::with('user')->findOrFail($id),
-            'user' => UserActivityLog::with('user')->findOrFail($id),
-            'auth' => AuthActivityLog::with('user')->findOrFail($id),
-            default => abort(404)
+            'user'        => UserActivityLog::with('user')->findOrFail($id),
+            'auth'        => AuthActivityLog::with('user')->findOrFail($id),
+            default       => abort(404)
         };
 
         return view('admin.activity-logs.show', compact('log', 'type'));
@@ -240,13 +240,13 @@ class ActivityLogController extends Controller
     public function destroy($type, $id)
     {
         $log = match ($type) {
-            'shifts' => AdminShiftsLog::findOrFail($id),
-            'users' => AdminUsersLog::findOrFail($id),
-            'schedules' => AdminSchedulesLog::findOrFail($id),
+            'shifts'      => AdminShiftsLog::findOrFail($id),
+            'users'       => AdminUsersLog::findOrFail($id),
+            'schedules'   => AdminSchedulesLog::findOrFail($id),
             'permissions' => AdminPermissionsLog::findOrFail($id),
-            'user' => UserActivityLog::findOrFail($id),
-            'auth' => AuthActivityLog::findOrFail($id),
-            default => abort(404)
+            'user'        => UserActivityLog::findOrFail($id),
+            'auth'        => AuthActivityLog::findOrFail($id),
+            default       => abort(404)
         };
 
         $log->delete();
@@ -257,7 +257,7 @@ class ActivityLogController extends Controller
 
     public function clear(Request $request)
     {
-        $type = $request->get('type', 'all');
+        $type      = $request->get('type', 'all');
         $olderThan = $request->get('older_than', 30); // days
 
         $date = now()->subDays($olderThan);

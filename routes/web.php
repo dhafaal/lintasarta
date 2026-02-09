@@ -1,32 +1,32 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Admin\LocationsController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\ShiftController;
-use App\Http\Controllers\Admin\ScheduleController;
-use App\Http\Controllers\Admin\PermissionController as AdminPermissionController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\AttendancesController as AdminAttendanceController;
 use App\Http\Controllers\Admin\ActivityLogController;
-use App\Http\Controllers\Admin\SecurityController;
+use App\Http\Controllers\Admin\AttendancesController as AdminAttendanceController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\LocationsController;
+use App\Http\Controllers\Admin\PermissionController as AdminPermissionController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
+use App\Http\Controllers\Admin\ScheduleController;
+use App\Http\Controllers\Admin\SecurityController;
+use App\Http\Controllers\Admin\ShiftController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\Users\AttendancesController as UsersAttendanceController;
+use App\Http\Controllers\Users\CalendarController;
 use App\Http\Controllers\Users\PermissionController as UsersPermissionController;
 use App\Http\Controllers\Users\ProfileController as UsersProfileController;
-use App\Http\Controllers\Users\CalendarController;
-use App\Http\Controllers\DashboardRedirectController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // ======= ADMIN =======
-Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
+Route::middleware(['auth', \App\Http\Middleware\CheckRole::class.':Admin'])
     ->prefix('admin')->name('admin.')->group(function () {
 
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/attendance-details', [DashboardController::class, 'getTodayAttendanceDetails'])->name('dashboard.attendance-details');
-        Route::resource('locations', LocationsController::class);   
+        Route::resource('locations', LocationsController::class);
         Route::post('locations/{location}/toggle-active', [LocationsController::class, 'toggleActive'])
             ->name('locations.toggle-active');
         Route::post('locations/bulk-activate', [LocationsController::class, 'bulkActivate'])->name('locations.bulk-activate');
@@ -46,7 +46,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
         Route::get('schedules/history/{user}', [ScheduleController::class, 'history'])->name('schedules.history');
         Route::get('schedules/calendar-grid-data', [ScheduleController::class, 'calendarGridData'])
             ->name('schedules.calendar-grid-data');
-        
+
         // Swap schedules routes
         Route::get('schedules/users-with-schedules', [ScheduleController::class, 'getUsersWithSchedules'])
             ->name('schedules.users-with-schedules');
@@ -56,15 +56,15 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
             ->name('schedules.swap');
         Route::post('schedules/bulk-delete', [ScheduleController::class, 'bulkDelete'])
             ->name('schedules.bulk-delete');
-        
+
         // Get existing schedules for user
         Route::get('schedules/user-existing-schedules', [ScheduleController::class, 'getUserExistingSchedules'])
             ->name('schedules.user-existing-schedules');
-        
+
         // Get available shifts for second shift based on first shift
         Route::post('schedules/get-available-shifts', [ScheduleController::class, 'getAvailableShifts'])
             ->name('schedules.get-available-shifts');
-        
+
         // Import Excel routes
         Route::get('schedules/download-template', [ScheduleController::class, 'downloadTemplate'])
             ->name('schedules.download-template');
@@ -100,13 +100,13 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
             Route::get('/export-all', [AdminAttendanceController::class, 'exportAll'])->name('export.all');
             // Real-time pending counts endpoint for badges
             Route::get('/pending-counts', [AdminAttendanceController::class, 'pendingCounts'])->name('pending-counts');
-            
+
             // Leave Requests Management
             Route::get('/leave-requests', [AdminAttendanceController::class, 'leaveRequests'])->name('leave-requests');
             Route::get('/leave-requests/{id}', [AdminAttendanceController::class, 'showLeaveRequest'])->name('leave-requests.show');
             Route::post('/leave-requests/{id}/process', [AdminAttendanceController::class, 'processLeaveRequestSchedules'])->name('leave-requests.process');
             Route::post('/leave-requests/{id}/process-simple', [AdminAttendanceController::class, 'processLeaveRequest'])->name('leave-requests.process-simple');
-            
+
             // Permission Actions
             Route::post('/permission/{permission}/approve', [AdminAttendanceController::class, 'approvePermission'])->name('permission.approve');
             Route::post('/permission/{permission}/reject', [AdminAttendanceController::class, 'rejectPermission'])->name('permission.reject');
@@ -143,7 +143,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Admin'])
     });
 
 // ======= OPERATOR =======
-Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Operator'])
+Route::middleware(['auth', \App\Http\Middleware\CheckRole::class.':Operator'])
     ->prefix('operator')->name('operator.')->group(function () {
         Route::get('/dashboard', function () {
             return view('operator.dashboard');
@@ -151,9 +151,9 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':Operator'])
     });
 
 // ======= USER =======
-Route::middleware(['auth', \App\Http\Middleware\CheckRole::class . ':User'])
+Route::middleware(['auth', \App\Http\Middleware\CheckRole::class.':User'])
     ->prefix('user')->name('user.')->group(function () {
-        Route::get('/dashboard', fn() => view('users.dashboard'))->name('dashboard');
+        Route::get('/dashboard', fn () => view('users.dashboard'))->name('dashboard');
 
         // Calendar
         Route::get('calendar', [CalendarController::class, 'calendarView'])->name('calendar.view');
@@ -218,4 +218,3 @@ Route::get('forgot-password', [AuthController::class, 'showForgotPassword'])->na
 Route::post('forgot-password/send-otp', [AuthController::class, 'sendOtp'])->name('password.send.otp');
 Route::post('forgot-password/verify-otp', [AuthController::class, 'verifyOtp'])->name('password.verify.otp');
 Route::post('forgot-password/reset', [AuthController::class, 'resetPassword'])->name('password.reset');
-

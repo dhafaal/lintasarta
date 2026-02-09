@@ -20,6 +20,7 @@ use App\Exports\ScheduleTemplateExport;
 
 class ScheduleController extends Controller
 {
+    use ScheduleStorageHelpers;
     public function index(Request $request)
     {
         $query = Schedules::with(['user', 'shift']);
@@ -749,10 +750,6 @@ class ScheduleController extends Controller
             ], 500);
         }
     }
-
-
-
-
     /**
      * Determine if a schedule has meaningful attendance for the given user.
      * Meaningful = has check-in/out or status not 'alpha'.
@@ -1936,12 +1933,12 @@ class ScheduleController extends Controller
         $previewData = session('import_preview');
 
         try {
-            // Pastikan file temporary masih ada (gunakan Storage agar path OS-agnostic)
+            // Pastikan file temporary masih ada (gunakan helper Storage agar path OS-agnostic)
             $relative = $previewData['file_path'];
-            if (!\Storage::disk('local')->exists($relative)) {
+            if (!$this->storageExists($relative)) {
                 return back()->with('error', 'File sementara import tidak ditemukan. Silakan ulangi proses import.');
             }
-            $tempPath = \Storage::disk('local')->path($relative);
+            $tempPath = $this->storagePath($relative);
 
             // Import dengan mode normal (simpan ke database)
             $import = new SchedulesImport($previewData['month'], $previewData['year'], false);
@@ -1999,7 +1996,7 @@ class ScheduleController extends Controller
             }
 
             // Hapus file temporary
-            try { \Storage::disk('local')->delete($previewData['file_path']); } catch (\Throwable $e) {}
+            try { $this->storageDelete($previewData['file_path']); } catch (\Throwable $e) {}
 
             // Hapus session preview
             session()->forget('import_preview');
@@ -2024,11 +2021,35 @@ class ScheduleController extends Controller
         if (session()->has('import_preview')) {
             $previewData = session('import_preview');
             // Hapus file temporary
-            \Storage::delete($previewData['file_path']);
+            try { $this->storageDelete($previewData['file_path']); } catch (\Throwable $e) {}
             session()->forget('import_preview');
         }
 
         return redirect()->route('admin.schedules.create')->with('info', 'Import dibatalkan');
     }
 }
+
+/**
+ * Helper methods (non-functional refactor): Storage operations
+ */
+namespace App\Http\Controllers\Admin {
+    trait ScheduleStorageHelpers
+    {
+        private function storageExists(string $relativePath): bool
+        {
+            return \Storage::disk('local')->exists($relativePath);
+        }
+
+        private function storagePath(string $relativePath): string
+        {
+            return \Storage::disk('local')->path($relativePath);
+        }
+
+        private function storageDelete(string $relativePath): bool
+        {
+            return \Storage::disk('local')->delete($relativePath);
+        }
+    }
+}
+
  

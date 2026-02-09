@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('user_agent')->nullable();
             $table->timestamp('attempted_at')->nullable(); // Waktu percobaan login
             $table->timestamps();
-            
+
             $table->index(['user_id', 'created_at']);
             $table->index(['email', 'created_at']);
             $table->index(['action', 'status']);

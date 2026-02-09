@@ -31,8 +31,8 @@ class Schedules extends Model
     {
         return $this->hasOne(Attendance::class, 'schedule_id');
     }
-    
-        public function permissions()
+
+    public function permissions()
     {
         return $this->hasMany(Permissions::class, 'schedule_id'); // ✅ relasi izin
     }
@@ -40,7 +40,9 @@ class Schedules extends Model
     // App\Models\Schedules.php
     public function getDurationInMinutesAttribute()
     {
-        if (!$this->shift) return 0;
+        if (! $this->shift) {
+            return 0;
+        }
 
         $start = \Carbon\Carbon::parse($this->shift->start_time);
         $end   = \Carbon\Carbon::parse($this->shift->end_time);

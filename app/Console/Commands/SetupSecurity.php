@@ -3,12 +3,13 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
 
 class SetupSecurity extends Command
 {
     protected $signature = 'security:setup';
+
     protected $description = 'Setup enhanced security features for the application';
 
     public function handle()
@@ -25,7 +26,7 @@ class SetupSecurity extends Command
         $tables = [
             'login_attempts',
             'blocked_ips',
-            'user_sessions'
+            'user_sessions',
         ];
 
         foreach ($tables as $table) {
@@ -38,7 +39,7 @@ class SetupSecurity extends Command
 
         $this->newLine();
         $this->info('🛡️ Enhanced Security Features Setup Completed!');
-        
+
         $this->newLine();
         $this->info('Security Features Enabled:');
         $this->line('🔐 Account Lockout: 5 failed attempts = 30 min lockout');
@@ -47,19 +48,19 @@ class SetupSecurity extends Command
         $this->line('👥 Session Management: Track and manage user sessions');
         $this->line('🕵️ Suspicious Activity Detection: Alert on unusual patterns');
         $this->line('📊 Security Monitoring: Comprehensive logging and stats');
-        
+
         $this->newLine();
         $this->info('Available Commands:');
         $this->line('• php artisan security:maintenance - Run security maintenance');
         $this->line('• php artisan security:maintenance --show-stats - Show security statistics');
         $this->line('• php artisan security:maintenance --clean-old - Clean old records');
         $this->line('• php artisan security:maintenance --unblock-expired - Unblock expired IPs');
-        
+
         $this->newLine();
         $this->info('Admin Panel:');
         $this->line('• Access Security Management at: /admin/security');
         $this->line('• View Activity Logs at: /admin/activity-logs');
-        
+
         $this->newLine();
         $this->warn('⚠️  Important Security Notes:');
         $this->line('• Set up a cron job to run security:maintenance daily');

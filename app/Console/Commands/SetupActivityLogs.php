@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Schema;
 class SetupActivityLogs extends Command
 {
     protected $signature = 'logs:setup';
+
     protected $description = 'Setup activity logs tables and test the logging system';
 
     public function handle()
@@ -26,8 +27,8 @@ class SetupActivityLogs extends Command
             'admin_users_logs',
             'admin_schedules_logs',
             'admin_permissions_logs',
-            'user_activity_logs', 
-            'auth_activity_logs'
+            'user_activity_logs',
+            'auth_activity_logs',
         ];
 
         foreach ($tables as $table) {
@@ -39,7 +40,7 @@ class SetupActivityLogs extends Command
         }
 
         $this->info('Activity Logs System setup completed!');
-        
+
         $this->newLine();
         $this->info('Available logging methods:');
         $this->line('- AdminShiftsLog::log() for admin shift activities');
@@ -48,7 +49,7 @@ class SetupActivityLogs extends Command
         $this->line('- AdminPermissionsLog::log() for admin permission activities');
         $this->line('- UserActivityLog::log() for user activities');
         $this->line('- AuthActivityLog::log() for authentication activities');
-        
+
         $this->newLine();
         $this->info('Activity logs are now being recorded for:');
         $this->line('🔧 Admin Shifts: create, update, delete shifts');

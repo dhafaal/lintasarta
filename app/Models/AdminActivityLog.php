@@ -47,16 +47,16 @@ class AdminActivityLog extends Model
         ?string $description = null
     ): void {
         self::create([
-            'user_id' => Auth::id(),
-            'action' => $action,
+            'user_id'       => Auth::id(),
+            'action'        => $action,
             'resource_type' => $resourceType,
-            'resource_id' => $resourceId,
+            'resource_id'   => $resourceId,
             'resource_name' => $resourceName,
-            'old_values' => $oldValues,
-            'new_values' => $newValues,
-            'description' => $description,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
+            'old_values'    => $oldValues,
+            'new_values'    => $newValues,
+            'description'   => $description,
+            'ip_address'    => request()->ip(),
+            'user_agent'    => request()->userAgent(),
         ]);
     }
 
@@ -66,12 +66,12 @@ class AdminActivityLog extends Model
     public function getFormattedActionAttribute(): string
     {
         return match ($this->action) {
-            'create' => 'Membuat',
-            'update' => 'Mengubah',
-            'delete' => 'Menghapus',
+            'create'  => 'Membuat',
+            'update'  => 'Mengubah',
+            'delete'  => 'Menghapus',
             'approve' => 'Menyetujui',
-            'reject' => 'Menolak',
-            default => ucfirst($this->action),
+            'reject'  => 'Menolak',
+            default   => ucfirst($this->action),
         };
     }
 
@@ -81,12 +81,12 @@ class AdminActivityLog extends Model
     public function getFormattedResourceTypeAttribute(): string
     {
         return match ($this->resource_type) {
-            'shifts' => 'Shift',
-            'schedules' => 'Jadwal',
-            'users' => 'User',
+            'shifts'      => 'Shift',
+            'schedules'   => 'Jadwal',
+            'users'       => 'User',
             'permissions' => 'Izin',
-            'Location' => 'Lokasi',
-            default => ucfirst($this->resource_type),
+            'Location'    => 'Lokasi',
+            default       => ucfirst($this->resource_type),
         };
     }
 }

@@ -18,12 +18,12 @@ class RememberMeMiddleware
     {
         try {
             // Skip if already authenticated
-            if (!Auth::check()) {
+            if (! Auth::check()) {
                 // Read remember token cookie if present
                 $cookieName = 'remember_token';
-                $token = $request->cookie($cookieName);
+                $token      = $request->cookie($cookieName);
 
-                if (!empty($token)) {
+                if (! empty($token)) {
                     $ip = $request->ip();
                     $ua = $request->userAgent() ?? '';
 

@@ -2,66 +2,68 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
-class AccountSeeder extends Seeder {
-    public function run(): void {
+class AccountSeeder extends Seeder
+{
+    public function run(): void
+    {
 
         User::create([
-            'name' => 'Super Admin',
-            'email' => 'admin@example.com',
+            'name'     => 'Super Admin',
+            'email'    => 'admin@example.com',
             'password' => Hash::make('password'),
-            'role' => 'Admin',
+            'role'     => 'Admin',
         ]);
         User::create([
-            'name' => 'Mursidi',
-            'email' => 'murmur@example.com',
+            'name'     => 'Mursidi',
+            'email'    => 'murmur@example.com',
             'password' => Hash::make('password'),
-            'role' => 'User',
+            'role'     => 'User',
         ]);
         User::create([
-            'name' => 'Dirman',
-            'email' => 'dir@example.com',
+            'name'     => 'Dirman',
+            'email'    => 'dir@example.com',
             'password' => Hash::make('password'),
-            'role' => 'User',
-        ]);
-            User::create([
-            'name' => 'Dayat',
-            'email' => 'dayat@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'User',
+            'role'     => 'User',
         ]);
         User::create([
-            'name' => 'Herman',
-            'email' => 'herman@example.com',
+            'name'     => 'Dayat',
+            'email'    => 'dayat@example.com',
             'password' => Hash::make('password'),
-            'role' => 'User',
+            'role'     => 'User',
         ]);
         User::create([
-            'name' => 'Surya',
-            'email' => 'surya@example.com',
+            'name'     => 'Herman',
+            'email'    => 'herman@example.com',
             'password' => Hash::make('password'),
-            'role' => 'User',
+            'role'     => 'User',
         ]);
         User::create([
-            'name' => 'Agus',
-            'email' => 'agus@example.com',
+            'name'     => 'Surya',
+            'email'    => 'surya@example.com',
             'password' => Hash::make('password'),
-            'role' => 'User',
+            'role'     => 'User',
         ]);
         User::create([
-            'name' => 'Asep',
-            'email' => 'Asep@example.com',
+            'name'     => 'Agus',
+            'email'    => 'agus@example.com',
             'password' => Hash::make('password'),
-            'role' => 'User',
+            'role'     => 'User',
         ]);
         User::create([
-            'name' => 'Bambang',
-            'email' => 'Bambang@example.com',
+            'name'     => 'Asep',
+            'email'    => 'Asep@example.com',
             'password' => Hash::make('password'),
-            'role' => 'User',
+            'role'     => 'User',
+        ]);
+        User::create([
+            'name'     => 'Bambang',
+            'email'    => 'Bambang@example.com',
+            'password' => Hash::make('password'),
+            'role'     => 'User',
         ]);
 
     }

@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AuthActivityLog;
+use App\Models\BlockedIP;
 use Closure;
 use Illuminate\Http\Request;
-use App\Models\BlockedIP;
-use App\Models\AuthActivityLog;
 use Symfony\Component\HttpFoundation\Response;
 
 class BlockSuspiciousIPs
@@ -20,7 +20,7 @@ class BlockSuspiciousIPs
         // Check if IP is blocked
         if (BlockedIP::isBlocked($ipAddress)) {
             $blockInfo = BlockedIP::getBlockInfo($ipAddress);
-            
+
             // Log blocked access attempt
             AuthActivityLog::log(
                 'blocked_access',
@@ -33,16 +33,16 @@ class BlockSuspiciousIPs
             // Return blocked response
             if ($request->expectsJson()) {
                 return response()->json([
-                    'error' => 'Access denied',
-                    'message' => 'Your IP address has been blocked due to suspicious activity.',
-                    'reason' => $blockInfo->reason,
-                    'blocked_at' => $blockInfo->blocked_at->format('Y-m-d H:i:s'),
+                    'error'          => 'Access denied',
+                    'message'        => 'Your IP address has been blocked due to suspicious activity.',
+                    'reason'         => $blockInfo->reason,
+                    'blocked_at'     => $blockInfo->blocked_at->format('Y-m-d H:i:s'),
                     'time_remaining' => $blockInfo->getTimeRemaining(),
                 ], 403);
             }
 
             return response()->view('auth.blocked', [
-                'blockInfo' => $blockInfo,
+                'blockInfo'     => $blockInfo,
                 'timeRemaining' => $blockInfo->getTimeRemaining(),
             ], 403);
         }

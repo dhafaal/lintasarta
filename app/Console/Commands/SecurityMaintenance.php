@@ -2,15 +2,16 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\LoginAttempt;
 use App\Models\BlockedIP;
+use App\Models\LoginAttempt;
 use App\Models\UserSession;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class SecurityMaintenance extends Command
 {
     protected $signature = 'security:maintenance {--clean-old : Clean old records} {--unblock-expired : Unblock expired IPs} {--show-stats : Show security statistics}';
+
     protected $description = 'Perform security maintenance tasks';
 
     public function handle()
@@ -18,15 +19,15 @@ class SecurityMaintenance extends Command
         $this->info('🔒 Starting Security Maintenance...');
         $this->newLine();
 
-        if ($this->option('clean-old') || !$this->hasOptions()) {
+        if ($this->option('clean-old') || ! $this->hasOptions()) {
             $this->cleanOldRecords();
         }
 
-        if ($this->option('unblock-expired') || !$this->hasOptions()) {
+        if ($this->option('unblock-expired') || ! $this->hasOptions()) {
             $this->unblockExpiredIPs();
         }
 
-        if ($this->option('show-stats') || !$this->hasOptions()) {
+        if ($this->option('show-stats') || ! $this->hasOptions()) {
             $this->showSecurityStats();
         }
 
@@ -78,7 +79,7 @@ class SecurityMaintenance extends Command
         $this->info('📊 Security Statistics:');
 
         // Login attempts in last 24 hours
-        $recentAttempts = LoginAttempt::where('attempted_at', '>=', Carbon::now()->subDay())->count();
+        $recentAttempts   = LoginAttempt::where('attempted_at', '>=', Carbon::now()->subDay())->count();
         $recentSuccessful = LoginAttempt::where('attempted_at', '>=', Carbon::now()->subDay())
             ->where('successful', true)->count();
         $recentFailed = $recentAttempts - $recentSuccessful;
@@ -86,7 +87,7 @@ class SecurityMaintenance extends Command
         $this->line("   📈 Login Attempts (24h): {$recentAttempts} total, {$recentSuccessful} successful, {$recentFailed} failed");
 
         // Currently blocked IPs
-        $blockedIPs = BlockedIP::count();
+        $blockedIPs      = BlockedIP::count();
         $permanentBlocks = BlockedIP::where('is_permanent', true)->count();
         $temporaryBlocks = $blockedIPs - $permanentBlocks;
 
@@ -106,7 +107,7 @@ class SecurityMaintenance extends Command
             ->get();
 
         if ($topFailedIPs->count() > 0) {
-            $this->line("   🎯 Top Failed Login IPs (7d):");
+            $this->line('   🎯 Top Failed Login IPs (7d):');
             foreach ($topFailedIPs as $ip) {
                 $this->line("      - {$ip->ip_address}: {$ip->failed_count} attempts");
             }

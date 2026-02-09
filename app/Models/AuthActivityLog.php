@@ -41,13 +41,13 @@ class AuthActivityLog extends Model
         ?string $description = null
     ): void {
         self::create([
-            'user_id' => $userId,
-            'action' => $action,
-            'email' => $email,
-            'status' => $status,
-            'description' => $description,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
+            'user_id'      => $userId,
+            'action'       => $action,
+            'email'        => $email,
+            'status'       => $status,
+            'description'  => $description,
+            'ip_address'   => request()->ip(),
+            'user_agent'   => request()->userAgent(),
             'attempted_at' => now(),
         ]);
     }
@@ -58,11 +58,11 @@ class AuthActivityLog extends Model
     public function getFormattedActionAttribute(): string
     {
         return match ($this->action) {
-            'login' => 'Login',
-            'logout' => 'Logout',
-            'failed_login' => 'Login Gagal',
+            'login'          => 'Login',
+            'logout'         => 'Logout',
+            'failed_login'   => 'Login Gagal',
             'password_reset' => 'Reset Password',
-            default => ucfirst($this->action),
+            default          => ucfirst($this->action),
         };
     }
 
@@ -73,9 +73,9 @@ class AuthActivityLog extends Model
     {
         return match ($this->status) {
             'success' => 'Berhasil',
-            'failed' => 'Gagal',
+            'failed'  => 'Gagal',
             'blocked' => 'Diblokir',
-            default => ucfirst($this->status),
+            default   => ucfirst($this->status),
         };
     }
 
@@ -86,9 +86,9 @@ class AuthActivityLog extends Model
     {
         return match ($this->status) {
             'success' => 'success',
-            'failed' => 'danger',
+            'failed'  => 'danger',
             'blocked' => 'warning',
-            default => 'secondary',
+            default   => 'secondary',
         };
     }
 }

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamp('last_activity');
             $table->timestamp('expires_at');
             $table->timestamps();
-            
+
             $table->index(['user_id', 'last_activity']);
             $table->index(['session_id', 'expires_at']);
             $table->index('is_trusted_device');

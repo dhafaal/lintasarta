@@ -1,39 +1,46 @@
-@extends('layouts.admin')
+@extends("layouts.admin")
 
-@section('title', 'Riwayat Absensi')
+@section("title", "Riwayat Absensi")
 
-@section('content')
+@section("content")
     <div class="min-h-screen bg-white sm:p-6 lg:p-8">
         <div class="mx-auto space-y-8">
             <!-- Minimalist Header -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <div
-                        class="w-14 h-14 bg-gradient-to-br from-sky-100 to-sky-200 rounded-2xl flex items-center justify-center shadow-lg">
-                        <i data-lucide="calendar-clock" class="w-7 h-7 text-sky-600"></i>
+                        class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 to-sky-200 shadow-lg"
+                    >
+                        <i data-lucide="calendar-clock" class="h-7 w-7 text-sky-600"></i>
                     </div>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">Riwayat Absensi</h1>
-                        <p class="text-sm text-gray-500 mt-1">{{ \Carbon\Carbon::parse($date)->format('d M Y') }}</p>
+                        <p class="mt-1 text-sm text-gray-500">{{ \Carbon\Carbon::parse($date)->format("d M Y") }}</p>
                     </div>
                 </div>
-                <div class="bg-gray-100 hover:bg-gray-200 transition-colors border-2 border-gray-200 rounded-md flex items-center justify-center">
-                <a href="{{ route('admin.attendances.index') }}"
-                    class="inline-flex items-center px-4 py-2 text-sm text-black">
-                    <i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i>
-                    Kembali
-                </a>
+                <div
+                    class="flex items-center justify-center rounded-md border-2 border-gray-200 bg-gray-100 transition-colors hover:bg-gray-200"
+                >
+                    <a
+                        href="{{ route("admin.attendances.index") }}"
+                        class="inline-flex items-center px-4 py-2 text-sm text-black"
+                    >
+                        <i data-lucide="arrow-left" class="mr-1 h-4 w-4"></i>
+                        Kembali
+                    </a>
                 </div>
             </div>
 
             <!-- Minimalist Filter Section -->
-            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-br from-sky-50 to-blue-50">
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <div class="border-b border-gray-200 bg-gradient-to-br from-sky-50 to-blue-50 px-6 py-4">
                     <div class="flex items-center justify-between">
                         <h3 class="text-sm font-semibold text-gray-700">Filter & Pencarian</h3>
                         @if ($search || $date != now()->toDateString())
-                            <a href="{{ route('admin.attendances.history') }}"
-                                class="text-xs text-sky-600 hover:text-sky-700 font-medium">
+                            <a
+                                href="{{ route("admin.attendances.history") }}"
+                                class="text-xs font-medium text-sky-600 hover:text-sky-700"
+                            >
                                 Reset
                             </a>
                         @endif
@@ -42,47 +49,75 @@
 
                 <div class="p-6">
                     <form method="GET" action="{{ url()->current() }}" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <label for="history_date"
-                                    class="block text-xs font-medium text-gray-700 mb-1">Tanggal</label>
-                                <input type="date" name="date" id="history_date" value="{{ $date }}"
-                                    class="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-sky-500 focus:border-sky-500">
+                                <label for="history_date" class="mb-1 block text-xs font-medium text-gray-700">
+                                    Tanggal
+                                </label>
+                                <input
+                                    type="date"
+                                    name="date"
+                                    id="history_date"
+                                    value="{{ $date }}"
+                                    class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                                />
                             </div>
 
                             <div>
-                                <label for="realtime_search" class="block text-xs font-medium text-gray-700 mb-1">Cari
-                                    Karyawan</label>
+                                <label for="realtime_search" class="mb-1 block text-xs font-medium text-gray-700">
+                                    Cari Karyawan
+                                </label>
 
                                 <div class="relative">
-                                    <input type="text" id="realtime_search"
-                                        class="block w-full pl-9 pr-9 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                                        placeholder="Ketik nama karyawan..." autocomplete="off">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
+                                    <input
+                                        type="text"
+                                        id="realtime_search"
+                                        class="block w-full rounded-lg border border-gray-300 py-2 pr-9 pl-9 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500"
+                                        placeholder="Ketik nama karyawan..."
+                                        autocomplete="off"
+                                    />
+                                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <i data-lucide="search" class="h-4 w-4 text-gray-400"></i>
                                     </div>
-                                    <button type="button" id="clear_search"
-                                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 hidden">
-                                        <i data-lucide="x" class="w-4 h-4"></i>
+                                    <button
+                                        type="button"
+                                        id="clear_search"
+                                        class="absolute inset-y-0 right-0 flex hidden items-center pr-3 text-gray-400 hover:text-gray-600"
+                                    >
+                                        <i data-lucide="x" class="h-4 w-4"></i>
                                     </button>
                                 </div>
 
                                 <!-- Search Results Dropdown -->
-                                <div id="history_user_search_results"
-                                    class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto hidden">
-                                    <div id="history_user_search_loading"
-                                        class="px-4 py-3 text-sm text-gray-500 text-center hidden">
-                                        <svg class="animate-spin h-4 w-4 mx-auto mb-1" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10"
-                                                stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor"
-                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                            </path>
+                                <div
+                                    id="history_user_search_results"
+                                    class="absolute z-50 mt-1 hidden max-h-60 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg"
+                                >
+                                    <div
+                                        id="history_user_search_loading"
+                                        class="hidden px-4 py-3 text-center text-sm text-gray-500"
+                                    >
+                                        <svg class="mx-auto mb-1 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle
+                                                class="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                stroke-width="4"
+                                            ></circle>
+                                            <path
+                                                class="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            ></path>
                                         </svg>
                                         Mencari karyawan...
                                     </div>
-                                    <div id="history_user_search_no_results"
-                                        class="px-4 py-3 text-sm text-gray-500 text-center hidden">
+                                    <div
+                                        id="history_user_search_no_results"
+                                        class="hidden px-4 py-3 text-center text-sm text-gray-500"
+                                    >
                                         Tidak ada karyawan ditemukan
                                     </div>
                                     <div id="history_user_search_results_list" class="divide-y divide-gray-100">
@@ -94,9 +129,11 @@
 
                         <!-- Submit Button -->
                         <div class="flex justify-end pt-2">
-                            <button type="submit"
-                                class="inline-flex items-center px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors">
-                                <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
+                            <button
+                                type="submit"
+                                class="inline-flex items-center rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-700"
+                            >
+                                <i data-lucide="filter" class="mr-2 h-4 w-4"></i>
                                 Filter
                             </button>
                         </div>
@@ -105,11 +142,13 @@
             </div>
 
             <!-- Enhanced Table Section -->
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                <div class="bg-gradient-to-br from-sky-50 to-blue-50 px-8 py-6 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-md flex items-center justify-center">
-                            <i data-lucide="users" class="w-6 h-6 text-sky-600"></i>
+            <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
+                <div class="border-b border-gray-200 bg-gradient-to-br from-sky-50 to-blue-50 px-8 py-6">
+                    <h3 class="flex items-center gap-3 text-lg font-semibold text-gray-800">
+                        <div
+                            class="flex h-10 w-10 items-center justify-center rounded-md bg-gradient-to-br from-sky-100 to-sky-200"
+                        >
+                            <i data-lucide="users" class="h-6 w-6 text-sky-600"></i>
                         </div>
                         Data Absensi Karyawan
                     </h3>
@@ -117,68 +156,77 @@
 
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-white border-b-2 border-gray-200">
+                        <thead class="border-b-2 border-gray-200 bg-white">
                             <tr>
                                 <th
-                                    class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-48">
+                                    class="w-48 px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
+                                >
                                     <div class="flex items-center">
-                                        <i data-lucide="user" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <i data-lucide="user" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Nama
                                     </div>
                                 </th>
                                 <th
-                                    class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-56">
+                                    class="w-56 px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
+                                >
                                     <div class="flex items-center">
-                                        <i data-lucide="clock" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <i data-lucide="clock" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Shift
                                     </div>
                                 </th>
                                 <th
-                                    class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-48">
+                                    class="w-48 px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
+                                >
                                     <div class="flex items-center">
-                                        <i data-lucide="map-pin" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <i data-lucide="map-pin" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Lokasi
                                     </div>
                                 </th>
                                 <th
-                                    class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-40">
+                                    class="w-40 px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
+                                >
                                     <div class="flex items-center">
-                                        <i data-lucide="calendar" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <i data-lucide="calendar" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Tanggal
                                     </div>
                                 </th>
                                 <th
-                                    class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-48">
+                                    class="w-48 px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
+                                >
                                     <div class="flex items-center">
-                                        <i data-lucide="log-in" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <i data-lucide="log-in" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Check In
                                     </div>
                                 </th>
                                 <th
-                                    class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-48">
+                                    class="w-48 px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
+                                >
                                     <div class="flex items-center">
-                                        <i data-lucide="log-out" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <i data-lucide="log-out" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Check Out
                                     </div>
                                 </th>
                                 <th
-                                    class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-32">
+                                    class="w-32 px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
+                                >
                                     <div class="flex items-center">
-                                        <i data-lucide="clock" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <i data-lucide="clock" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Jam Kerja
                                     </div>
                                 </th>
                                 <th
-                                    class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-32">
+                                    class="w-32 px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
+                                >
                                     <div class="flex items-center">
-                                        <i data-lucide="activity" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <i data-lucide="activity" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Status
                                     </div>
                                 </th>
                                 <th
-                                    class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-64">
+                                    class="w-64 px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
+                                >
                                     <div class="flex items-center">
-                                        <i data-lucide="message-circle" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <i data-lucide="message-circle" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Keterangan
                                     </div>
                                 </th>
@@ -188,26 +236,27 @@
                             @php
                                 // Group schedules by user_id and schedule_date for double shift support
                                 $groupedSchedules = $schedules->groupBy(function ($schedule) {
-                                    return $schedule->user_id . '_' . $schedule->schedule_date;
+                                    return $schedule->user_id . "_" . $schedule->schedule_date;
                                 });
                             @endphp
-                            @forelse($groupedSchedules as $groupKey => $userSchedules)
+
+                            @forelse ($groupedSchedules as $groupKey => $userSchedules)
                                 @php
                                     // Get first schedule for user info
                                     $firstSchedule = $userSchedules->first();
 
                                     // Sort schedules by shift category (Pagi -> Siang -> Malam)
-                                    $order = ['Pagi' => 1, 'Siang' => 2, 'Malam' => 3];
+                                    $order = ["Pagi" => 1, "Siang" => 2, "Malam" => 3];
                                     $sortedSchedules = $userSchedules->sortBy(function ($s) use ($order) {
-                                        return $order[$s->shift->category ?? ''] ?? 99;
+                                        return $order[$s->shift->category ?? ""] ?? 99;
                                     });
 
                                     // Get schedule IDs for this group
-                                    $scheduleIds = $sortedSchedules->pluck('id');
+                                    $scheduleIds = $sortedSchedules->pluck("id");
 
                                     // Get attendances and permissions for all schedules in this group
-                                    $attGroup = $attendances->whereIn('schedule_id', $scheduleIds);
-                                    $permGroup = $permissions->whereIn('schedule_id', $scheduleIds);
+                                    $attGroup = $attendances->whereIn("schedule_id", $scheduleIds);
+                                    $permGroup = $permissions->whereIn("schedule_id", $scheduleIds);
 
                                     // Location: pick any available
                                     $firstWithLocation = $attGroup->first(function ($a) {
@@ -217,24 +266,32 @@
 
                                     // Times: earliest check-in, latest check-out
                                     $checkInTime = optional(
-                                        $attGroup->whereNotNull('check_in_time')->sortBy('check_in_time')->first(),
+                                        $attGroup
+                                            ->whereNotNull("check_in_time")
+                                            ->sortBy("check_in_time")
+                                            ->first(),
                                     )->check_in_time;
                                     $checkOutTime = optional(
                                         $attGroup
-                                            ->whereNotNull('check_out_time')
-                                            ->sortByDesc('check_out_time')
+                                            ->whereNotNull("check_out_time")
+                                            ->sortByDesc("check_out_time")
                                             ->first(),
                                     )->check_out_time;
                                 @endphp
-                                <tr class="hover:bg-sky-50 transition-colors duration-200">
+
+                                <tr class="transition-colors duration-200 hover:bg-sky-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div
-                                                class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-full flex items-center justify-center mr-3">
-                                                <i data-lucide="user" class="w-5 h-5 text-sky-600"></i>
+                                                class="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-100 to-sky-200"
+                                            >
+                                                <i data-lucide="user" class="h-5 w-5 text-sky-600"></i>
                                             </div>
-                                            <div class="text-sm font-medium text-gray-900 max-w-[200px] truncate"
-                                                title="{{ $firstSchedule->user->name }}">{{ $firstSchedule->user->name }}
+                                            <div
+                                                class="max-w-[200px] truncate text-sm font-medium text-gray-900"
+                                                title="{{ $firstSchedule->user->name }}"
+                                            >
+                                                {{ $firstSchedule->user->name }}
                                             </div>
                                         </div>
                                     </td>
@@ -242,23 +299,36 @@
                                         <div class="flex flex-col space-y-1">
                                             @foreach ($sortedSchedules as $us)
                                                 <div>
-                                                    <div class="text-sm font-semibold text-gray-900 max-w-[160px] truncate"
-                                                        title="{{ $us->shift->shift_name ?? '-' }}">
-                                                        {{ $us->shift->shift_name ?? '-' }}</div>
-                                                    <div class="text-xs text-gray-500 mt-0.5">
+                                                    <div
+                                                        class="max-w-[160px] truncate text-sm font-semibold text-gray-900"
+                                                        title="{{ $us->shift->shift_name ?? "-" }}"
+                                                    >
+                                                        {{ $us->shift->shift_name ?? "-" }}
+                                                    </div>
+                                                    <div class="mt-0.5 text-xs text-gray-500">
                                                         @if ($us->shift)
                                                             <span
-                                                                class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-medium 
-                                                            @if ($us->shift->category == 'Pagi') bg-yellow-100 text-yellow-800
-                                                            @elseif($us->shift->category == 'Siang') bg-orange-100 text-orange-800
-                                                            @elseif($us->shift->category == 'Malam') bg-indigo-100 text-indigo-800
-                                                            @else bg-gray-100 text-gray-800 @endif">
+                                                                class="@if ($us->shift->category == "Pagi")
+                                                                    bg-yellow-100
+                                                                    text-yellow-800
+                                                                @elseif ($us->shift->category == "Siang")
+                                                                    bg-orange-100
+                                                                    text-orange-800
+                                                                @elseif ($us->shift->category == "Malam")
+                                                                    bg-indigo-100
+                                                                    text-indigo-800
+                                                                @else
+                                                                    bg-gray-100
+                                                                    text-gray-800
+                                                                @endif inline-flex items-center rounded-full px-2 py-1 text-[10px] font-medium"
+                                                            >
                                                                 {{ $us->shift->category }}
                                                             </span>
-                                                            <span
-                                                                class="ml-2">{{ \Carbon\Carbon::parse($us->shift->start_time)->format('H:i') }}
+                                                            <span class="ml-2">
+                                                                {{ \Carbon\Carbon::parse($us->shift->start_time)->format("H:i") }}
                                                                 -
-                                                                {{ \Carbon\Carbon::parse($us->shift->end_time)->format('H:i') }}</span>
+                                                                {{ \Carbon\Carbon::parse($us->shift->end_time)->format("H:i") }}
+                                                            </span>
                                                         @else
                                                             -
                                                         @endif
@@ -271,196 +341,209 @@
                                         @if ($location)
                                             <div class="flex items-center">
                                                 <div
-                                                    class="w-8 h-8 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center mr-3">
-                                                    <i data-lucide="map-pin" class="w-4 h-4 text-sky-600"></i>
+                                                    class="mr-3 flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-100 to-sky-200"
+                                                >
+                                                    <i data-lucide="map-pin" class="h-4 w-4 text-sky-600"></i>
                                                 </div>
                                                 <div>
-                                                    <div class="text-sm font-semibold text-gray-900 max-w-[140px] truncate"
-                                                        title="{{ $location->name }}">{{ $location->name }}</div>
-                                                    <div class="text-xs text-gray-500">Radius: {{ $location->radius }}m
+                                                    <div
+                                                        class="max-w-[140px] truncate text-sm font-semibold text-gray-900"
+                                                        title="{{ $location->name }}"
+                                                    >
+                                                        {{ $location->name }}
+                                                    </div>
+                                                    <div class="text-xs text-gray-500">
+                                                        Radius: {{ $location->radius }}m
                                                     </div>
                                                 </div>
                                             </div>
                                         @else
-                                            <span class="text-gray-400 text-sm">-</span>
+                                            <span class="text-sm text-gray-400">-</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-semibold text-gray-900">
-                                            {{ \Carbon\Carbon::parse($firstSchedule->schedule_date)->format('d M Y') }}
+                                            {{ \Carbon\Carbon::parse($firstSchedule->schedule_date)->format("d M Y") }}
                                         </div>
                                         <div class="text-xs text-gray-500">
-                                            {{ \Carbon\Carbon::parse($firstSchedule->schedule_date)->translatedFormat('l') }}
+                                            {{ \Carbon\Carbon::parse($firstSchedule->schedule_date)->translatedFormat("l") }}
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if ($checkInTime)
                                             <div class="flex items-start">
                                                 <div
-                                                    class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                                                    <i data-lucide="log-in" class="w-4 h-4 text-green-600"></i>
+                                                    class="mr-3 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-green-100"
+                                                >
+                                                    <i data-lucide="log-in" class="h-4 w-4 text-green-600"></i>
                                                 </div>
                                                 <div>
                                                     <div class="text-sm font-semibold text-gray-900">
-                                                        {{ \Carbon\Carbon::parse($checkInTime)->format('H:i') }}</div>
+                                                        {{ \Carbon\Carbon::parse($checkInTime)->format("H:i") }}
+                                                    </div>
                                                     <div class="text-xs text-gray-500">
-                                                        {{ \Carbon\Carbon::parse($checkInTime)->format('d M Y') }}</div>
+                                                        {{ \Carbon\Carbon::parse($checkInTime)->format("d M Y") }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         @else
-                                            <span class="text-gray-400 text-sm">-</span>
+                                            <span class="text-sm text-gray-400">-</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if ($checkOutTime)
                                             <div class="flex items-start">
                                                 <div
-                                                    class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                                                    <i data-lucide="log-out" class="w-4 h-4 text-red-600"></i>
+                                                    class="mr-3 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-red-100"
+                                                >
+                                                    <i data-lucide="log-out" class="h-4 w-4 text-red-600"></i>
                                                 </div>
                                                 <div>
                                                     <div class="text-sm font-semibold text-gray-900">
-                                                        {{ \Carbon\Carbon::parse($checkOutTime)->format('H:i') }}</div>
+                                                        {{ \Carbon\Carbon::parse($checkOutTime)->format("H:i") }}
+                                                    </div>
                                                     <div class="text-xs text-gray-500">
-                                                        {{ \Carbon\Carbon::parse($checkOutTime)->format('d M Y') }}</div>
+                                                        {{ \Carbon\Carbon::parse($checkOutTime)->format("d M Y") }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         @else
-                                            <span class="text-gray-400 text-sm">-</span>
+                                            <span class="text-sm text-gray-400">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
                                         @php
                                             // Calculate work hours for all shifts in this group
                                             $dayMinutesAcc = 0;
                                             foreach ($sortedSchedules as $ds) {
-                                                if (!$ds->shift) {
+                                                if (! $ds->shift) {
                                                     continue;
                                                 }
-                                                $att = $attendances->firstWhere('schedule_id', $ds->id);
-                                                $perm = $permissions->firstWhere('schedule_id', $ds->id);
+                                                $att = $attendances->firstWhere("schedule_id", $ds->id);
+                                                $perm = $permissions->firstWhere("schedule_id", $ds->id);
                                                 $start = \Carbon\Carbon::parse($ds->shift->start_time);
                                                 $end = \Carbon\Carbon::parse($ds->shift->end_time);
                                                 if ($end->lt($start)) {
                                                     $end->addDay();
                                                 }
                                                 $shiftMinutes = $start->diffInMinutes($end);
-                                                if ($att && $att->status === 'alpha') {
+                                                if ($att && $att->status === "alpha") {
                                                     $m = 0;
-                                                } elseif (!$att && !$perm) {
+                                                } elseif (! $att && ! $perm) {
                                                     $m = 0; // auto-alpha when absent without permission
                                                 } else {
                                                     $m = $shiftMinutes;
                                                 }
                                                 $dayMinutesAcc += $m;
                                             }
-                                            $dayMinutesAfterBreak =
-                                                $dayMinutesAcc > 0 ? max(0, $dayMinutesAcc - 60) : 0;
+                                            $dayMinutesAfterBreak = $dayMinutesAcc > 0 ? max(0, $dayMinutesAcc - 60) : 0;
                                             $hours = $dayMinutesAfterBreak / 60;
                                         @endphp
-                                        {{ $hours == floor($hours) ? floor($hours) . ' jam' : number_format($hours, 1) . ' jam' }}
+
+                                        {{ $hours == floor($hours) ? floor($hours) . " jam" : number_format($hours, 1) . " jam" }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @php
                                             // Status priority: izin > early_checkout > telat > hadir > forgot_checkout > alpha
                                             // Status based on FIRST shift (Pagi if exists) for consistency with index.blade.php
-                                            $statusText = '-';
-                                            if ($attGroup->where('status', 'izin')->isNotEmpty()) {
-                                                $statusText = 'izin';
-                                            } elseif ($attGroup->where('status', 'early_checkout')->isNotEmpty()) {
-                                                $statusText = 'early_checkout';
-                                            } elseif ($attGroup->where('status', 'telat')->isNotEmpty()) {
-                                                $statusText = 'telat';
-                                            } elseif ($attGroup->where('status', 'hadir')->isNotEmpty()) {
-                                                $statusText = 'hadir';
-                                            } elseif ($attGroup->where('status', 'forgot_checkout')->isNotEmpty()) {
-                                                $statusText = 'forgot_checkout';
+                                            $statusText = "-";
+                                            if ($attGroup->where("status", "izin")->isNotEmpty()) {
+                                                $statusText = "izin";
+                                            } elseif ($attGroup->where("status", "early_checkout")->isNotEmpty()) {
+                                                $statusText = "early_checkout";
+                                            } elseif ($attGroup->where("status", "telat")->isNotEmpty()) {
+                                                $statusText = "telat";
+                                            } elseif ($attGroup->where("status", "hadir")->isNotEmpty()) {
+                                                $statusText = "hadir";
+                                            } elseif ($attGroup->where("status", "forgot_checkout")->isNotEmpty()) {
+                                                $statusText = "forgot_checkout";
                                             } elseif ($attGroup->isNotEmpty()) {
-                                                $statusText = optional($attGroup->first())->status ?: '-';
+                                                $statusText = optional($attGroup->first())->status ?: "-";
                                             }
 
                                             // Fallback: if no attendance and no permission, mark as alpha
-                                            if (
-                                                $statusText === '-' &&
-                                                $sortedSchedules->isNotEmpty() &&
-                                                $attGroup->isEmpty() &&
-                                                $permGroup->isEmpty()
-                                            ) {
-                                                $statusText = 'alpha';
+                                            if ($statusText === "-" && $sortedSchedules->isNotEmpty() && $attGroup->isEmpty() && $permGroup->isEmpty()) {
+                                                $statusText = "alpha";
                                             }
 
                                             // Determine if we need stacked badges
-                                            $hasForgot = $attGroup->where('status', 'forgot_checkout')->isNotEmpty();
-                                            $hasEarly = $attGroup->where('status', 'early_checkout')->isNotEmpty();
+                                            $hasForgot = $attGroup->where("status", "forgot_checkout")->isNotEmpty();
+                                            $hasEarly = $attGroup->where("status", "early_checkout")->isNotEmpty();
                                             $wasLate =
                                                 $attGroup
                                                     ->filter(function ($a) {
                                                         return $a && $a->is_late;
                                                     })
-                                                    ->isNotEmpty() || $attGroup->where('status', 'telat')->isNotEmpty();
+                                                    ->isNotEmpty() || $attGroup->where("status", "telat")->isNotEmpty();
                                             $wasPresent =
                                                 $attGroup
                                                     ->filter(function ($a) {
-                                                        return $a && !is_null($a->check_in_time);
+                                                        return $a && ! is_null($a->check_in_time);
                                                     })
-                                                    ->isNotEmpty() || $attGroup->where('status', 'hadir')->isNotEmpty();
+                                                    ->isNotEmpty() || $attGroup->where("status", "hadir")->isNotEmpty();
                                             $showStacked = ($hasForgot || $hasEarly) && ($wasLate || $wasPresent);
 
-                                            $statusColor = 'bg-gray-100 text-gray-700';
-                                            if ($statusText === 'hadir') {
-                                                $statusColor = 'bg-green-100 text-green-800';
+                                            $statusColor = "bg-gray-100 text-gray-700";
+                                            if ($statusText === "hadir") {
+                                                $statusColor = "bg-green-100 text-green-800";
                                             }
-                                            if ($statusText === 'telat') {
-                                                $statusColor = 'bg-orange-100 text-orange-800';
+                                            if ($statusText === "telat") {
+                                                $statusColor = "bg-orange-100 text-orange-800";
                                             }
-                                            if ($statusText === 'izin') {
-                                                $statusColor = 'bg-yellow-100 text-yellow-800';
+                                            if ($statusText === "izin") {
+                                                $statusColor = "bg-yellow-100 text-yellow-800";
                                             }
-                                            if ($statusText === 'early_checkout') {
-                                                $statusColor = 'bg-amber-100 text-amber-800';
+                                            if ($statusText === "early_checkout") {
+                                                $statusColor = "bg-amber-100 text-amber-800";
                                             }
-                                            if ($statusText === 'forgot_checkout') {
-                                                $statusColor = 'bg-rose-100 text-rose-800';
+                                            if ($statusText === "forgot_checkout") {
+                                                $statusColor = "bg-rose-100 text-rose-800";
                                             }
-                                            if ($statusText === 'alpha') {
-                                                $statusColor = 'bg-red-100 text-red-800';
+                                            if ($statusText === "alpha") {
+                                                $statusColor = "bg-red-100 text-red-800";
                                             }
 
-                                            $primaryText = $wasLate ? 'telat' : 'hadir';
-                                            $primaryColor = $wasLate
-                                                ? 'bg-orange-100 text-orange-800'
-                                                : 'bg-green-100 text-green-800';
+                                            $primaryText = $wasLate ? "telat" : "hadir";
+                                            $primaryColor = $wasLate ? "bg-orange-100 text-orange-800" : "bg-green-100 text-green-800";
                                         @endphp
+
                                         @if ($showStacked)
                                             <div class="flex flex-col space-y-1">
                                                 <span
-                                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $primaryColor }}">
+                                                    class="{{ $primaryColor }} inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
+                                                >
                                                     {{ ucwords($primaryText) }}
                                                 </span>
                                                 @if ($hasForgot)
                                                     <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
+                                                        class="inline-flex items-center rounded-full bg-rose-100 px-3 py-1 text-xs font-medium text-rose-800"
+                                                    >
                                                         Forgot Checkout
                                                     </span>
                                                 @endif
+
                                                 @if ($hasEarly || $hasEarlyPerm)
                                                     <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                        class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800"
+                                                    >
                                                         Early Checkout
                                                     </span>
                                                 @endif
                                             </div>
                                         @else
                                             <span
-                                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $statusColor }}">
-                                                {{ ucwords(str_replace('_', ' ', $statusText)) }}
+                                                class="{{ $statusColor }} inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
+                                            >
+                                                {{ ucwords(str_replace("_", " ", $statusText)) }}
                                             </span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="max-w-[200px] line-clamp-2 text-sm text-gray-600 break-words"
-                                            title="{{ $permission?->reason ?? '-' }}">
-                                            {{ $permission?->reason ?? '-' }}
+                                        <div
+                                            class="line-clamp-2 max-w-[200px] text-sm break-words text-gray-600"
+                                            title="{{ $permission?->reason ?? "-" }}"
+                                        >
+                                            {{ $permission?->reason ?? "-" }}
                                         </div>
                                     </td>
                                 </tr>
@@ -469,11 +552,13 @@
                                     <td colspan="9" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center">
                                             <div
-                                                class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                                <i data-lucide="search-x" class="w-8 h-8 text-gray-400"></i>
+                                                class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100"
+                                            >
+                                                <i data-lucide="search-x" class="h-8 w-8 text-gray-400"></i>
                                             </div>
-                                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Tidak ada data</h3>
-                                            <p class="text-gray-500">Tidak ada riwayat absensi untuk tanggal yang dipilih.
+                                            <h3 class="mb-2 text-lg font-semibold text-gray-900">Tidak ada data</h3>
+                                            <p class="text-gray-500">
+                                                Tidak ada riwayat absensi untuk tanggal yang dipilih.
                                             </p>
                                         </div>
                                     </td>
@@ -485,9 +570,9 @@
             </div>
 
             <!-- Enhanced Pagination -->
-            @if (method_exists($schedules, 'links'))
-                <div class="flex justify-center mt-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            @if (method_exists($schedules, "links"))
+                <div class="mt-6 flex justify-center">
+                    <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                         {{ $schedules->links() }}
                     </div>
                 </div>

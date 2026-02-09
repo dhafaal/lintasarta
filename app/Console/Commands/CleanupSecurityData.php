@@ -2,13 +2,13 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
+use App\Models\AuthActivityLog;
+use App\Models\BlockedIP;
+use App\Models\LoginAttempt;
 use App\Models\RememberToken;
 use App\Models\UserSession;
-use App\Models\LoginAttempt;
-use App\Models\BlockedIP;
-use App\Models\AuthActivityLog;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class CleanupSecurityData extends Command
 {
@@ -31,8 +31,9 @@ class CleanupSecurityData extends Command
      */
     public function handle()
     {
-        if (!$this->option('force') && !$this->confirm('This will clean up expired security data. Continue?')) {
+        if (! $this->option('force') && ! $this->confirm('This will clean up expired security data. Continue?')) {
             $this->info('Cleanup cancelled.');
+
             return 0;
         }
 
@@ -59,6 +60,7 @@ class CleanupSecurityData extends Command
         $this->info("Cleaned up {$oldLogs} old activity logs.");
 
         $this->info('Security data cleanup completed successfully!');
+
         return 0;
     }
 
@@ -68,7 +70,7 @@ class CleanupSecurityData extends Command
     private function cleanupInactiveSessions(): int
     {
         $sessionTimeout = config('session.lifetime', 120); // minutes
-        $cutoffTime = Carbon::now()->subMinutes($sessionTimeout);
+        $cutoffTime     = Carbon::now()->subMinutes($sessionTimeout);
 
         return UserSession::where('last_activity', '<', $cutoffTime)->delete();
     }
@@ -79,7 +81,7 @@ class CleanupSecurityData extends Command
     private function cleanupOldLoginAttempts(): int
     {
         $retentionDays = config('security.audit_logging.retention_days', 90);
-        $cutoffTime = Carbon::now()->subDays($retentionDays);
+        $cutoffTime    = Carbon::now()->subDays($retentionDays);
 
         return LoginAttempt::where('created_at', '<', $cutoffTime)->delete();
     }
@@ -100,7 +102,7 @@ class CleanupSecurityData extends Command
     private function cleanupOldActivityLogs(): int
     {
         $retentionDays = config('security.audit_logging.retention_days', 90);
-        $cutoffTime = Carbon::now()->subDays($retentionDays);
+        $cutoffTime    = Carbon::now()->subDays($retentionDays);
 
         return AuthActivityLog::where('created_at', '<', $cutoffTime)->delete();
     }

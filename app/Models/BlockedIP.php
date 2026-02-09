@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 class BlockedIP extends Model
 {
@@ -23,9 +23,9 @@ class BlockedIP extends Model
     ];
 
     protected $casts = [
-        'blocked_at' => 'datetime',
+        'blocked_at'    => 'datetime',
         'blocked_until' => 'datetime',
-        'is_permanent' => 'boolean',
+        'is_permanent'  => 'boolean',
     ];
 
     /**
@@ -38,12 +38,12 @@ class BlockedIP extends Model
         return self::updateOrCreate(
             ['ip_address' => $ipAddress],
             [
-                'reason' => $reason,
+                'reason'          => $reason,
                 'failed_attempts' => $failedAttempts,
-                'blocked_at' => now(),
-                'blocked_until' => $blockedUntil,
-                'is_permanent' => $isPermanent,
-                'blocked_by' => $blockedBy,
+                'blocked_at'      => now(),
+                'blocked_until'   => $blockedUntil,
+                'is_permanent'    => $isPermanent,
+                'blocked_by'      => $blockedBy,
             ]
         );
     }
@@ -55,7 +55,7 @@ class BlockedIP extends Model
     {
         $blockedIP = self::where('ip_address', $ipAddress)->first();
 
-        if (!$blockedIP) {
+        if (! $blockedIP) {
             return false;
         }
 
@@ -72,6 +72,7 @@ class BlockedIP extends Model
         // Block has expired, remove it
         if ($blockedIP->blocked_until && Carbon::now()->gte($blockedIP->blocked_until)) {
             $blockedIP->delete();
+
             return false;
         }
 
@@ -103,12 +104,12 @@ class BlockedIP extends Model
         if ($failedAttempts >= 10 && $failedAttempts < 20) {
             return self::blockIP($ipAddress, 'Auto-blocked: Too many failed login attempts', $failedAttempts, 60);
         }
-        
+
         // Block for 24 hours after 20 failed attempts
         if ($failedAttempts >= 20 && $failedAttempts < 50) {
             return self::blockIP($ipAddress, 'Auto-blocked: Excessive failed login attempts', $failedAttempts, 1440);
         }
-        
+
         // Permanent block after 50 failed attempts
         if ($failedAttempts >= 50) {
             return self::blockIP($ipAddress, 'Auto-blocked: Suspected brute force attack', $failedAttempts, null, true);
@@ -122,7 +123,7 @@ class BlockedIP extends Model
      */
     public function getTimeRemaining(): ?int
     {
-        if ($this->is_permanent || !$this->blocked_until) {
+        if ($this->is_permanent || ! $this->blocked_until) {
             return null;
         }
 

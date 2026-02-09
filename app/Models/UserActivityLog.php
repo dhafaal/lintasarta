@@ -43,15 +43,15 @@ class UserActivityLog extends Model
         ?string $description = null
     ): void {
         self::create([
-            'user_id' => auth()->id(),
-            'action' => $action,
-            'resource_type' => $resourceType,
-            'resource_id' => $resourceId,
-            'resource_name' => $resourceName,
+            'user_id'         => auth()->id(),
+            'action'          => $action,
+            'resource_type'   => $resourceType,
+            'resource_id'     => $resourceId,
+            'resource_name'   => $resourceName,
             'additional_data' => $additionalData,
-            'description' => $description,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
+            'description'     => $description,
+            'ip_address'      => request()->ip(),
+            'user_agent'      => request()->userAgent(),
         ]);
     }
 
@@ -61,11 +61,11 @@ class UserActivityLog extends Model
     public function getFormattedActionAttribute(): string
     {
         return match ($this->action) {
-            'checkin' => 'Check In',
-            'checkout' => 'Check Out',
+            'checkin'            => 'Check In',
+            'checkout'           => 'Check Out',
             'request_permission' => 'Mengajukan Izin',
-            'absent' => 'Menandai Alpha',
-            default => ucfirst($this->action),
+            'absent'             => 'Menandai Alpha',
+            default              => ucfirst($this->action),
         };
     }
 
@@ -77,7 +77,7 @@ class UserActivityLog extends Model
         return match ($this->resource_type) {
             'attendances' => 'Kehadiran',
             'permissions' => 'Izin',
-            default => ucfirst($this->resource_type ?? ''),
+            default       => ucfirst($this->resource_type ?? ''),
         };
     }
 }

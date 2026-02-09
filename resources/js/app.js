@@ -1,6 +1,17 @@
 import './bootstrap';
 import './calendar.js';
-import { createIcons, Home, Users, Calendar, Clock, CheckCircle, CalendarDays, LogOut, User, ChevronDown } from 'lucide';
+import {
+    createIcons,
+    Home,
+    Users,
+    Calendar,
+    Clock,
+    CheckCircle,
+    CalendarDays,
+    LogOut,
+    User,
+    ChevronDown,
+} from 'lucide';
 
 createIcons({
     icons: {
@@ -11,8 +22,8 @@ createIcons({
         CheckCircle,
         CalendarDays,
         LogOut,
-        User
-    }
+        User,
+    },
 });
 
 // import '@fullcalendar/core/styles/index.css';

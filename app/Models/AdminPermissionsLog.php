@@ -65,20 +65,20 @@ class AdminPermissionsLog extends Model
         ?string $description = null
     ): void {
         self::create([
-            'user_id' => Auth::id(),
-            'action' => $action,
-            'permission_id' => $permissionId,
-            'target_user_id' => $targetUserId,
-            'target_user_name' => $targetUserName,
-            'permission_type' => $permissionType,
+            'user_id'           => Auth::id(),
+            'action'            => $action,
+            'permission_id'     => $permissionId,
+            'target_user_id'    => $targetUserId,
+            'target_user_name'  => $targetUserName,
+            'permission_type'   => $permissionType,
             'permission_reason' => $permissionReason,
-            'permission_date' => $permissionDate,
-            'old_status' => $oldStatus,
-            'new_status' => $newStatus,
-            'additional_data' => $additionalData,
-            'description' => $description,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
+            'permission_date'   => $permissionDate,
+            'old_status'        => $oldStatus,
+            'new_status'        => $newStatus,
+            'additional_data'   => $additionalData,
+            'description'       => $description,
+            'ip_address'        => request()->ip(),
+            'user_agent'        => request()->userAgent(),
         ]);
     }
 
@@ -89,8 +89,8 @@ class AdminPermissionsLog extends Model
     {
         return match ($this->action) {
             'approve' => 'Menyetujui',
-            'reject' => 'Menolak',
-            default => ucfirst($this->action),
+            'reject'  => 'Menolak',
+            default   => ucfirst($this->action),
         };
     }
 
@@ -101,8 +101,8 @@ class AdminPermissionsLog extends Model
     {
         return match ($this->action) {
             'approve' => 'success',
-            'reject' => 'danger',
-            default => 'secondary',
+            'reject'  => 'danger',
+            default   => 'secondary',
         };
     }
 
@@ -112,9 +112,9 @@ class AdminPermissionsLog extends Model
     public function getPermissionTypeColorAttribute(): string
     {
         return match ($this->permission_type) {
-            'izin' => 'primary',
+            'izin'  => 'primary',
             'sakit' => 'warning',
-            'cuti' => 'info',
+            'cuti'  => 'info',
             default => 'secondary',
         };
     }
@@ -127,8 +127,8 @@ class AdminPermissionsLog extends Model
         return match ($this->new_status) {
             'approved' => 'success',
             'rejected' => 'danger',
-            'pending' => 'warning',
-            default => 'secondary',
+            'pending'  => 'warning',
+            default    => 'secondary',
         };
     }
 

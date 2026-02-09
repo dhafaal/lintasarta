@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Location;
+use Illuminate\Database\Seeder;
 
 class LocationSeeder extends Seeder
 {
@@ -15,10 +14,10 @@ class LocationSeeder extends Seeder
     {
         $locations = [
             [
-                'name' => 'TBS',
-                'latitude' => -6.2909797985328195,
-                'longitude' => 106.78580949615643,
-                'radius' => 500,
+                'name'       => 'TBS',
+                'latitude'   => -6.2909797985328195,
+                'longitude'  => 106.78580949615643,
+                'radius'     => 500,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

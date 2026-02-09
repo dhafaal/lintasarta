@@ -12,12 +12,12 @@ class DashboardRedirectController extends Controller
      */
     public function redirectToDashboard(Request $request)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
         $user = Auth::user();
-        
+
         // Log dashboard access
         \App\Models\AuthActivityLog::log(
             'dashboard_access',
@@ -40,20 +40,20 @@ class DashboardRedirectController extends Controller
      */
     public function validateRoleAccess(Request $request, string $requiredRole)
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
         $user = Auth::user();
-        
+
         // Check if user has required role or higher privileges
         $roleHierarchy = [
-            'User' => 1,
+            'User'     => 1,
             'Operator' => 2,
-            'Admin' => 3,
+            'Admin'    => 3,
         ];
 
-        $userLevel = $roleHierarchy[$user->role] ?? 0;
+        $userLevel     = $roleHierarchy[$user->role]   ?? 0;
         $requiredLevel = $roleHierarchy[$requiredRole] ?? 999;
 
         if ($userLevel < $requiredLevel) {
@@ -80,7 +80,7 @@ class DashboardRedirectController extends Controller
     {
         return match ($role) {
             'Admin'    => 'admin.dashboard',
-            'Operator' => 'operator.dashboard', 
+            'Operator' => 'operator.dashboard',
             'User'     => 'user.dashboard',
             default    => 'login',
         };

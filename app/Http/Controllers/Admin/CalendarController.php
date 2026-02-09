@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
-use App\Models\User; // kalau kamu ambil dari user
-use App\Models\Shift; // kalau kamu pakai model Shift
+use App\Models\Shift;
+use App\Models\User;
+use Carbon\Carbon; // kalau kamu ambil dari user
+use Illuminate\Http\Request; // kalau kamu pakai model Shift
 
 class CalendarController extends Controller
 {
@@ -14,7 +14,7 @@ class CalendarController extends Controller
     {
         // Ambil bulan & tahun dari request, default bulan & tahun sekarang
         $month = (int) $request->input('month', now()->month);
-        $year = (int) $request->input('year', now()->year);
+        $year  = (int) $request->input('year', now()->year);
 
         // Total hari dalam bulan tersebut
         $daysInMonth = Carbon::create($year, $month)->daysInMonth;
@@ -27,8 +27,8 @@ class CalendarController extends Controller
 
         foreach ($users as $user) {
             $row = [
-                'nama' => $user->name,
-                'shifts' => [],
+                'nama'      => $user->name,
+                'shifts'    => [],
                 'total_jam' => 0,
             ];
 
@@ -59,10 +59,10 @@ class CalendarController extends Controller
         }
 
         return view('admin.schedules.index', [
-            'month' => $month,
-            'year' => $year,
+            'month'       => $month,
+            'year'        => $year,
             'daysInMonth' => $daysInMonth,
-            'data' => $data,
+            'data'        => $data,
         ]);
     }
 }

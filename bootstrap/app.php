@@ -13,11 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'block.suspicious.ips' => \App\Http\Middleware\BlockSuspiciousIPs::class,
-            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-            'auth.secure' => \App\Http\Middleware\SecureSessionMiddleware::class,
-            'redirect.dashboard' => \App\Http\Middleware\RedirectToDashboard::class,
+            'guest'                => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'auth.secure'          => \App\Http\Middleware\SecureSessionMiddleware::class,
+            'redirect.dashboard'   => \App\Http\Middleware\RedirectToDashboard::class,
         ]);
-        
+
         // Apply middleware globally to web routes
         $middleware->web(append: [
             \App\Http\Middleware\BlockSuspiciousIPs::class,

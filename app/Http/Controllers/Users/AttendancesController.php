@@ -7,27 +7,26 @@ use App\Models\Attendance;
 use App\Models\Location;
 use App\Models\Schedules;
 use App\Models\UserActivityLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class AttendancesController extends Controller
 {
-
     public function index()
     {
         $user = Auth::user();
         // Auto-close any open attendances that have passed the grace deadline
         $this->autoCheckoutMissedShifts($user->id);
-        $now = now();
+        $now   = now();
         $today = $now->toDateString();
 
         // Resolve the active schedule considering cross-midnight night shifts
         $activeSchedule = $this->getActiveScheduleForNow($user->id);
 
         // If no active schedule window, try to find the latest open attendance (checked-in, not yet checked-out)
-        if (!$activeSchedule) {
+        if (! $activeSchedule) {
             $openAttendance = Attendance::with(['schedule.shift'])
                 ->where('user_id', $user->id)
                 ->whereNotNull('check_in_time')
@@ -35,7 +34,7 @@ class AttendancesController extends Controller
                 ->whereHas('schedule', function ($q) use ($today) {
                     // Limit search to yesterday and today for performance and correctness
                     $q->whereDate('schedule_date', '>=', Carbon::parse($today)->subDay()->toDateString())
-                      ->whereDate('schedule_date', '<=', $today);
+                        ->whereDate('schedule_date', '<=', $today);
                 })
                 ->orderByDesc('check_in_time')
                 ->first();
@@ -79,10 +78,10 @@ class AttendancesController extends Controller
     {
         $request->validate([
             'schedule_id' => 'required|exists:schedules,id',
-            'reason' => 'required|string|min:5',
+            'reason'      => 'required|string|min:5',
         ]);
 
-        $user = Auth::user();
+        $user     = Auth::user();
         $schedule = Schedules::with('shift')->findOrFail($request->schedule_id);
 
         // Ensure user owns schedule
@@ -95,7 +94,7 @@ class AttendancesController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$attendance || !$attendance->check_in_time) {
+        if (! $attendance || ! $attendance->check_in_time) {
             return back()->with('error', 'Anda belum check-in.');
         }
         if ($attendance->check_out_time) {
@@ -109,18 +108,24 @@ class AttendancesController extends Controller
             ->get();
         $lastEnd = null;
         foreach ($sameDaySchedules as $sch) {
-            if (!$sch->shift) continue;
-            $date = \Carbon\Carbon::parse($sch->schedule_date);
-            $startT = \Carbon\Carbon::parse($sch->shift->start_time);
-            $endT   = \Carbon\Carbon::parse($sch->shift->end_time);
+            if (! $sch->shift) {
+                continue;
+            }
+            $date    = \Carbon\Carbon::parse($sch->schedule_date);
+            $startT  = \Carbon\Carbon::parse($sch->shift->start_time);
+            $endT    = \Carbon\Carbon::parse($sch->shift->end_time);
             $startDT = $date->copy()->setTimeFrom($startT);
             $endDT   = $date->copy()->setTimeFrom($endT);
-            if ($endDT->lt($startDT)) { $endDT->addDay(); }
-            if (!$lastEnd || $endDT->gt($lastEnd)) { $lastEnd = $endDT->copy(); }
+            if ($endDT->lt($startDT)) {
+                $endDT->addDay();
+            }
+            if (! $lastEnd || $endDT->gt($lastEnd)) {
+                $lastEnd = $endDT->copy();
+            }
         }
 
         $now = now();
-        if ($lastEnd && $now->gte($lastEnd)) {  
+        if ($lastEnd && $now->gte($lastEnd)) {
             return back()->with('error', 'Waktu shift sudah selesai, lakukan check-out biasa.');
         }
 
@@ -129,7 +134,7 @@ class AttendancesController extends Controller
             ->where('type', 'izin')
             ->where('status', 'pending')
             ->where('reason', 'like', '[EARLY_CHECKOUT]%')
-            ->whereHas('schedule', function($q) use ($schedule) {
+            ->whereHas('schedule', function ($q) use ($schedule) {
                 $q->whereDate('schedule_date', $schedule->schedule_date);
             })
             ->first();
@@ -138,11 +143,11 @@ class AttendancesController extends Controller
         }
 
         $permission = \App\Models\Permissions::create([
-            'user_id' => $user->id,
+            'user_id'     => $user->id,
             'schedule_id' => $schedule->id,
-            'type' => 'izin',
-            'reason' => '[EARLY_CHECKOUT] ' . $request->reason,
-            'status' => 'pending',
+            'type'        => 'izin',
+            'reason'      => '[EARLY_CHECKOUT] '.$request->reason,
+            'status'      => 'pending',
         ]);
 
         // Log user activity
@@ -152,9 +157,9 @@ class AttendancesController extends Controller
             $permission->id,
             "Request Early Checkout - {$schedule->schedule_date}",
             [
-                'schedule_id' => $schedule->id,
-                'type' => 'izin',
-                'reason' => $request->reason,
+                'schedule_id'             => $schedule->id,
+                'type'                    => 'izin',
+                'reason'                  => $request->reason,
                 'requested_checkout_time' => $now->toDateTimeString(),
             ],
             'Mengajukan checkout lebih cepat'
@@ -162,12 +167,13 @@ class AttendancesController extends Controller
 
         return back()->with('success', 'Pengajuan checkout lebih cepat telah dikirim dan menunggu persetujuan admin.');
     }
+
     public function checkin(Request $request)
     {
         $request->validate([
             'schedule_id' => 'required|exists:schedules,id',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+            'latitude'    => 'required|numeric',
+            'longitude'   => 'required|numeric',
         ]);
 
         // Before processing a new check-in, auto-close any missed checkouts from previous shifts
@@ -175,7 +181,7 @@ class AttendancesController extends Controller
 
         // Cek apakah user memiliki izin (pending/approved) untuk tanggal ini
         // Jika izin ditolak (rejected), user harus bisa check-in
-        $schedule = Schedules::findOrFail($request->schedule_id);
+        $schedule           = Schedules::findOrFail($request->schedule_id);
         $existingPermission = \App\Models\Permissions::where('user_id', Auth::id())
             ->whereHas('schedule', function ($q) use ($schedule) {
                 $q->whereDate('schedule_date', $schedule->schedule_date);
@@ -185,20 +191,21 @@ class AttendancesController extends Controller
 
         if ($existingPermission) {
             $statusText = $existingPermission->status === 'pending' ? 'menunggu persetujuan' : 'telah disetujui';
+
             return back()->with('error', "Tidak dapat check-in karena Anda memiliki izin yang {$statusText} untuk tanggal ini.");
         }
 
         // Find valid location using smart detection
         $validLocation = $this->findValidLocation($request->latitude, $request->longitude);
-        
-        if (!$validLocation) {
+
+        if (! $validLocation) {
             return back()->with('error', 'Anda berada di luar radius dari semua lokasi yang tersedia. Pastikan Anda berada di salah satu lokasi kantor.');
         }
 
         // Validate check-in time with late tolerance and early restriction
         $validation = $this->validateCheckInTime($request->schedule_id);
 
-        if (!$validation['valid']) {
+        if (! $validation['valid']) {
             return back()->with('error', $validation['message']);
         }
 
@@ -212,29 +219,29 @@ class AttendancesController extends Controller
             if ($attendance->check_in_time) {
                 return back()->with('error', 'Anda sudah check-in sebelumnya.');
             }
-            
+
             // Jika ada tapi belum check-in (status alpha dari rejected permission), update
             $attendance->update([
-                'location_id' => $validLocation->id,
-                'status' => $validation['status'],
-                'is_late' => $validation['is_late'],
-                'late_minutes' => $validation['late_minutes'],
+                'location_id'   => $validLocation->id,
+                'status'        => $validation['status'],
+                'is_late'       => $validation['is_late'],
+                'late_minutes'  => $validation['late_minutes'],
                 'check_in_time' => now(),
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
+                'latitude'      => $request->latitude,
+                'longitude'     => $request->longitude,
             ]);
         } else {
             // Buat attendance baru
             $attendance = Attendance::create([
-                'schedule_id' => $request->schedule_id,
-                'user_id' => Auth::id(),
-                'location_id' => $validLocation->id,
-                'status' => $validation['status'],
-                'is_late' => $validation['is_late'],
-                'late_minutes' => $validation['late_minutes'],
+                'schedule_id'   => $request->schedule_id,
+                'user_id'       => Auth::id(),
+                'location_id'   => $validLocation->id,
+                'status'        => $validation['status'],
+                'is_late'       => $validation['is_late'],
+                'late_minutes'  => $validation['late_minutes'],
                 'check_in_time' => now(),
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
+                'latitude'      => $request->latitude,
+                'longitude'     => $request->longitude,
             ]);
         }
 
@@ -243,20 +250,22 @@ class AttendancesController extends Controller
             ->whereDate('schedule_date', $schedule->schedule_date)
             ->pluck('id');
         foreach ($sameDaySchedules as $sid) {
-            if ((int)$sid === (int)$request->schedule_id) { continue; }
+            if ((int) $sid === (int) $request->schedule_id) {
+                continue;
+            }
             $att = Attendance::firstOrNew([
                 'schedule_id' => $sid,
-                'user_id' => Auth::id(),
+                'user_id'     => Auth::id(),
             ]);
-            if (!$att->check_in_time) {
+            if (! $att->check_in_time) {
                 $att->fill([
-                    'location_id' => $validLocation->id,
-                    'status' => 'hadir', // untuk shift lain jangan tandai telat
-                    'is_late' => false,
-                    'late_minutes' => 0,
+                    'location_id'   => $validLocation->id,
+                    'status'        => 'hadir', // untuk shift lain jangan tandai telat
+                    'is_late'       => false,
+                    'late_minutes'  => 0,
                     'check_in_time' => now(),
-                    'latitude' => $request->latitude,
-                    'longitude' => $request->longitude,
+                    'latitude'      => $request->latitude,
+                    'longitude'     => $request->longitude,
                 ])->save();
             }
         }
@@ -268,14 +277,14 @@ class AttendancesController extends Controller
             $attendance->id,
             "Check In - {$schedule->shift->shift_name}",
             [
-                'schedule_id' => $schedule->id,
-                'status' => $validation['status'],
-                'is_late' => $validation['is_late'],
+                'schedule_id'  => $schedule->id,
+                'status'       => $validation['status'],
+                'is_late'      => $validation['is_late'],
                 'late_minutes' => $validation['late_minutes'],
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude
+                'latitude'     => $request->latitude,
+                'longitude'    => $request->longitude,
             ],
-            $validation['is_late'] ? "Check in terlambat {$validation['late_minutes']} menit" : "Check in tepat waktu"
+            $validation['is_late'] ? "Check in terlambat {$validation['late_minutes']} menit" : 'Check in tepat waktu'
         );
 
         return back()->with('success', $validation['message']);
@@ -285,8 +294,8 @@ class AttendancesController extends Controller
     {
         $request->validate([
             'schedule_id' => 'required|exists:schedules,id',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+            'latitude'    => 'required|numeric',
+            'longitude'   => 'required|numeric',
         ]);
 
         // Before proceeding, auto-close if past deadline
@@ -295,56 +304,66 @@ class AttendancesController extends Controller
         // Use transaction to ensure atomic multi-shift updates
         return DB::transaction(function () use ($request) {
             $schedule = Schedules::findOrFail($request->schedule_id);
-            
+
             // Get all same-day schedules and calculate shift times
             $sameDaySchedules = Schedules::with('shift')
                 ->where('user_id', Auth::id())
                 ->whereDate('schedule_date', $schedule->schedule_date)
                 ->get();
-            
-            $finalEnd = null; $firstStart = null;
+
+            $finalEnd   = null;
+            $firstStart = null;
             foreach ($sameDaySchedules as $sch) {
-                if (!$sch->shift) continue;
-                $date = Carbon::parse($sch->schedule_date);
-                $st = Carbon::parse($sch->shift->start_time);
-                $et = Carbon::parse($sch->shift->end_time);
+                if (! $sch->shift) {
+                    continue;
+                }
+                $date    = Carbon::parse($sch->schedule_date);
+                $st      = Carbon::parse($sch->shift->start_time);
+                $et      = Carbon::parse($sch->shift->end_time);
                 $startDT = $date->copy()->setTimeFrom($st);
                 $endDT   = $date->copy()->setTimeFrom($et);
-                if ($endDT->lt($startDT)) { $endDT->addDay(); }
-                if (!$firstStart || $startDT->lt($firstStart)) { $firstStart = $startDT->copy(); }
-                if (!$finalEnd || $endDT->gt($finalEnd)) { $finalEnd = $endDT->copy(); }
+                if ($endDT->lt($startDT)) {
+                    $endDT->addDay();
+                }
+                if (! $firstStart || $startDT->lt($firstStart)) {
+                    $firstStart = $startDT->copy();
+                }
+                if (! $finalEnd || $endDT->gt($finalEnd)) {
+                    $finalEnd = $endDT->copy();
+                }
             }
-            
+
             // Block checkout if past final end + grace period
             $graceHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
             if ($finalEnd && now()->gte($finalEnd->copy()->addHours($graceHours))) {
                 return back()->with('error', 'Batas waktu checkout (akhir shift + '.$graceHours.' jam) telah lewat. Attendance ditutup otomatis sebagai forgot checkout.');
             }
-            
+
             // Check for existing permissions (exclude approved early checkout)
             $existingPermission = \App\Models\Permissions::where('user_id', Auth::id())
                 ->whereHas('schedule', function ($q) use ($schedule) {
                     $q->whereDate('schedule_date', $schedule->schedule_date);
                 })
                 ->whereIn('status', ['pending', 'approved'])
-                ->where(function($q) {
+                ->where(function ($q) {
                     // Exclude approved early checkout permissions
                     $q->where('type', '!=', 'izin')
-                      ->orWhere(function($subQ) {
-                          $subQ->where('type', 'izin')
-                               ->where('reason', 'not like', '[EARLY_CHECKOUT]%');
-                      });
+                        ->orWhere(function ($subQ) {
+                            $subQ->where('type', 'izin')
+                                ->where('reason', 'not like', '[EARLY_CHECKOUT]%');
+                        });
                 })
                 ->first();
 
             if ($existingPermission) {
                 $statusText = $existingPermission->status === 'pending' ? 'menunggu persetujuan' : 'telah disetujui';
+
                 return back()->with('error', "Tidak dapat check-out karena Anda memiliki izin yang {$statusText} untuk tanggal ini.");
             }
 
             // Find valid location using smart detection
             $validLocation = $this->findValidLocation($request->latitude, $request->longitude);
-            if (!$validLocation) {
+            if (! $validLocation) {
                 return back()->with('error', 'Anda berada di luar radius dari semua lokasi yang tersedia. Pastikan Anda berada di salah satu lokasi kantor.');
             }
 
@@ -357,18 +376,18 @@ class AttendancesController extends Controller
                     ->where('type', 'izin')
                     ->where('status', 'approved')
                     ->where('reason', 'like', '[EARLY_CHECKOUT]%')
-                    ->whereHas('schedule', function($q) use ($schedule) {
+                    ->whereHas('schedule', function ($q) use ($schedule) {
                         $q->whereDate('schedule_date', $schedule->schedule_date);
                     })
                     ->first();
 
-                if (!$approvedEarlyCheckout) {
+                if (! $approvedEarlyCheckout) {
                     return back()->with('error', 'Anda tidak dapat checkout sebelum jam shift berakhir. Silakan gunakan fitur "Request Early Checkout" jika Anda perlu pulang lebih awal.');
                 }
             }
 
             // Collect open attendances for this day
-            $sameDayIds = $sameDaySchedules->pluck('id');
+            $sameDayIds      = $sameDaySchedules->pluck('id');
             $openAttendances = Attendance::whereIn('schedule_id', $sameDayIds)
                 ->where('user_id', Auth::id())
                 ->whereNotNull('check_in_time')
@@ -380,20 +399,23 @@ class AttendancesController extends Controller
             }
 
             // Update each open attendance safely (checkout time cannot precede check-in)
-            $affected = 0; $firstAttendance = null;
+            $affected        = 0;
+            $firstAttendance = null;
             foreach ($openAttendances as $att) {
                 $checkoutTime = $now;
                 if ($att->check_in_time && $checkoutTime->lt(Carbon::parse($att->check_in_time))) {
                     $checkoutTime = Carbon::parse($att->check_in_time); // clamp
                 }
                 $att->update([
-                    'location_id' => $validLocation->id,
-                    'check_out_time' => $checkoutTime,
-                    'latitude_checkout' => $request->latitude,
+                    'location_id'        => $validLocation->id,
+                    'check_out_time'     => $checkoutTime,
+                    'latitude_checkout'  => $request->latitude,
                     'longitude_checkout' => $request->longitude,
                 ]);
                 $affected++;
-                if (!$firstAttendance) { $firstAttendance = $att; }
+                if (! $firstAttendance) {
+                    $firstAttendance = $att;
+                }
             }
 
             // Log user activity (once)
@@ -404,15 +426,15 @@ class AttendancesController extends Controller
                     $firstAttendance->id,
                     "Check Out - Multi-shift di {$validLocation->name}",
                     [
-                        'schedule_ids' => $sameDayIds->values()->all(),
+                        'schedule_ids'         => $sameDayIds->values()->all(),
                         'affected_attendances' => $affected,
-                        'first_shift_start' => optional($firstStart)->toDateTimeString(),
-                        'final_shift_end' => optional($finalEnd)->toDateTimeString(),
-                        'check_out_time' => $now->toDateTimeString(),
-                        'location_id' => $validLocation->id,
-                        'location_name' => $validLocation->name,
-                        'latitude_checkout' => $request->latitude,
-                        'longitude_checkout' => $request->longitude,
+                        'first_shift_start'    => optional($firstStart)->toDateTimeString(),
+                        'final_shift_end'      => optional($finalEnd)->toDateTimeString(),
+                        'check_out_time'       => $now->toDateTimeString(),
+                        'location_id'          => $validLocation->id,
+                        'location_name'        => $validLocation->name,
+                        'latitude_checkout'    => $request->latitude,
+                        'longitude_checkout'   => $request->longitude,
                     ],
                     $affected > 1
                         ? "Check out berhasil untuk {$affected} shift pada {$now->format('H:i')} di {$validLocation->name}"
@@ -424,22 +446,21 @@ class AttendancesController extends Controller
         });
     }
 
-
     public function absent(Request $request)
     {
         $request->validate([
             'schedule_id' => 'required|exists:schedules,id',
         ]);
-        
+
         $schedule = Schedules::find($request->schedule_id);
-        $user = Auth::user();
+        $user     = Auth::user();
 
         $attendance = Attendance::firstOrCreate(
             ['schedule_id' => $schedule->id, 'user_id' => $user->id],
             ['status' => 'alpha']
         );
 
-        if (!$attendance->wasRecentlyCreated && $attendance->status === 'alpha') {
+        if (! $attendance->wasRecentlyCreated && $attendance->status === 'alpha') {
             return back()->with('error', 'Anda sudah ditandai Alpha.');
         }
 
@@ -453,7 +474,7 @@ class AttendancesController extends Controller
             "Alpha - {$schedule->shift->shift_name}",
             [
                 'schedule_id' => $schedule->id,
-                'status' => 'alpha'
+                'status'      => 'alpha',
             ],
             "Menandai diri sebagai Alpha pada {$schedule->schedule_date}"
         );
@@ -463,12 +484,12 @@ class AttendancesController extends Controller
 
     public function history(Request $request)
     {
-        $user = Auth::user();
-        $date = $request->input('date');
+        $user          = Auth::user();
+        $date          = $request->input('date');
         $selectedMonth = $request->input('month', now()->month);
-        $selectedYear = $request->input('year', now()->year);
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $selectedYear  = $request->input('year', now()->year);
+        $startDate     = $request->input('start_date');
+        $endDate       = $request->input('end_date');
 
         $today = now()->toDateString();
 
@@ -491,13 +512,13 @@ class AttendancesController extends Controller
             });
 
         // Apply date filters
-        if (!empty($date)) {
+        if (! empty($date)) {
             $scheduleQuery->whereDate('schedule_date', $date);
-            $attendanceQuery->whereHas('schedule', fn($q) => $q->whereDate('schedule_date', $date));
-            $permissionQuery->whereHas('schedule', fn($q) => $q->whereDate('schedule_date', $date));
+            $attendanceQuery->whereHas('schedule', fn ($q) => $q->whereDate('schedule_date', $date));
+            $permissionQuery->whereHas('schedule', fn ($q) => $q->whereDate('schedule_date', $date));
         }
         // Apply month and year filter
-        else if ($request->has('month') || $request->has('year')) {
+        elseif ($request->has('month') || $request->has('year')) {
             $scheduleQuery->whereMonth('schedule_date', $selectedMonth)
                 ->whereYear('schedule_date', $selectedYear);
             $attendanceQuery->whereHas('schedule', function ($q) use ($selectedMonth, $selectedYear) {
@@ -510,7 +531,7 @@ class AttendancesController extends Controller
             });
         }
         // Apply date range filter
-        else if ($startDate && $endDate) {
+        elseif ($startDate && $endDate) {
             $scheduleQuery->whereBetween('schedule_date', [$startDate, $endDate]);
             $attendanceQuery->whereHas('schedule', function ($q) use ($startDate, $endDate) {
                 $q->whereBetween('schedule_date', [$startDate, $endDate]);
@@ -520,7 +541,7 @@ class AttendancesController extends Controller
             });
         }
 
-        $schedules = $scheduleQuery->orderBy('schedule_date', 'desc')->get();
+        $schedules   = $scheduleQuery->orderBy('schedule_date', 'desc')->get();
         $attendances = $attendanceQuery->get();
         $permissions = $permissionQuery->get();
 
@@ -542,38 +563,39 @@ class AttendancesController extends Controller
     private function findValidLocation($userLat, $userLng)
     {
         // Only consider active locations
-        $locations = Location::where('is_active', true)->get();
+        $locations      = Location::where('is_active', true)->get();
         $validLocations = [];
-        $debugInfo = [];
+        $debugInfo      = [];
 
         foreach ($locations as $location) {
-            $distance = $this->calculateDistance($userLat, $userLng, $location->latitude, $location->longitude);
+            $distance    = $this->calculateDistance($userLat, $userLng, $location->latitude, $location->longitude);
             $debugInfo[] = "{$location->name}: {$distance}m (radius: {$location->radius}m)";
-            
+
             if ($distance <= $location->radius) {
                 $validLocations[] = [
                     'location' => $location,
-                    'distance' => $distance
+                    'distance' => $distance,
                 ];
             }
         }
 
         // Sort by distance (closest first)
-        usort($validLocations, function($a, $b) {
+        usort($validLocations, function ($a, $b) {
             return $a['distance'] <=> $b['distance'];
         });
 
         if (count($validLocations) > 0) {
             $closestLocation = $validLocations[0]['location'];
-            $distance = $validLocations[0]['distance'];
-            
+            $distance        = $validLocations[0]['distance'];
+
             // Store debug info in session
             session()->flash('location_debug', "Check-in di {$closestLocation->name}: {$distance}m dari lokasi");
-            
+
             return $closestLocation;
         } else {
             // Store debug info for invalid location
-            session()->flash('location_debug', 'Jarak ke lokasi: ' . implode(', ', $debugInfo));
+            session()->flash('location_debug', 'Jarak ke lokasi: '.implode(', ', $debugInfo));
+
             return null;
         }
     }
@@ -585,38 +607,38 @@ class AttendancesController extends Controller
     {
         $earthRadius = 6371000; // Earth radius in meters
 
-        $lat1Rad = deg2rad($lat1);
-        $lat2Rad = deg2rad($lat2);
+        $lat1Rad     = deg2rad($lat1);
+        $lat2Rad     = deg2rad($lat2);
         $deltaLatRad = deg2rad($lat2 - $lat1);
         $deltaLngRad = deg2rad($lng2 - $lng1);
 
-        $a = sin($deltaLatRad / 2) * sin($deltaLatRad / 2) +
-             cos($lat1Rad) * cos($lat2Rad) *
-             sin($deltaLngRad / 2) * sin($deltaLngRad / 2);
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        $a = sin($deltaLatRad / 2) * sin($deltaLatRad / 2) + cos($lat1Rad) * cos($lat2Rad) * sin($deltaLngRad / 2) * sin($deltaLngRad / 2);
+        $c = 2                     * atan2(sqrt($a), sqrt(1 - $a));
 
         return round($earthRadius * $c);
     }
 
     private function autoCheckoutMissedShifts(int $userId): int
     {
-        $now = Carbon::now();
+        $now        = Carbon::now();
         $graceHours = (int) env('FORGOT_CHECKOUT_GRACE_HOURS', 6);
-        $open = Attendance::with(['schedule.shift'])
+        $open       = Attendance::with(['schedule.shift'])
             ->where('user_id', $userId)
             ->whereNotNull('check_in_time')
             ->whereNull('check_out_time')
             ->get();
 
         // Group open attendances by schedule_date
-        $grouped = $open->groupBy(function($att){
+        $grouped = $open->groupBy(function ($att) {
             return optional($att->schedule)->schedule_date;
         });
 
         $totalAffected = 0;
 
         foreach ($grouped as $scheduleDate => $atts) {
-            if (!$scheduleDate) { continue; }
+            if (! $scheduleDate) {
+                continue;
+            }
 
             // Compute FINAL end across all shifts for this user on this date (multi-shift, cross-midnight aware)
             $sameDaySchedules = Schedules::with('shift')
@@ -626,34 +648,49 @@ class AttendancesController extends Controller
 
             $finalEnd = null;
             foreach ($sameDaySchedules as $sch) {
-                if (!$sch->shift) continue;
-                $date = Carbon::parse($sch->schedule_date);
-                $st = Carbon::parse($sch->shift->start_time);
-                $et = Carbon::parse($sch->shift->end_time);
+                if (! $sch->shift) {
+                    continue;
+                }
+                $date    = Carbon::parse($sch->schedule_date);
+                $st      = Carbon::parse($sch->shift->start_time);
+                $et      = Carbon::parse($sch->shift->end_time);
                 $startDT = $date->copy()->setTimeFrom($st);
                 $endDT   = $date->copy()->setTimeFrom($et);
-                if ($endDT->lt($startDT)) { $endDT->addDay(); }
-                if (!$finalEnd || $endDT->gt($finalEnd)) { $finalEnd = $endDT->copy(); }
+                if ($endDT->lt($startDT)) {
+                    $endDT->addDay();
+                }
+                if (! $finalEnd || $endDT->gt($finalEnd)) {
+                    $finalEnd = $endDT->copy();
+                }
             }
 
-            if (!$finalEnd) { continue; }
+            if (! $finalEnd) {
+                continue;
+            }
 
             // Apply grace for ALL categories, after the FINAL end (configurable)
             $threshold = $finalEnd->copy()->addHours($graceHours);
-            if ($now->lt($threshold)) { continue; }
+            if ($now->lt($threshold)) {
+                continue;
+            }
 
             // Update all open attendances for this date
-            $affected = 0; $firstId = null;
+            $affected = 0;
+            $firstId  = null;
             foreach ($atts as $att) {
                 // Clamp to not precede check-in
-                $cin = Carbon::parse($att->check_in_time);
+                $cin        = Carbon::parse($att->check_in_time);
                 $checkoutAt = $cin->gt($finalEnd) ? $cin : $finalEnd;
 
                 $att->update([
                     'check_out_time' => $checkoutAt,
-                    'status' => 'forgot_checkout',
+                    'status'         => 'forgot_checkout',
                 ]);
-                $affected++; $totalAffected++; if (!$firstId) { $firstId = $att->id; }
+                $affected++;
+                $totalAffected++;
+                if (! $firstId) {
+                    $firstId = $att->id;
+                }
             }
 
             // Log once per user/date
@@ -664,10 +701,10 @@ class AttendancesController extends Controller
                     $firstId,
                     'Auto Forgot Checkout (final end + 6h)',
                     [
-                        'user_id' => $userId,
-                        'schedule_date' => $scheduleDate,
-                        'final_shift_end' => $finalEnd->toDateTimeString(),
-                        'applied_after_hours' => $graceHours,
+                        'user_id'              => $userId,
+                        'schedule_date'        => $scheduleDate,
+                        'final_shift_end'      => $finalEnd->toDateTimeString(),
+                        'applied_after_hours'  => $graceHours,
                         'affected_attendances' => $affected,
                     ],
                     'Sistem menandai forgot checkout setelah grace dari akhir shift terakhir hari tersebut'
@@ -685,8 +722,8 @@ class AttendancesController extends Controller
      */
     private function getActiveScheduleForNow(int $userId)
     {
-        $now = Carbon::now();
-        $today = $now->toDateString();
+        $now       = Carbon::now();
+        $today     = $now->toDateString();
         $yesterday = $now->copy()->subDay()->toDateString();
 
         // Load schedules for today and yesterday with shifts
@@ -696,12 +733,14 @@ class AttendancesController extends Controller
             ->whereDate('schedule_date', '<=', $today)
             ->get();
 
-        $active = null;
+        $active    = null;
         $activeEnd = null;
 
         foreach ($candidates as $sch) {
-            if (!$sch->shift) { continue; }
-            $date = Carbon::parse($sch->schedule_date);
+            if (! $sch->shift) {
+                continue;
+            }
+            $date   = Carbon::parse($sch->schedule_date);
             $startT = Carbon::parse($sch->shift->start_time);
             $endT   = Carbon::parse($sch->shift->end_time);
 
@@ -717,8 +756,8 @@ class AttendancesController extends Controller
             if ($now->betweenIncluded($startDT, $endDT)) {
                 // Prioritize shift that ends latest (for overlapping shifts)
                 // This ensures night shift stays active until its end_time
-                if (!$activeEnd || $endDT->gt($activeEnd)) {
-                    $active = $sch;
+                if (! $activeEnd || $endDT->gt($activeEnd)) {
+                    $active    = $sch;
                     $activeEnd = $endDT->copy();
                 }
             }
@@ -726,16 +765,18 @@ class AttendancesController extends Controller
 
         // If no active schedule found in today/yesterday, check if there's an ongoing night shift
         // from yesterday that hasn't ended yet (for shifts that cross midnight)
-        if (!$active) {
-            $twoDaysAgo = $now->copy()->subDays(2)->toDateString();
+        if (! $active) {
+            $twoDaysAgo    = $now->copy()->subDays(2)->toDateString();
             $oldCandidates = Schedules::with(['shift', 'permissions', 'attendances'])
                 ->where('user_id', $userId)
                 ->whereDate('schedule_date', $twoDaysAgo)
                 ->get();
 
             foreach ($oldCandidates as $sch) {
-                if (!$sch->shift) { continue; }
-                $date = Carbon::parse($sch->schedule_date);
+                if (! $sch->shift) {
+                    continue;
+                }
+                $date   = Carbon::parse($sch->schedule_date);
                 $startT = Carbon::parse($sch->shift->start_time);
                 $endT   = Carbon::parse($sch->shift->end_time);
 
@@ -748,8 +789,8 @@ class AttendancesController extends Controller
 
                 // Check if this old shift is still active (hasn't reached end_time)
                 if ($now->betweenIncluded($startDT, $endDT)) {
-                    if (!$activeEnd || $endDT->gt($activeEnd)) {
-                        $active = $sch;
+                    if (! $activeEnd || $endDT->gt($activeEnd)) {
+                        $active    = $sch;
                         $activeEnd = $endDT->copy();
                     }
                 }
@@ -762,14 +803,14 @@ class AttendancesController extends Controller
     private function validateCheckInTime($scheduleId, $checkInTime = null)
     {
         $checkInTime = $checkInTime ?: now();
-        $schedule = Schedules::with('shift')->find($scheduleId);
+        $schedule    = Schedules::with('shift')->find($scheduleId);
 
-        if (!$schedule || !$schedule->shift) {
+        if (! $schedule || ! $schedule->shift) {
             return ['valid' => false, 'message' => 'Schedule atau shift tidak ditemukan'];
         }
 
         // Gabungkan tanggal schedule dengan waktu shift
-        $scheduleDate = Carbon::parse($schedule->schedule_date);
+        $scheduleDate   = Carbon::parse($schedule->schedule_date);
         $shiftStartTime = Carbon::parse($schedule->shift->start_time);
 
         // Buat datetime lengkap untuk shift start
@@ -778,37 +819,37 @@ class AttendancesController extends Controller
         $checkIn = Carbon::parse($checkInTime);
 
         // Tentukan status berdasarkan waktu check-in dengan kompensasi 5 menit
-        $status = 'hadir';
-        $isLate = false;
+        $status      = 'hadir';
+        $isLate      = false;
         $lateMinutes = 0;
-        
+
         // Tambahkan kompensasi 5 menit ke waktu shift start
-        $graceTime = 5; // menit kompensasi
+        $graceTime           = 5; // menit kompensasi
         $shiftStartWithGrace = $shiftStart->copy()->addMinutes($graceTime);
 
         if ($checkIn->gt($shiftStartWithGrace)) {
             // Hitung berapa menit telat dari waktu shift asli (tanpa grace time)
             $lateMinutes = (int) $shiftStart->diffInMinutes($checkIn);
-            $status = 'telat';
-            $isLate = true;
+            $status      = 'telat';
+            $isLate      = true;
         }
 
         return [
-            'valid' => true,
-            'status' => $status,
-            'is_late' => $isLate,
+            'valid'        => true,
+            'status'       => $status,
+            'is_late'      => $isLate,
             'late_minutes' => $lateMinutes,
-            'message' => $isLate
-                ? 'Anda terlambat ' . $lateMinutes . ' menit.'
-                : ($checkIn->gt($shiftStart) 
-                    ? 'Check-in berhasil dalam batas toleransi 5 menit.' 
-                    : 'Check-in berhasil tepat waktu.')
+            'message'      => $isLate
+                ? 'Anda terlambat '.$lateMinutes.' menit.'
+                : ($checkIn->gt($shiftStart)
+                    ? 'Check-in berhasil dalam batas toleransi 5 menit.'
+                    : 'Check-in berhasil tepat waktu.'),
         ];
     }
 
     public function getUpcomingSchedules()
     {
-        $user = Auth::user();
+        $user  = Auth::user();
         $today = now()->toDateString();
 
         try {
@@ -825,36 +866,37 @@ class AttendancesController extends Controller
                 $hasBlockingPermission = $schedule->permissions()
                     ->whereIn('status', ['pending', 'approved'])
                     ->exists();
-                return !$hasBlockingPermission;
+
+                return ! $hasBlockingPermission;
             });
 
             \Log::info('Upcoming schedules query', [
-                'user_id' => $user->id,
-                'today' => $today,
-                'all_schedules_count' => $allSchedules->count(),
+                'user_id'                  => $user->id,
+                'today'                    => $today,
+                'all_schedules_count'      => $allSchedules->count(),
                 'filtered_schedules_count' => $schedules->count(),
-                'all_schedules' => $allSchedules->toArray(),
-                'filtered_schedules' => $schedules->values()->toArray()
+                'all_schedules'            => $allSchedules->toArray(),
+                'filtered_schedules'       => $schedules->values()->toArray(),
             ]);
 
             return response()->json([
                 'schedules' => $schedules->values(), // Reset array keys
-                'debug' => [
-                    'user_id' => $user->id,
-                    'today' => $today,
-                    'all_count' => $allSchedules->count(),
-                    'filtered_count' => $schedules->count()
-                ]
+                'debug'     => [
+                    'user_id'        => $user->id,
+                    'today'          => $today,
+                    'all_count'      => $allSchedules->count(),
+                    'filtered_count' => $schedules->count(),
+                ],
             ]);
         } catch (\Exception $e) {
             \Log::error('Error loading upcoming schedules', [
-                'error' => $e->getMessage(),
-                'user_id' => $user->id
+                'error'   => $e->getMessage(),
+                'user_id' => $user->id,
             ]);
 
             return response()->json([
-                'error' => 'Failed to load schedules',
-                'message' => $e->getMessage()
+                'error'   => 'Failed to load schedules',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\UsersExport;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\UsersExport;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class FeatureController extends Controller
 {
@@ -32,10 +32,10 @@ class FeatureController extends Controller
     public function store(Request $request)
     {
         User::create($request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users',
+            'name'     => 'required',
+            'email'    => 'required|email|unique:users',
             'password' => 'required',
-            'role' => 'required',
+            'role'     => 'required',
         ]));
 
         return redirect()->route('admin.users.index')->with('success', 'User created');
@@ -49,10 +49,10 @@ class FeatureController extends Controller
     public function update(Request $request, User $user)
     {
         $data = $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'name'     => 'required',
+            'email'    => 'required|email|unique:users,email,'.$user->id,
             'password' => 'nullable',
-            'role' => 'required',
+            'role'     => 'required',
         ]);
 
         if ($request->password) {
@@ -69,6 +69,7 @@ class FeatureController extends Controller
     public function destroy(User $user)
     {
         $user->delete();
+
         return back()->with('success', 'User deleted');
     }
 
@@ -78,6 +79,7 @@ class FeatureController extends Controller
 
         if ($ids) {
             User::whereIn('id', $ids)->delete();
+
             return back()->with('success', 'Selected users deleted');
         }
 
@@ -87,7 +89,8 @@ class FeatureController extends Controller
     public function exportPdf()
     {
         $users = User::all();
-        $pdf = Pdf::loadView('admin.users.pdf', compact('users'));
+        $pdf   = Pdf::loadView('admin.users.pdf', compact('users'));
+
         return $pdf->download('users.pdf');
     }
 

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->boolean('is_permanent')->default(false);
             $table->string('blocked_by')->nullable(); // admin yang memblokir
             $table->timestamps();
-            
+
             $table->index(['ip_address', 'blocked_until']);
             $table->index('is_permanent');
         });

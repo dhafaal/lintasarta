@@ -28,8 +28,8 @@ class AdminSchedulesLog extends Model
     ];
 
     protected $casts = [
-        'old_values' => 'array',
-        'new_values' => 'array',
+        'old_values'    => 'array',
+        'new_values'    => 'array',
         'schedule_date' => 'date',
     ];
 
@@ -69,19 +69,19 @@ class AdminSchedulesLog extends Model
         ?string $description = null
     ): void {
         self::create([
-            'user_id' => Auth::id(),
-            'action' => $action,
-            'schedule_id' => $scheduleId,
-            'target_user_id' => $targetUserId,
+            'user_id'          => Auth::id(),
+            'action'           => $action,
+            'schedule_id'      => $scheduleId,
+            'target_user_id'   => $targetUserId,
             'target_user_name' => $targetUserName,
-            'shift_id' => $shiftId,
-            'shift_name' => $shiftName,
-            'schedule_date' => $scheduleDate,
-            'old_values' => $oldValues,
-            'new_values' => $newValues,
-            'description' => $description,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
+            'shift_id'         => $shiftId,
+            'shift_name'       => $shiftName,
+            'schedule_date'    => $scheduleDate,
+            'old_values'       => $oldValues,
+            'new_values'       => $newValues,
+            'description'      => $description,
+            'ip_address'       => request()->ip(),
+            'user_agent'       => request()->userAgent(),
         ]);
     }
 
@@ -94,7 +94,7 @@ class AdminSchedulesLog extends Model
             'create' => 'Membuat',
             'update' => 'Mengubah',
             'delete' => 'Menghapus',
-            default => ucfirst($this->action),
+            default  => ucfirst($this->action),
         };
     }
 
@@ -107,7 +107,7 @@ class AdminSchedulesLog extends Model
             'create' => 'success',
             'update' => 'warning',
             'delete' => 'danger',
-            default => 'secondary',
+            default  => 'secondary',
         };
     }
 

@@ -1,0 +1,12 @@
+node_modules
+vendor
+public/build
+storage
+bootstrap/cache
+coverage
+**/*.min.js
+**/*.min.css
+resources/views/admin/dashboard.md
+resources/views/admin/dashboard.blade.php
+resources/views/admin/shifts/edit.blade.php
+resources/views/layouts/coordinator.blade.php

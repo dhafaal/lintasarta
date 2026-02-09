@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuthActivityLog;
+use App\Models\BlockedIP;
+use App\Models\LoginAttempt;
+use App\Models\RememberToken;
+use App\Models\User;
+use App\Models\UserSession;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Carbon\Carbon;
-use App\Models\User;
-use App\Models\AuthActivityLog;
-use App\Models\LoginAttempt;
-use App\Models\BlockedIP;
-use App\Models\UserSession;
-use App\Models\RememberToken;
 
 class AuthController extends Controller
 {
@@ -40,7 +40,7 @@ class AuthController extends Controller
 
         $ipAddress = $request->ip();
         $userAgent = $request->userAgent();
-        $email = $request->email;
+        $email     = $request->email;
 
         // Check if IP is blocked
         if (BlockedIP::isBlocked($ipAddress)) {
@@ -52,9 +52,9 @@ class AuthController extends Controller
                 null,
                 "Login attempt from blocked IP: {$ipAddress}"
             );
-            
+
             return back()->withErrors([
-                'email' => 'Your IP address is temporarily blocked due to suspicious activity. Please try again later.'
+                'email' => 'Your IP address is temporarily blocked due to suspicious activity. Please try again later.',
             ]);
         }
 
@@ -65,12 +65,12 @@ class AuthController extends Controller
                 'locked_out_login_attempt',
                 'blocked',
                 $email,
-                null,   
+                null,
                 "Login attempt for locked out email: {$email}"
             );
-            
+
             return back()->withErrors([
-                'email' => "Account temporarily locked due to too many failed attempts. Please try again in {$timeRemaining} minutes."
+                'email' => "Account temporarily locked due to too many failed attempts. Please try again in {$timeRemaining} minutes.",
             ]);
         }
 
@@ -78,7 +78,7 @@ class AuthController extends Controller
         $this->ensureIsNotRateLimited($request);
 
         $credentials = $request->only('email', 'password');
-        $remember = $request->filled('remember');
+        $remember    = $request->filled('remember');
 
         if (Auth::attempt($credentials, false)) { // Don't use Laravel's built-in remember
             $request->session()->regenerate();
@@ -88,13 +88,13 @@ class AuthController extends Controller
 
             // Record successful login attempt
             LoginAttempt::record($email, $ipAddress, $userAgent, true);
-            
+
             // Clear previous failed attempts for this email
             LoginAttempt::clearSuccessfulAttempts($email);
 
             // Create or update user session
             $deviceFingerprint = UserSession::generateDeviceFingerprint($userAgent, $ipAddress);
-            $userSession = UserSession::createOrUpdate(
+            $userSession       = UserSession::createOrUpdate(
                 $user->id,
                 $request->session()->getId(),
                 $ipAddress,
@@ -109,13 +109,13 @@ class AuthController extends Controller
 
             // Check for suspicious activity
             $suspiciousActivities = UserSession::checkSuspiciousActivity($user->id);
-            if (!empty($suspiciousActivities)) {
+            if (! empty($suspiciousActivities)) {
                 AuthActivityLog::log(
                     'suspicious_login',
                     'warning',
                     $email,
                     $user->id,
-                    "Suspicious login detected: " . implode(', ', $suspiciousActivities)
+                    'Suspicious login detected: '.implode(', ', $suspiciousActivities)
                 );
             }
 
@@ -125,14 +125,15 @@ class AuthController extends Controller
                 'success',
                 $request->email,
                 $user->id,
-                "Login berhasil sebagai {$user->role}" . (!$userSession->is_trusted_device ? ' (New Device)' : '') . ($remember ? ' (Remember Me)' : '')
+                "Login berhasil sebagai {$user->role}".(! $userSession->is_trusted_device ? ' (New Device)' : '').($remember ? ' (Remember Me)' : '')
             );
 
             // Redirect ke intended URL atau dashboard sesuai role
             $intendedUrl = session('url.intended');
-            
+
             if ($intendedUrl && $this->isValidIntendedUrl($intendedUrl, $user->role)) {
                 session()->forget('url.intended');
+
                 return redirect($intendedUrl);
             }
 
@@ -148,7 +149,7 @@ class AuthController extends Controller
 
         // Record failed login attempt
         LoginAttempt::record($email, $ipAddress, $userAgent, false, 'Invalid credentials');
-        
+
         // Check if we should auto-block this IP
         $ipFailedAttempts = LoginAttempt::getFailedAttemptsForIP($ipAddress, 60);
         BlockedIP::autoBlockIP($ipAddress, $ipFailedAttempts);
@@ -189,7 +190,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $user = Auth::user();
+        $user      = Auth::user();
         $sessionId = $request->session()->getId();
         $ipAddress = $request->ip();
         $userAgent = $request->userAgent();
@@ -275,7 +276,7 @@ class AuthController extends Controller
 
         if (! $record || $record->otp != $request->otp || Carbon::now()->greaterThan($record->expires_at)) {
             return back()->withErrors(['otp' => 'OTP tidak valid atau sudah expired'])
-                         ->with(['step' => 'otp', 'email' => $request->email]);
+                ->with(['step' => 'otp', 'email' => $request->email]);
         }
 
         return back()->with([
@@ -306,7 +307,7 @@ class AuthController extends Controller
                 'success',
                 $request->email,
                 $user->id,
-                "Password berhasil direset"
+                'Password berhasil direset'
             );
         }
 
@@ -325,7 +326,7 @@ class AuthController extends Controller
 
         // Generate new secure token
         $tokenData = RememberToken::generateToken($userId, $ipAddress, $userAgent);
-        
+
         // Set secure cookie (30 days)
         cookie()->queue(cookie(
             'remember_token',
@@ -344,35 +345,35 @@ class AuthController extends Controller
             'success',
             null,
             $userId,
-            'Remember me token created for device: ' . substr(hash('sha256', $userAgent), 0, 8)
+            'Remember me token created for device: '.substr(hash('sha256', $userAgent), 0, 8)
         );
     }
 
     public function logoutAllSessions(Request $request)
     {
         $user = Auth::user();
-        
+
         if ($user) {
             // Remove all user sessions
             UserSession::where('user_id', $user->id)->delete();
-            
+
             // Revoke all remember tokens
             RememberToken::revokeAllForUser($user->id);
-            
+
             // Log security action
             AuthActivityLog::log(
                 'logout_all_sessions',
                 'success',
                 $user->email,
                 $user->id,
-                "All sessions terminated by user request"
+                'All sessions terminated by user request'
             );
         }
 
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        
+
         cookie()->queue(cookie()->forget('remember_token'));
 
         return redirect()->route('login')->with('status', 'Semua sesi telah dihentikan. Silakan login kembali.');
@@ -384,8 +385,8 @@ class AuthController extends Controller
     public function getActiveSessions(Request $request)
     {
         $user = Auth::user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -395,13 +396,13 @@ class AuthController extends Controller
             ->get()
             ->map(function ($session) use ($request) {
                 return [
-                    'id' => $session->id,
-                    'ip_address' => $session->ip_address,
-                    'user_agent' => $session->user_agent,
-                    'is_current' => $session->session_id === $request->session()->getId(),
-                    'is_trusted' => $session->is_trusted_device,
+                    'id'            => $session->id,
+                    'ip_address'    => $session->ip_address,
+                    'user_agent'    => $session->user_agent,
+                    'is_current'    => $session->session_id === $request->session()->getId(),
+                    'is_trusted'    => $session->is_trusted_device,
                     'last_activity' => $session->last_activity->diffForHumans(),
-                    'location' => $this->getLocationFromIP($session->ip_address),
+                    'location'      => $this->getLocationFromIP($session->ip_address),
                 ];
             });
 
@@ -414,8 +415,8 @@ class AuthController extends Controller
     public function terminateSession(Request $request, $sessionId)
     {
         $user = Auth::user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -423,7 +424,7 @@ class AuthController extends Controller
             ->where('id', $sessionId)
             ->first();
 
-        if (!$session) {
+        if (! $session) {
             return response()->json(['error' => 'Session not found'], 404);
         }
 
@@ -455,7 +456,7 @@ class AuthController extends Controller
         if ($ipAddress === '127.0.0.1' || $ipAddress === '::1') {
             return 'Local Machine';
         }
-        
+
         // You can integrate with services like MaxMind, IPinfo, etc.
         return 'Unknown Location';
     }
@@ -467,7 +468,7 @@ class AuthController extends Controller
     {
         // Parse URL to get path
         $path = parse_url($url, PHP_URL_PATH);
-        
+
         // Define role-based access patterns
         $rolePatterns = [
             'Admin' => [
@@ -486,7 +487,7 @@ class AuthController extends Controller
 
         // Check if path matches allowed patterns for user role
         $allowedPatterns = $rolePatterns[$userRole] ?? [];
-        
+
         foreach ($allowedPatterns as $pattern) {
             if (strpos($path, $pattern) === 0) {
                 return true;

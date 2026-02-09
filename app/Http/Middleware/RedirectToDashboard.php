@@ -18,15 +18,15 @@ class RedirectToDashboard
         // Jika user sudah login, redirect ke dashboard sesuai role
         if (Auth::check()) {
             $user = Auth::user();
-            
+
             // Cek apakah user mengakses root URL atau halaman yang tidak sesuai dengan role
             $currentRoute = $request->route()->getName();
-            
+
             // Jika mengakses root URL atau halaman yang tidak sesuai
             if ($currentRoute === 'home' || $this->shouldRedirectToDashboard($currentRoute, $user->role)) {
                 return match ($user->role) {
                     'Admin'    => redirect()->route('admin.dashboard'),
-                    'Operator' => redirect()->route('operator.dashboard'), 
+                    'Operator' => redirect()->route('operator.dashboard'),
                     'User'     => redirect()->route('user.dashboard'),
                     default    => redirect()->route('login')->withErrors(['role' => 'Role tidak valid']),
                 };
@@ -48,7 +48,7 @@ class RedirectToDashboard
                 'user.dashboard',
             ],
             'Operator' => [
-                'admin.dashboard', 
+                'admin.dashboard',
                 'user.dashboard',
             ],
             'User' => [

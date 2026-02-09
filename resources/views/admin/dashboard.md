@@ -3,6 +3,7 @@
 @section('title', 'History Jadwal - ' . $user->name)
 
 @section('content')
+
 <div class="mx-auto p-6 bg-white rounded-xl shadow">
     <h2 class="text-2xl font-bold mb-4">Riwayat Jadwal - {{ $user->name }}</h2>
     <p class="text-gray-600 mb-6">Menampilkan semua jadwal yang sudah lewat.</p>
@@ -51,6 +52,7 @@
            Kembali
         </a>
     </div>
+
 </div>
 @endsection
 
@@ -62,19 +64,19 @@ Refrensi:
 @section('title', 'Daftar Users')
 
 @section('content')
-    <div class="min-h-screen bg-white sm:p-6 lg:p-8">
-        <div class="mx-auto space-y-8">
-            <!-- Enhanced Header Section -->
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users text-sky-700"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-700 tracking-tight">Manajemen Users</h1>
-                        <p class="text-gray-500 mt-1">Kelola semua pengguna dalam sistem</p>
-                    </div>
-                </div>
+<div class="min-h-screen bg-white sm:p-6 lg:p-8">
+<div class="mx-auto space-y-8">
+<!-- Enhanced Header Section -->
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm">
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users text-sky-700"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+</div>
+<div>
+<h1 class="text-3xl font-bold text-gray-700 tracking-tight">Manajemen Users</h1>
+<p class="text-gray-500 mt-1">Kelola semua pengguna dalam sistem</p>
+</div>
+</div>
 
                 <a href="{{ route('admin.users.create') }}"
                     class="inline-flex items-center px-6 py-3 bg-sky-600 hover:to-sky-700 text-white font-bold rounded-xl transition-all transform   focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm hover:shadow-md">
@@ -101,25 +103,25 @@ Refrensi:
                     </div>
                 </div>
 
-                <x-role-card 
-                    title="Admin" 
-                    :count="$countAdmin" 
+                <x-role-card
+                    title="Admin"
+                    :count="$countAdmin"
                     subtitle="Akses penuh"
                     bgColor="bg-gradient-to-br from-red-100 to-red-200"
                     icon='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 text-red-600 lucide lucide-shield-user-icon lucide-shield-user"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M6.376 18.91a6 6 0 0 1 11.249.003"/><circle cx="12" cy="11" r="4"/></svg>'
                 />
 
-                <x-role-card 
-                    title="Operator" 
-                    :count="$countOperator" 
+                <x-role-card
+                    title="Operator"
+                    :count="$countOperator"
                     subtitle="Kelola jadwal"
                     bgColor="bg-gradient-to-br from-blue-100 to-sky-100"
                     icon='<svg class="w-7 h-7 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>'
                 />
 
                 <x-role-card
-                    title="User" 
-                    :count="$countUser" 
+                    title="User"
+                    :count="$countUser"
                     subtitle="Akses terbatas"
                     bgColor="bg-gradient-to-br from-green-100 to-emerald-100"
                     icon='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 text-green-600 lucide lucide-circle-user-round-icon lucide-circle-user-round"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>'
@@ -254,4 +256,5 @@ Refrensi:
             </div>
         </div>
     </div>
+
 @endsection

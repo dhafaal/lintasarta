@@ -29,8 +29,9 @@ class SetupSecuritySystem extends Command
     {
         $this->info('🔐 Setting up Security System...');
 
-        if (!$this->option('force') && !$this->confirm('This will setup security system. Continue?')) {
+        if (! $this->option('force') && ! $this->confirm('This will setup security system. Continue?')) {
             $this->info('Setup cancelled.');
+
             return 0;
         }
 
@@ -47,6 +48,7 @@ class SetupSecuritySystem extends Command
         $this->displaySummary();
 
         $this->info('✅ Security system setup completed successfully!');
+
         return 0;
     }
 
@@ -68,13 +70,13 @@ class SetupSecuritySystem extends Command
 
         $missingTables = [];
         foreach ($requiredTables as $table) {
-            if (!Schema::hasTable($table)) {
+            if (! Schema::hasTable($table)) {
                 $missingTables[] = $table;
             }
         }
 
-        if (!empty($missingTables)) {
-            $this->error('❌ Missing required tables: ' . implode(', ', $missingTables));
+        if (! empty($missingTables)) {
+            $this->error('❌ Missing required tables: '.implode(', ', $missingTables));
             $this->info('Run: php artisan migrate');
             exit(1);
         }
@@ -90,7 +92,7 @@ class SetupSecuritySystem extends Command
         $this->info('⚙️ Setting up configuration...');
 
         // Check if security config exists
-        if (!file_exists(config_path('security.php'))) {
+        if (! file_exists(config_path('security.php'))) {
             $this->error('❌ Security config file not found at config/security.php');
             exit(1);
         }
@@ -137,7 +139,7 @@ class SetupSecuritySystem extends Command
 
             $this->info('✅ Performance indexes created.');
         } catch (\Exception $e) {
-            $this->warn('⚠️ Some indexes may already exist: ' . $e->getMessage());
+            $this->warn('⚠️ Some indexes may already exist: '.$e->getMessage());
         }
     }
 
@@ -149,7 +151,7 @@ class SetupSecuritySystem extends Command
         try {
             // Check if index exists
             $indexExists = DB::select("SHOW INDEX FROM {$table} WHERE Key_name = ?", [$indexName]);
-            
+
             if (empty($indexExists)) {
                 DB::statement("CREATE INDEX {$indexName} ON {$table}({$columns})");
                 $this->info("  ✓ Created index: {$indexName}");
@@ -157,7 +159,7 @@ class SetupSecuritySystem extends Command
                 $this->info("  - Index already exists: {$indexName}");
             }
         } catch (\Exception $e) {
-            $this->warn("  ⚠️ Could not create index {$indexName}: " . $e->getMessage());
+            $this->warn("  ⚠️ Could not create index {$indexName}: ".$e->getMessage());
         }
     }
 
@@ -172,7 +174,7 @@ class SetupSecuritySystem extends Command
 
         // Count records safely
         $stats = [];
-        
+
         try {
             $stats['Users'] = DB::table('users')->count();
         } catch (\Exception $e) {

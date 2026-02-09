@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 class LoginAttempt extends Model
 {
@@ -21,7 +21,7 @@ class LoginAttempt extends Model
     ];
 
     protected $casts = [
-        'successful' => 'boolean',
+        'successful'   => 'boolean',
         'attempted_at' => 'datetime',
     ];
 
@@ -39,12 +39,12 @@ class LoginAttempt extends Model
     public static function record(string $email, string $ipAddress, string $userAgent, bool $successful, ?string $failureReason = null): self
     {
         return self::create([
-            'email' => $email,
-            'ip_address' => $ipAddress,
-            'user_agent' => $userAgent,
-            'successful' => $successful,
+            'email'          => $email,
+            'ip_address'     => $ipAddress,
+            'user_agent'     => $userAgent,
+            'successful'     => $successful,
             'failure_reason' => $failureReason,
-            'attempted_at' => now(),
+            'attempted_at'   => now(),
         ]);
     }
 
@@ -76,6 +76,7 @@ class LoginAttempt extends Model
     public static function isEmailLockedOut(string $email, int $maxAttempts = 5, int $lockoutMinutes = 30): bool
     {
         $failedAttempts = self::getFailedAttemptsForEmail($email, $lockoutMinutes);
+
         return $failedAttempts >= $maxAttempts;
     }
 
@@ -85,6 +86,7 @@ class LoginAttempt extends Model
     public static function isIPLockedOut(string $ipAddress, int $maxAttempts = 10, int $lockoutMinutes = 60): bool
     {
         $failedAttempts = self::getFailedAttemptsForIP($ipAddress, $lockoutMinutes);
+
         return $failedAttempts >= $maxAttempts;
     }
 
@@ -109,12 +111,12 @@ class LoginAttempt extends Model
             ->orderBy('attempted_at', 'desc')
             ->first();
 
-        if (!$lastFailedAttempt) {
+        if (! $lastFailedAttempt) {
             return null;
         }
 
         $lockoutUntil = $lastFailedAttempt->attempted_at->addMinutes($lockoutMinutes);
-        $now = Carbon::now();
+        $now          = Carbon::now();
 
         if ($now->lt($lockoutUntil)) {
             return $now->diffInMinutes($lockoutUntil);

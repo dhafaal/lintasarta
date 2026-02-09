@@ -14,15 +14,15 @@ class EnsureUserIsAuthenticated
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             // Jika request adalah AJAX, return JSON response
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthenticated.'], 401);
             }
-            
+
             // Simpan intended URL untuk redirect setelah login
             session(['url.intended' => $request->url()]);
-            
+
             return redirect()->route('login')->with('message', 'Silakan login terlebih dahulu.');
         }
 

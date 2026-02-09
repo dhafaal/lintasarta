@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('failure_reason')->nullable();
             $table->timestamp('attempted_at');
             $table->timestamps();
-            
+
             $table->index(['email', 'attempted_at']);
             $table->index(['ip_address', 'attempted_at']);
             $table->index(['successful', 'attempted_at']);

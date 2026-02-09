@@ -1,314 +1,496 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lupa Password</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        @keyframes shake {
-            10%, 90% { transform: translateX(-2px); }
-            20%, 80% { transform: translateX(4px); }
-            30%, 50%, 70% { transform: translateX(-6px); }
-            40%, 60% { transform: translateX(6px); }
-        }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Lupa Password</title>
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <style>
+            @keyframes shake {
+                10%,
+                90% {
+                    transform: translateX(-2px);
+                }
+                20%,
+                80% {
+                    transform: translateX(4px);
+                }
+                30%,
+                50%,
+                70% {
+                    transform: translateX(-6px);
+                }
+                40%,
+                60% {
+                    transform: translateX(6px);
+                }
+            }
 
-        .animate-shake { animation: shake 0.6s; }
-    </style>
-</head>
-<body class="min-h-screen bg-radial from-sky-200 via-sky-100 to-white flex items-center justify-center overflow-hidden relative">
-    <div id="forgotPasswordBox" class="bg-white/90 backdrop-blur-lg border border-sky-200 shadow-2xl rounded-2xl p-8 w-full max-w-md">
-        <!-- Logo -->
-        <div class="flex justify-center mb-6">
-            <img src="/Logo-Lintasarta-new.webp" alt="Logo" class="h-20">
+            .animate-shake {
+                animation: shake 0.6s;
+            }
+        </style>
+    </head>
+    <body
+        class="relative flex min-h-screen items-center justify-center overflow-hidden bg-radial from-sky-200 via-sky-100 to-white"
+    >
+        <div
+            id="forgotPasswordBox"
+            class="w-full max-w-md rounded-2xl border border-sky-200 bg-white/90 p-8 shadow-2xl backdrop-blur-lg"
+        >
+            <!-- Logo -->
+            <div class="mb-6 flex justify-center">
+                <img src="/Logo-Lintasarta-new.webp" alt="Logo" class="h-20" />
+            </div>
+
+            <!-- Status / Alert -->
+            @if (session('status'))
+                <div class="animate-shake mb-4 rounded-lg bg-green-100 p-3 text-sm text-green-700">
+                    {{ session('status') }}
+                </div>
+            @endif
+
+            <!-- Error -->
+            @if ($errors->any())
+                <div id="serverError" class="animate-shake mb-4 rounded-lg bg-red-100 p-3 text-sm text-red-600">
+                    <ul class="list-inside list-disc">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @php
+                $step = session('step', 'email');
+                $email = session('email');
+            @endphp
+
+            <!-- Step 1: Masukkan Email -->
+            @if ($step === 'email')
+                <form
+                    id="emailForm"
+                    method="POST"
+                    action="{{ route('password.send.otp') }}"
+                    class="space-y-6"
+                    novalidate
+                >
+                    @csrf
+                    <div>
+                        <label for="email" class="mb-1 block text-sm font-semibold text-gray-700">Email</label>
+                        <input
+                            type="email"
+                            name="email"
+                            id="email"
+                            class="w-full rounded-lg border border-sky-300 bg-sky-50/50 px-4 py-2 transition duration-300 hover:shadow-md focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                            required
+                        />
+                        <p id="emailError" class="mt-1 hidden text-sm text-red-600"></p>
+                    </div>
+                    <button
+                        id="submitEmailBtn"
+                        type="submit"
+                        class="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E90FF] py-2 text-lg font-semibold text-white shadow-md transition duration-300 hover:bg-[#1E90FF]/90 hover:shadow-lg"
+                    >
+                        <span id="btnTextEmail">Kirim OTP</span>
+                        <svg
+                            id="loadingSpinnerEmail"
+                            class="hidden h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                fill="currentColor"
+                                d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
+                                opacity="0.25"
+                            />
+                            <path
+                                fill="currentColor"
+                                d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"
+                            >
+                                <animateTransform
+                                    attributeName="transform"
+                                    dur="0.75s"
+                                    repeatCount="indefinite"
+                                    type="rotate"
+                                    values="0 12 12;360 12 12"
+                                />
+                            </path>
+                        </svg>
+                    </button>
+                </form>
+            @endif
+
+            <!-- Step 2: Masukkan OTP -->
+            @if ($step === 'otp')
+                <form
+                    id="otpForm"
+                    method="POST"
+                    action="{{ route('password.verify.otp') }}"
+                    class="space-y-6"
+                    novalidate
+                >
+                    @csrf
+                    <input type="hidden" name="email" value="{{ $email }}" />
+                    <div>
+                        <label for="otp" class="mb-1 block text-sm font-semibold text-gray-700">Kode OTP</label>
+                        <input
+                            type="number"
+                            name="otp"
+                            id="otp"
+                            class="w-full rounded-lg border border-sky-300 bg-sky-50/50 px-4 py-2 transition duration-300 hover:shadow-md focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                            required
+                        />
+                        <p id="otpError" class="mt-1 hidden text-sm text-red-600"></p>
+                    </div>
+                    <button
+                        id="submitOtpBtn"
+                        type="submit"
+                        class="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E90FF] py-2 text-lg font-semibold text-white shadow-md transition duration-300 hover:bg-[#1E90FF]/90 hover:shadow-lg"
+                    >
+                        <span id="btnTextOtp">Verifikasi OTP</span>
+                        <svg
+                            id="loadingSpinnerOtp"
+                            class="hidden h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                fill="currentColor"
+                                d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
+                                opacity="0.25"
+                            />
+                            <path
+                                fill="currentColor"
+                                d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"
+                            >
+                                <animateTransform
+                                    attributeName="transform"
+                                    dur="0.75s"
+                                    repeatCount="indefinite"
+                                    type="rotate"
+                                    values="0 12 12;360 12 12"
+                                />
+                            </path>
+                        </svg>
+                    </button>
+                </form>
+            @endif
+
+            <!-- Step 3: Reset Password -->
+            @if ($step === 'reset')
+                <form id="resetForm" method="POST" action="{{ route('password.reset') }}" class="space-y-6" novalidate>
+                    @csrf
+                    <input type="hidden" name="email" value="{{ $email }}" />
+                    <div>
+                        <label for="password" class="mb-1 block text-sm font-semibold text-gray-700">
+                            Password Baru
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="password"
+                                name="password"
+                                id="password"
+                                class="w-full rounded-lg border border-sky-300 bg-sky-50/50 px-4 py-2 transition duration-300 hover:shadow-md focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                                required
+                            />
+                            <button
+                                type="button"
+                                id="togglePassword"
+                                class="absolute inset-y-0 right-2 flex h-full w-12 items-center justify-center text-gray-500 transition hover:text-sky-600"
+                            >
+                                <svg
+                                    id="eyeOpen"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="lucide lucide-eye scale-100 opacity-100 transition-all duration-300 ease-in-out"
+                                >
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <svg
+                                    id="eyeClosed"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="lucide lucide-eye-off hidden scale-90 opacity-0 transition-all duration-300 ease-in-out"
+                                >
+                                    <path
+                                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12 a21.86 21.86 0 0 1 5.17-6.88M9.9 4.24 A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8 a21.86 21.86 0 0 1-2.88 4.27M12 12 a3 3 0 0 1-3-3m6 0a3 3 0 0 1-3 3z"
+                                    />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p id="passwordError" class="mt-1 hidden text-sm text-red-600"></p>
+                    </div>
+                    <div>
+                        <label for="password_confirmation" class="mb-1 block text-sm font-semibold text-gray-700">
+                            Konfirmasi Password
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="password"
+                                name="password_confirmation"
+                                id="password_confirmation"
+                                class="w-full rounded-lg border border-sky-300 bg-sky-50/50 px-4 py-2 transition duration-300 hover:shadow-md focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                                required
+                            />
+                            <button
+                                type="button"
+                                id="toggleConfirmPassword"
+                                class="absolute inset-y-0 right-2 flex h-full w-12 items-center justify-center text-gray-500 transition hover:text-sky-600"
+                            >
+                                <svg
+                                    id="eyeOpenConfirm"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="lucide lucide-eye scale-100 opacity-100 transition-all duration-300 ease-in-out"
+                                >
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <svg
+                                    id="eyeClosedConfirm"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="lucide lucide-eye-off hidden scale-90 opacity-0 transition-all duration-300 ease-in-out"
+                                >
+                                    <path
+                                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12 a21.86 21.86 0 0 1 5.17-6.88M9.9 4.24 A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8 a21.86 21.86 0 0 1-2.88 4.27M12 12 a3 3 0 0 1-3-3m6 0a3 3 0 0 1-3 3z"
+                                    />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p id="passwordConfirmError" class="mt-1 hidden text-sm text-red-600"></p>
+                    </div>
+                    <button
+                        id="submitResetBtn"
+                        type="submit"
+                        class="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E90FF] py-2 text-lg font-semibold text-white shadow-md transition duration-300 hover:bg-[#1E90FF]/90 hover:shadow-lg"
+                    >
+                        <span id="btnTextReset">Reset Password</span>
+                        <svg
+                            id="loadingSpinnerReset"
+                            class="hidden h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                fill="currentColor"
+                                d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
+                                opacity="0.25"
+                            />
+                            <path
+                                fill="currentColor"
+                                d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"
+                            >
+                                <animateTransform
+                                    attributeName="transform"
+                                    dur="0.75s"
+                                    repeatCount="indefinite"
+                                    type="rotate"
+                                    values="0 12 12;360 12 12"
+                                />
+                            </path>
+                        </svg>
+                    </button>
+                </form>
+            @endif
         </div>
 
-        <!-- Status / Alert -->
-        @if (session('status'))
-            <div class="mb-4 p-3 rounded-lg bg-green-100 text-green-700 text-sm animate-shake">
-                {{ session('status') }}
-            </div>
-        @endif
+        <script>
+            // Email Form Validation
+            const emailForm = document.getElementById('emailForm');
+            if (emailForm) {
+                const forgotPasswordBox = document.getElementById('forgotPasswordBox');
+                const submitEmailBtn = document.getElementById('submitEmailBtn');
+                const btnTextEmail = document.getElementById('btnTextEmail');
+                const loadingSpinnerEmail = document.getElementById('loadingSpinnerEmail');
 
-        <!-- Error -->
-        @if ($errors->any())
-            <div id="serverError" class="mb-4 p-3 rounded-lg bg-red-100 text-red-600 text-sm animate-shake">
-                <ul class="list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+                emailForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    let valid = true;
 
-        @php
-            $step = session('step', 'email');
-            $email = session('email');
-        @endphp
+                    const email = document.getElementById('email');
+                    const emailError = document.getElementById('emailError');
 
-        <!-- Step 1: Masukkan Email -->
-        @if ($step === 'email')
-            <form id="emailForm" method="POST" action="{{ route('password.send.otp') }}" class="space-y-6" novalidate>
-                @csrf
-                <div>
-                    <label for="email" class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" id="email" class="w-full px-4 py-2 border border-sky-300 rounded-lg bg-sky-50/50 focus:outline-none focus:ring-2 focus:ring-sky-400 hover:shadow-md transition duration-300" required>
-                    <p id="emailError" class="hidden text-sm text-red-600 mt-1"></p>
-                </div>
-                <button id="submitEmailBtn" type="submit" class="w-full bg-[#1E90FF] text-white py-2 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg hover:bg-[#1E90FF]/90 transition duration-300 flex justify-center items-center gap-2">
-                    <span id="btnTextEmail">Kirim OTP</span>
-                    <svg id="loadingSpinnerEmail" class="hidden h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity="0.25" />
-                        <path fill="currentColor" d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z">
-                            <animateTransform attributeName="transform" dur="0.75s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
-                        </path>
-                    </svg>
-                </button>
-            </form>
-        @endif
+                    emailError.classList.add('hidden');
 
-        <!-- Step 2: Masukkan OTP -->
-        @if ($step === 'otp')
-            <form id="otpForm" method="POST" action="{{ route('password.verify.otp') }}" class="space-y-6" novalidate>
-                @csrf
-                <input type="hidden" name="email" value="{{ $email }}">
-                <div>
-                    <label for="otp" class="block text-sm font-semibold text-gray-700 mb-1">Kode OTP</label>
-                    <input type="number" name="otp" id="otp" class="w-full px-4 py-2 border border-sky-300 rounded-lg bg-sky-50/50 focus:outline-none focus:ring-2 focus:ring-sky-400 hover:shadow-md transition duration-300" required>
-                    <p id="otpError" class="hidden text-sm text-red-600 mt-1"></p>
-                </div>
-                <button id="submitOtpBtn" type="submit" class="w-full bg-[#1E90FF] text-white py-2 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg hover:bg-[#1E90FF]/90 transition duration-300 flex justify-center items-center gap-2">
-                    <span id="btnTextOtp">Verifikasi OTP</span>
-                    <svg id="loadingSpinnerOtp" class="hidden h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity="0.25" />
-                        <path fill="currentColor" d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z">
-                            <animateTransform attributeName="transform" dur="0.75s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
-                        </path>
-                    </svg>
-                </button>
-            </form>
-        @endif
+                    if (email.value.trim() === '') {
+                        emailError.textContent = 'Email is required.';
+                        emailError.classList.remove('hidden');
+                        valid = false;
+                    }
 
-        <!-- Step 3: Reset Password -->
-        @if ($step === 'reset')
-            <form id="resetForm" method="POST" action="{{ route('password.reset') }}" class="space-y-6" novalidate>
-                @csrf
-                <input type="hidden" name="email" value="{{ $email }}">
-                <div>
-                    <label for="password" class="block text-sm font-semibold text-gray-700 mb-1">Password Baru</label>
-                    <div class="relative">
-                        <input type="password" name="password" id="password" class="w-full px-4 py-2 border border-sky-300 rounded-lg bg-sky-50/50 focus:outline-none focus:ring-2 focus:ring-sky-400 hover:shadow-md transition duration-300" required>
-                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-2 flex items-center justify-center text-gray-500 hover:text-sky-600 transition w-12 h-full">
-                            <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye transition-all duration-300 ease-in-out opacity-100 scale-100">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg>
-                            <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off transition-all duration-300 ease-in-out opacity-0 scale-90 hidden">
-                                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12 a21.86 21.86 0 0 1 5.17-6.88M9.9 4.24 A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8 a21.86 21.86 0 0 1-2.88 4.27M12 12 a3 3 0 0 1-3-3m6 0a3 3 0 0 1-3 3z" />
-                                <line x1="1" y1="1" x2="23" y2="23" />
-                            </svg>
-                        </button>
-                    </div>
-                    <p id="passwordError" class="hidden text-sm text-red-600 mt-1"></p>
-                </div>
-                <div>
-                    <label for="password_confirmation" class="block text-sm font-semibold text-gray-700 mb-1">Konfirmasi Password</label>
-                    <div class="relative">
-                        <input type="password" name="password_confirmation" id="password_confirmation" class="w-full px-4 py-2 border border-sky-300 rounded-lg bg-sky-50/50 focus:outline-none focus:ring-2 focus:ring-sky-400 hover:shadow-md transition duration-300" required>
-                        <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 right-2 flex items-center justify-center text-gray-500 hover:text-sky-600 transition w-12 h-full">
-                            <svg id="eyeOpenConfirm" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye transition-all duration-300 ease-in-out opacity-100 scale-100">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg>
-                            <svg id="eyeClosedConfirm" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off transition-all duration-300 ease-in-out opacity-0 scale-90 hidden">
-                                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12 a21.86 21.86 0 0 1 5.17-6.88M9.9 4.24 A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8 a21.86 21.86 0 0 1-2.88 4.27M12 12 a3 3 0 0 1-3-3m6 0a3 3 0 0 1-3 3z" />
-                                <line x1="1" y1="1" x2="23" y2="23" />
-                            </svg>
-                        </button>
-                    </div>
-                    <p id="passwordConfirmError" class="hidden text-sm text-red-600 mt-1"></p>
-                </div>
-                <button id="submitResetBtn" type="submit" class="w-full bg-[#1E90FF] text-white py-2 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg hover:bg-[#1E90FF]/90 transition duration-300 flex justify-center items-center gap-2">
-                    <span id="btnTextReset">Reset Password</span>
-                    <svg id="loadingSpinnerReset" class="hidden h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity="0.25" />
-                        <path fill="currentColor" d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z">
-                            <animateTransform attributeName="transform" dur="0.75s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
-                        </path>
-                    </svg>
-                </button>
-            </form>
-        @endif
-    </div>
+                    if (!valid) {
+                        forgotPasswordBox.classList.add('animate-shake');
+                        setTimeout(() => forgotPasswordBox.classList.remove('animate-shake'), 600);
+                        return;
+                    }
 
-    <script>
-        // Email Form Validation
-        const emailForm = document.getElementById('emailForm');
-        if (emailForm) {
-            const forgotPasswordBox = document.getElementById('forgotPasswordBox');
-            const submitEmailBtn = document.getElementById('submitEmailBtn');
-            const btnTextEmail = document.getElementById('btnTextEmail');
-            const loadingSpinnerEmail = document.getElementById('loadingSpinnerEmail');
+                    btnTextEmail.textContent = 'Sending OTP...';
+                    loadingSpinnerEmail.classList.remove('hidden');
+                    submitEmailBtn.disabled = true;
 
-            emailForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                let valid = true;
+                    emailForm.submit();
+                });
+            }
 
-                const email = document.getElementById('email');
-                const emailError = document.getElementById('emailError');
+            // OTP Form Validation
+            const otpForm = document.getElementById('otpForm');
+            if (otpForm) {
+                const forgotPasswordBox = document.getElementById('forgotPasswordBox');
+                const submitOtpBtn = document.getElementById('submitOtpBtn');
+                const btnTextOtp = document.getElementById('btnTextOtp');
+                const loadingSpinnerOtp = document.getElementById('loadingSpinnerOtp');
 
-                emailError.classList.add('hidden');
+                otpForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    let valid = true;
 
-                if (email.value.trim() === '') {
-                    emailError.textContent = "Email is required.";
-                    emailError.classList.remove('hidden');
-                    valid = false;
-                }
+                    const otp = document.getElementById('otp');
+                    const otpError = document.getElementById('otpError');
 
-                if (!valid) {
-                    forgotPasswordBox.classList.add('animate-shake');
-                    setTimeout(() => forgotPasswordBox.classList.remove('animate-shake'), 600);
-                    return;
-                }
+                    otpError.classList.add('hidden');
 
-                btnTextEmail.textContent = "Sending OTP...";
-                loadingSpinnerEmail.classList.remove('hidden');
-                submitEmailBtn.disabled = true;
+                    if (otp.value.trim() === '') {
+                        otpError.textContent = 'Kode OTP is required.';
+                        otpError.classList.remove('hidden');
+                        valid = false;
+                    }
 
-                emailForm.submit();
-            });
-        }
+                    if (!valid) {
+                        forgotPasswordBox.classList.add('animate-shake');
+                        setTimeout(() => forgotPasswordBox.classList.remove('animate-shake'), 600);
+                        return;
+                    }
 
-        // OTP Form Validation
-        const otpForm = document.getElementById('otpForm');
-        if (otpForm) {
-            const forgotPasswordBox = document.getElementById('forgotPasswordBox');
-            const submitOtpBtn = document.getElementById('submitOtpBtn');
-            const btnTextOtp = document.getElementById('btnTextOtp');
-            const loadingSpinnerOtp = document.getElementById('loadingSpinnerOtp');
+                    btnTextOtp.textContent = 'Verifying OTP...';
+                    loadingSpinnerOtp.classList.remove('hidden');
+                    submitOtpBtn.disabled = true;
 
-            otpForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                let valid = true;
+                    otpForm.submit();
+                });
+            }
 
-                const otp = document.getElementById('otp');
-                const otpError = document.getElementById('otpError');
+            // Reset Password Form Validation
+            const resetForm = document.getElementById('resetForm');
+            if (resetForm) {
+                const forgotPasswordBox = document.getElementById('forgotPasswordBox');
+                const submitResetBtn = document.getElementById('submitResetBtn');
+                const btnTextReset = document.getElementById('btnTextReset');
+                const loadingSpinnerReset = document.getElementById('loadingSpinnerReset');
 
-                otpError.classList.add('hidden');
+                // Toggle show/hide password
+                const togglePassword = document.getElementById('togglePassword');
+                const passwordInput = document.getElementById('password');
+                const eyeOpen = document.getElementById('eyeOpen');
+                const eyeClosed = document.getElementById('eyeClosed');
 
-                if (otp.value.trim() === '') {
-                    otpError.textContent = "Kode OTP is required.";
-                    otpError.classList.remove('hidden');
-                    valid = false;
-                }
+                togglePassword.addEventListener('click', () => {
+                    const isPassword = passwordInput.type === 'password';
+                    passwordInput.type = isPassword ? 'text' : 'password';
 
-                if (!valid) {
-                    forgotPasswordBox.classList.add('animate-shake');
-                    setTimeout(() => forgotPasswordBox.classList.remove('animate-shake'), 600);
-                    return;
-                }
+                    if (isPassword) {
+                        eyeOpen.classList.add('opacity-0', 'scale-90', 'hidden');
+                        eyeClosed.classList.remove('hidden');
+                        setTimeout(() => eyeClosed.classList.remove('opacity-0', 'scale-90'), 10);
+                    } else {
+                        eyeClosed.classList.add('opacity-0', 'scale-90', 'hidden');
+                        eyeOpen.classList.remove('hidden');
+                        setTimeout(() => eyeOpen.classList.remove('opacity-0', 'scale-90'), 10);
+                    }
+                });
 
-                btnTextOtp.textContent = "Verifying OTP...";
-                loadingSpinnerOtp.classList.remove('hidden');
-                submitOtpBtn.disabled = true;
+                // Toggle show/hide confirm password
+                const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+                const confirmPasswordInput = document.getElementById('password_confirmation');
+                const eyeOpenConfirm = document.getElementById('eyeOpenConfirm');
+                const eyeClosedConfirm = document.getElementById('eyeClosedConfirm');
 
-                otpForm.submit();
-            });
-        }
+                toggleConfirmPassword.addEventListener('click', () => {
+                    const isConfirmPassword = confirmPasswordInput.type === 'password';
+                    confirmPasswordInput.type = isConfirmPassword ? 'text' : 'password';
 
-        // Reset Password Form Validation
-        const resetForm = document.getElementById('resetForm');
-        if (resetForm) {
-            const forgotPasswordBox = document.getElementById('forgotPasswordBox');
-            const submitResetBtn = document.getElementById('submitResetBtn');
-            const btnTextReset = document.getElementById('btnTextReset');
-            const loadingSpinnerReset = document.getElementById('loadingSpinnerReset');
+                    if (isConfirmPassword) {
+                        eyeOpenConfirm.classList.add('opacity-0', 'scale-90', 'hidden');
+                        eyeClosedConfirm.classList.remove('hidden');
+                        setTimeout(() => eyeClosedConfirm.classList.remove('opacity-0', 'scale-90'), 10);
+                    } else {
+                        eyeClosedConfirm.classList.add('opacity-0', 'scale-90', 'hidden');
+                        eyeOpenConfirm.classList.remove('hidden');
+                        setTimeout(() => eyeOpenConfirm.classList.remove('opacity-0', 'scale-90'), 10);
+                    }
+                });
 
-            // Toggle show/hide password
-            const togglePassword = document.getElementById('togglePassword');
-            const passwordInput = document.getElementById('password');
-            const eyeOpen = document.getElementById('eyeOpen');
-            const eyeClosed = document.getElementById('eyeClosed');
+                resetForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    let valid = true;
 
-            togglePassword.addEventListener('click', () => {
-                const isPassword = passwordInput.type === 'password';
-                passwordInput.type = isPassword ? 'text' : 'password';
+                    const password = document.getElementById('password');
+                    const passwordConfirm = document.getElementById('password_confirmation');
+                    const passwordError = document.getElementById('passwordError');
+                    const passwordConfirmError = document.getElementById('passwordConfirmError');
 
-                if (isPassword) {
-                    eyeOpen.classList.add('opacity-0', 'scale-90', 'hidden');
-                    eyeClosed.classList.remove('hidden');
-                    setTimeout(() => eyeClosed.classList.remove('opacity-0', 'scale-90'), 10);
-                } else {
-                    eyeClosed.classList.add('opacity-0', 'scale-90', 'hidden');
-                    eyeOpen.classList.remove('hidden');
-                    setTimeout(() => eyeOpen.classList.remove('opacity-0', 'scale-90'), 10);
-                }
-            });
+                    passwordError.classList.add('hidden');
+                    passwordConfirmError.classList.add('hidden');
 
-            // Toggle show/hide confirm password
-            const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
-            const confirmPasswordInput = document.getElementById('password_confirmation');
-            const eyeOpenConfirm = document.getElementById('eyeOpenConfirm');
-            const eyeClosedConfirm = document.getElementById('eyeClosedConfirm');
+                    if (password.value.trim() === '') {
+                        passwordError.textContent = 'Password is required.';
+                        passwordError.classList.remove('hidden');
+                        valid = false;
+                    }
 
-            toggleConfirmPassword.addEventListener('click', () => {
-                const isConfirmPassword = confirmPasswordInput.type === 'password';
-                confirmPasswordInput.type = isConfirmPassword ? 'text' : 'password';
+                    if (passwordConfirm.value.trim() === '') {
+                        passwordConfirmError.textContent = 'Konfirmasi Password is required.';
+                        passwordConfirmError.classList.remove('hidden');
+                        valid = false;
+                    }
 
-                if (isConfirmPassword) {
-                    eyeOpenConfirm.classList.add('opacity-0', 'scale-90', 'hidden');
-                    eyeClosedConfirm.classList.remove('hidden');
-                    setTimeout(() => eyeClosedConfirm.classList.remove('opacity-0', 'scale-90'), 10);
-                } else {
-                    eyeClosedConfirm.classList.add('opacity-0', 'scale-90', 'hidden');
-                    eyeOpenConfirm.classList.remove('hidden');
-                    setTimeout(() => eyeOpenConfirm.classList.remove('opacity-0', 'scale-90'), 10);
-                }
-            });
+                    if (password.value !== passwordConfirm.value) {
+                        passwordConfirmError.textContent = 'Password and confirmation must match.';
+                        passwordConfirmError.classList.remove('hidden');
+                        valid = false;
+                    }
 
-            resetForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                let valid = true;
+                    if (!valid) {
+                        forgotPasswordBox.classList.add('animate-shake');
+                        setTimeout(() => forgotPasswordBox.classList.remove('animate-shake'), 600);
+                        return;
+                    }
 
-                const password = document.getElementById('password');
-                const passwordConfirm = document.getElementById('password_confirmation');
-                const passwordError = document.getElementById('passwordError');
-                const passwordConfirmError = document.getElementById('passwordConfirmError');
+                    btnTextReset.textContent = 'Resetting Password...';
+                    loadingSpinnerReset.classList.remove('hidden');
+                    submitResetBtn.disabled = true;
 
-                passwordError.classList.add('hidden');
-                passwordConfirmError.classList.add('hidden');
-
-                if (password.value.trim() === '') {
-                    passwordError.textContent = "Password is required.";
-                    passwordError.classList.remove('hidden');
-                    valid = false;
-                }
-
-                if (passwordConfirm.value.trim() === '') {
-                    passwordConfirmError.textContent = "Konfirmasi Password is required.";
-                    passwordConfirmError.classList.remove('hidden');
-                    valid = false;
-                }
-
-                if (password.value !== passwordConfirm.value) {
-                    passwordConfirmError.textContent = "Password and confirmation must match.";
-                    passwordConfirmError.classList.remove('hidden');
-                    valid = false;
-                }
-
-                if (!valid) {
-                    forgotPasswordBox.classList.add('animate-shake');
-                    setTimeout(() => forgotPasswordBox.classList.remove('animate-shake'), 600);
-                    return;
-                }
-
-                btnTextReset.textContent = "Resetting Password...";
-                loadingSpinnerReset.classList.remove('hidden');
-                submitResetBtn.disabled = true;
-
-                resetForm.submit();
-            });
-        }
-    </script>
-</body>
+                    resetForm.submit();
+                });
+            }
+        </script>
+    </body>
 </html>

@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\LoginAttempt;
-use App\Models\BlockedIP;
-use App\Models\UserSession;
 use App\Models\AuthActivityLog;
-use Illuminate\Http\Request;
+use App\Models\BlockedIP;
+use App\Models\LoginAttempt;
+use App\Models\UserSession;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class SecurityController extends Controller
@@ -17,7 +17,7 @@ class SecurityController extends Controller
     {
         // Security statistics
         $stats = $this->getSecurityStats();
-        
+
         // Recent failed login attempts
         $recentFailedAttempts = LoginAttempt::where('successful', false)
             ->where('attempted_at', '>=', Carbon::now()->subHours(24))
@@ -56,15 +56,15 @@ class SecurityController extends Controller
     {
         $request->validate([
             'ip_address' => 'required|ip',
-            'reason' => 'required|string|max:255',
-            'duration' => 'required|in:1,24,168,permanent', // 1h, 24h, 1week, permanent
+            'reason'     => 'required|string|max:255',
+            'duration'   => 'required|in:1,24,168,permanent', // 1h, 24h, 1week, permanent
         ]);
 
-        $duration = $request->duration;
-        $blockMinutes = match($duration) {
-            '1' => 60,
-            '24' => 1440,
-            '168' => 10080,
+        $duration     = $request->duration;
+        $blockMinutes = match ($duration) {
+            '1'         => 60,
+            '24'        => 1440,
+            '168'       => 10080,
             'permanent' => null,
         };
 
@@ -148,7 +148,7 @@ class SecurityController extends Controller
             'user_id' => 'required|exists:users,id',
         ]);
 
-        $user = \App\Models\User::find($request->user_id);
+        $user            = \App\Models\User::find($request->user_id);
         $terminatedCount = UserSession::terminateUserSessions($request->user_id);
 
         // Log mass session termination
@@ -191,23 +191,23 @@ class SecurityController extends Controller
 
         return [
             // Login attempts
-            'total_attempts_24h' => LoginAttempt::where('attempted_at', '>=', $now->copy()->subDay())->count(),
+            'total_attempts_24h'      => LoginAttempt::where('attempted_at', '>=', $now->copy()->subDay())->count(),
             'successful_attempts_24h' => LoginAttempt::where('attempted_at', '>=', $now->copy()->subDay())->where('successful', true)->count(),
-            'failed_attempts_24h' => LoginAttempt::where('attempted_at', '>=', $now->copy()->subDay())->where('successful', false)->count(),
-            
+            'failed_attempts_24h'     => LoginAttempt::where('attempted_at', '>=', $now->copy()->subDay())->where('successful', false)->count(),
+
             // Blocked IPs
             'total_blocked_ips' => BlockedIP::count(),
-            'permanent_blocks' => BlockedIP::where('is_permanent', true)->count(),
-            'temporary_blocks' => BlockedIP::where('is_permanent', false)->count(),
-            
+            'permanent_blocks'  => BlockedIP::where('is_permanent', true)->count(),
+            'temporary_blocks'  => BlockedIP::where('is_permanent', false)->count(),
+
             // Active sessions
-            'active_sessions' => UserSession::where('last_activity', '>=', $now->copy()->subMinutes(30))->count(),
+            'active_sessions'    => UserSession::where('last_activity', '>=', $now->copy()->subMinutes(30))->count(),
             'total_sessions_24h' => UserSession::where('created_at', '>=', $now->copy()->subDay())->count(),
-            
+
             // Suspicious activities
             'suspicious_logins_24h' => AuthActivityLog::where('action', 'suspicious_login')->where('created_at', '>=', $now->copy()->subDay())->count(),
-            'blocked_attempts_24h' => AuthActivityLog::where('action', 'blocked_login_attempt')->where('created_at', '>=', $now->copy()->subDay())->count(),
-            
+            'blocked_attempts_24h'  => AuthActivityLog::where('action', 'blocked_login_attempt')->where('created_at', '>=', $now->copy()->subDay())->count(),
+
             // Top failed IPs
             'top_failed_ips' => LoginAttempt::where('attempted_at', '>=', $now->copy()->subWeek())
                 ->where('successful', false)

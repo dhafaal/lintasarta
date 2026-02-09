@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Shift;
 use App\Models\AdminShiftsLog;
-use Illuminate\Http\Request;
+use App\Models\Shift;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class ShiftController extends Controller
 {
@@ -26,9 +26,9 @@ class ShiftController extends Controller
         }
 
         $shifts = $query->get();
-        $Pagi = $shifts->where('category', 'Pagi')->count();
-        $Siang = $shifts->where('category', 'Siang')->count();
-        $Malam = $shifts->where('category', 'Malam')->count();
+        $Pagi   = $shifts->where('category', 'Pagi')->count();
+        $Siang  = $shifts->where('category', 'Siang')->count();
+        $Malam  = $shifts->where('category', 'Malam')->count();
 
         return view('admin.shifts.index', compact('shifts', 'Pagi', 'Siang', 'Malam'));
     }
@@ -97,7 +97,7 @@ class ShiftController extends Controller
         $end   = Carbon::createFromFormat('H:i', $request->end_time)->format('H:i:s');
 
         $oldValues = $shift->toArray();
-        
+
         $shift->update([
             'shift_name' => $request->shift_name,
             'category'   => $request->category,
@@ -123,7 +123,7 @@ class ShiftController extends Controller
     {
         $shiftName = $shift->shift_name;
         $shiftData = $shift->toArray();
-        
+
         $shift->delete();
 
         // Log admin shift activity

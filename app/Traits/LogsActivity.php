@@ -3,8 +3,8 @@
 namespace App\Traits;
 
 use App\Models\AdminActivityLog;
-use App\Models\UserActivityLog;
 use App\Models\AuthActivityLog;
+use App\Models\UserActivityLog;
 
 trait LogsActivity
 {

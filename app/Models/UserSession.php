@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 class UserSession extends Model
 {
@@ -24,8 +24,8 @@ class UserSession extends Model
 
     protected $casts = [
         'is_trusted_device' => 'boolean',
-        'last_activity' => 'datetime',
-        'expires_at' => 'datetime',
+        'last_activity'     => 'datetime',
+        'expires_at'        => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -43,13 +43,13 @@ class UserSession extends Model
         return self::updateOrCreate(
             ['session_id' => $sessionId],
             [
-                'user_id' => $userId,
-                'ip_address' => $ipAddress,
-                'user_agent' => $userAgent,
+                'user_id'            => $userId,
+                'ip_address'         => $ipAddress,
+                'user_agent'         => $userAgent,
                 'device_fingerprint' => $deviceFingerprint,
-                'is_trusted_device' => $isTrustedDevice,
-                'last_activity' => now(),
-                'expires_at' => now()->addHours(24),
+                'is_trusted_device'  => $isTrustedDevice,
+                'last_activity'      => now(),
+                'expires_at'         => now()->addHours(24),
             ]
         );
     }
@@ -124,7 +124,7 @@ class UserSession extends Model
     public static function terminateUserSessions(int $userId, ?string $exceptSessionId = null): int
     {
         $query = self::where('user_id', $userId);
-        
+
         if ($exceptSessionId) {
             $query->where('session_id', '!=', $exceptSessionId);
         }
@@ -156,6 +156,6 @@ class UserSession extends Model
      */
     public static function generateDeviceFingerprint(string $userAgent, string $ipAddress): string
     {
-        return hash('sha256', $userAgent . '|' . $ipAddress . '|' . config('app.key'));
+        return hash('sha256', $userAgent.'|'.$ipAddress.'|'.config('app.key'));
     }
 }

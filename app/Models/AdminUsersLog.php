@@ -27,8 +27,8 @@ class AdminUsersLog extends Model
     ];
 
     protected $casts = [
-        'old_values' => 'array',
-        'new_values' => 'array',
+        'old_values'       => 'array',
+        'new_values'       => 'array',
         'password_changed' => 'boolean',
     ];
 
@@ -57,18 +57,18 @@ class AdminUsersLog extends Model
         ?string $description = null
     ): void {
         self::create([
-            'user_id' => Auth::id(),
-            'action' => $action,
-            'target_user_id' => $targetUserId,
-            'target_user_name' => $targetUserName,
+            'user_id'           => Auth::id(),
+            'action'            => $action,
+            'target_user_id'    => $targetUserId,
+            'target_user_name'  => $targetUserName,
             'target_user_email' => $targetUserEmail,
-            'target_user_role' => $targetUserRole,
-            'old_values' => $oldValues,
-            'new_values' => $newValues,
-            'password_changed' => $passwordChanged,
-            'description' => $description,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
+            'target_user_role'  => $targetUserRole,
+            'old_values'        => $oldValues,
+            'new_values'        => $newValues,
+            'password_changed'  => $passwordChanged,
+            'description'       => $description,
+            'ip_address'        => request()->ip(),
+            'user_agent'        => request()->userAgent(),
         ]);
     }
 
@@ -81,7 +81,7 @@ class AdminUsersLog extends Model
             'create' => 'Membuat',
             'update' => 'Mengubah',
             'delete' => 'Menghapus',
-            default => ucfirst($this->action),
+            default  => ucfirst($this->action),
         };
     }
 
@@ -94,7 +94,7 @@ class AdminUsersLog extends Model
             'create' => 'success',
             'update' => 'warning',
             'delete' => 'danger',
-            default => 'secondary',
+            default  => 'secondary',
         };
     }
 
@@ -104,10 +104,10 @@ class AdminUsersLog extends Model
     public function getRoleColorAttribute(): string
     {
         return match ($this->target_user_role) {
-            'admin' => 'danger',
+            'admin'    => 'danger',
             'operator' => 'warning',
-            'user' => 'primary',
-            default => 'secondary',
+            'user'     => 'primary',
+            default    => 'secondary',
         };
     }
 }

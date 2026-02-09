@@ -51,16 +51,16 @@ class AdminShiftsLog extends Model
         ?string $description = null
     ): void {
         self::create([
-            'user_id' => auth()->id(),
-            'action' => $action,
-            'shift_id' => $shiftId,
-            'shift_name' => $shiftName,
+            'user_id'        => auth()->id(),
+            'action'         => $action,
+            'shift_id'       => $shiftId,
+            'shift_name'     => $shiftName,
             'shift_category' => $shiftCategory,
-            'old_values' => $oldValues,
-            'new_values' => $newValues,
-            'description' => $description,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
+            'old_values'     => $oldValues,
+            'new_values'     => $newValues,
+            'description'    => $description,
+            'ip_address'     => request()->ip(),
+            'user_agent'     => request()->userAgent(),
         ]);
     }
 
@@ -73,7 +73,7 @@ class AdminShiftsLog extends Model
             'create' => 'Membuat',
             'update' => 'Mengubah',
             'delete' => 'Menghapus',
-            default => ucfirst($this->action),
+            default  => ucfirst($this->action),
         };
     }
 
@@ -86,7 +86,7 @@ class AdminShiftsLog extends Model
             'create' => 'success',
             'update' => 'warning',
             'delete' => 'danger',
-            default => 'secondary',
+            default  => 'secondary',
         };
     }
 }

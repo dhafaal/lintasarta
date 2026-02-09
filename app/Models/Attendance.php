@@ -1,6 +1,7 @@
 <?php
 
 // app/Models/Attendance.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +24,7 @@ class Attendance extends Model
     {
         return $this->belongsTo(Location::class);
     }
-    
+
     public function shift()
     {
         return $this->hasOneThrough(Shift::class, Schedules::class, 'id', 'id', 'schedule_id', 'shift_id');

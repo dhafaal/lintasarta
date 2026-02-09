@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
 use App\Models\Attendance;
 use App\Models\Schedules;
 use App\Models\UserActivityLog;
 use Carbon\Carbon;
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Facades\Artisan;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -22,17 +22,19 @@ Artisan::command('attendances:auto-forgot-checkout', function () {
         ->get();
 
     // Group by user and schedule_date
-    $grouped = $open->groupBy(function($att){
-        return $att->user_id . '|' . optional($att->schedule)->schedule_date;
+    $grouped = $open->groupBy(function ($att) {
+        return $att->user_id.'|'.optional($att->schedule)->schedule_date;
     });
 
     $totalAffected = 0;
 
     foreach ($grouped as $key => $atts) {
-        $first = $atts->first();
-        $userId = $first->user_id;
+        $first        = $atts->first();
+        $userId       = $first->user_id;
         $scheduleDate = optional($first->schedule)->schedule_date;
-        if (!$scheduleDate) { continue; }
+        if (! $scheduleDate) {
+            continue;
+        }
 
         // Compute FINAL end across all shifts for this user on this date
         $sameDaySchedules = Schedules::with('shift')
@@ -42,32 +44,47 @@ Artisan::command('attendances:auto-forgot-checkout', function () {
 
         $finalEnd = null;
         foreach ($sameDaySchedules as $sch) {
-            if (!$sch->shift) continue;
-            $date = Carbon::parse($sch->schedule_date);
-            $st = Carbon::parse($sch->shift->start_time);
-            $et = Carbon::parse($sch->shift->end_time);
+            if (! $sch->shift) {
+                continue;
+            }
+            $date    = Carbon::parse($sch->schedule_date);
+            $st      = Carbon::parse($sch->shift->start_time);
+            $et      = Carbon::parse($sch->shift->end_time);
             $startDT = $date->copy()->setTimeFrom($st);
             $endDT   = $date->copy()->setTimeFrom($et);
-            if ($endDT->lt($startDT)) { $endDT->addDay(); }
-            if (!$finalEnd || $endDT->gt($finalEnd)) { $finalEnd = $endDT->copy(); }
+            if ($endDT->lt($startDT)) {
+                $endDT->addDay();
+            }
+            if (! $finalEnd || $endDT->gt($finalEnd)) {
+                $finalEnd = $endDT->copy();
+            }
         }
 
-        if (!$finalEnd) { continue; }
+        if (! $finalEnd) {
+            continue;
+        }
 
         // Apply 6-hour grace after FINAL end
         $threshold = $finalEnd->copy()->addHours(1);
-        if ($now->lt($threshold)) { continue; }
+        if ($now->lt($threshold)) {
+            continue;
+        }
 
         // Update all open attendances for this user/date
-        $affected = 0; $firstId = null;
+        $affected = 0;
+        $firstId  = null;
         foreach ($atts as $att) {
-            $cin = Carbon::parse($att->check_in_time);
+            $cin        = Carbon::parse($att->check_in_time);
             $checkoutAt = $cin->gt($finalEnd) ? $cin : $finalEnd;
             $att->update([
                 'check_out_time' => $checkoutAt,
-                'status' => 'forgot_checkout',
+                'status'         => 'forgot_checkout',
             ]);
-            $affected++; $totalAffected++; if (!$firstId) { $firstId = $att->id; }
+            $affected++;
+            $totalAffected++;
+            if (! $firstId) {
+                $firstId = $att->id;
+            }
         }
 
         if ($affected > 0) {
@@ -77,10 +94,10 @@ Artisan::command('attendances:auto-forgot-checkout', function () {
                 $firstId,
                 'Auto Forgot Checkout (final end + 6h)',
                 [
-                    'user_id' => $userId,
-                    'schedule_date' => $scheduleDate,
-                    'final_shift_end' => $finalEnd->toDateTimeString(),
-                    'applied_after_hours' => 1,
+                    'user_id'              => $userId,
+                    'schedule_date'        => $scheduleDate,
+                    'final_shift_end'      => $finalEnd->toDateTimeString(),
+                    'applied_after_hours'  => 1,
                     'affected_attendances' => $affected,
                 ],
                 'Sistem menutup otomatis attendance (final end + 6 jam) untuk hari yang sama'

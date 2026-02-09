@@ -2,57 +2,57 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\AttendancesExport;
 use App\Http\Controllers\Controller;
+use App\Models\AdminPermissionsLog;
 use App\Models\Attendance;
 use App\Models\Permissions;
 use App\Models\Schedules;
-use App\Models\AdminPermissionsLog;
-use App\Models\UserActivityLog;
 use App\Models\User;
+use App\Models\UserActivityLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\AttendancesExport;
 
 class AttendancesController extends Controller
 {
     public function index(Request $request)
-{
-        $today = $request->input('date', Carbon::today()->toDateString());
+    {
+        $today         = $request->input('date', Carbon::today()->toDateString());
         $todayFormated = Carbon::parse($today)->locale('id')->translatedFormat('l, d F Y');
-        $search = $request->input('search', '');
-        $statusFilter = $request->input('status', '');
+        $search        = $request->input('search', '');
+        $statusFilter  = $request->input('status', '');
 
         // Query builder untuk schedules dengan filter search
         $schedulesQuery = Schedules::with(['user', 'shift'])
             ->whereDate('schedule_date', $today);
 
         // Filter berdasarkan nama karyawan jika ada search
-        if (!empty($search)) {
+        if (! empty($search)) {
             $schedulesQuery->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%');
+                $q->where('name', 'like', '%'.$search.'%');
             });
         }
 
         $schedulesToday = $schedulesQuery->get();
-        $scheduleIds = $schedulesToday->pluck('id');
+        $scheduleIds    = $schedulesToday->pluck('id');
 
         // Query builder untuk attendances dengan filter status
         $attendancesQuery = Attendance::with(['user', 'schedule.shift', 'location'])
             ->whereIn('schedule_id', $scheduleIds);
 
         // Filter berdasarkan status jika dipilih
-        if (!empty($statusFilter)) {
+        if (! empty($statusFilter)) {
             $attendancesQuery->where('status', $statusFilter);
         }
 
         $attendances = $attendancesQuery->get();
 
         // Overnight open attendances (yesterday check-in without checkout)
-        $yesterday = Carbon::parse($today)->copy()->subDay()->toDateString();
-        $yesterdayScheduleIds = Schedules::whereDate('schedule_date', $yesterday)->pluck('id');
+        $yesterday                = Carbon::parse($today)->copy()->subDay()->toDateString();
+        $yesterdayScheduleIds     = Schedules::whereDate('schedule_date', $yesterday)->pluck('id');
         $overnightOpenAttendances = Attendance::with(['user', 'schedule.shift', 'location'])
             ->whereIn('schedule_id', $yesterdayScheduleIds)
             ->whereNotNull('check_in_time')
@@ -65,11 +65,15 @@ class AttendancesController extends Controller
             ->get();
 
         // Aggregate per user so double/long shifts count as one schedule
-        $groupsByUser = $schedulesToday->groupBy('user_id');
+        $groupsByUser   = $schedulesToday->groupBy('user_id');
         $totalSchedules = $groupsByUser->count();
-        $totalHadir = 0; $totalTelat = 0; $totalIzin = 0; $totalAlpha = 0;
+        $totalHadir     = 0;
+        $totalTelat     = 0;
+        $totalIzin      = 0;
+        $totalAlpha     = 0;
         // keep EC/FC variables for view compatibility
-        $totalEarlyCheckout = 0; $totalForgotCheckout = 0;
+        $totalEarlyCheckout  = 0;
+        $totalForgotCheckout = 0;
 
         foreach ($groupsByUser as $userId => $userSchedules) {
             $scheduleIds = $userSchedules->pluck('id');
@@ -79,27 +83,37 @@ class AttendancesController extends Controller
                 ->exists();
             if ($hasPermission) {
                 $totalIzin++;
+
                 continue;
             }
 
             $attGroup = $attendances->whereIn('schedule_id', $scheduleIds);
             if ($attGroup->isEmpty()) {
                 $totalAlpha++;
+
                 continue;
             }
 
             // Use earliest shift as reference for hadir/telat
-            $earliest = $userSchedules->sortBy(function($s){ return optional($s->shift)->shift_start ?? '23:59:59'; })->first();
+            $earliest = $userSchedules->sortBy(function ($s) {
+                return optional($s->shift)->shift_start ?? '23:59:59';
+            })->first();
             $ref = $attGroup->firstWhere('schedule_id', optional($earliest)->id);
-            if (!$ref) { $ref = $attGroup->sortBy('check_in_time')->first(); }
+            if (! $ref) {
+                $ref = $attGroup->sortBy('check_in_time')->first();
+            }
 
-            if ($ref && (int)$ref->is_late === 1) { $totalTelat++; }
-            elseif ($ref) { $totalHadir++; }
-            else { $totalAlpha++; }
+            if ($ref && (int) $ref->is_late === 1) {
+                $totalTelat++;
+            } elseif ($ref) {
+                $totalHadir++;
+            } else {
+                $totalAlpha++;
+            }
         }
 
         // Users for per-user export selector
-        $users = User::orderBy('name')->get(['id','name']);
+        $users = User::orderBy('name')->get(['id', 'name']);
 
         return view('admin.attendances.index', compact(
             'today',
@@ -132,23 +146,23 @@ class AttendancesController extends Controller
             return back()->with('error', 'Izin ini sudah diproses sebelumnya.');
         }
 
-        $oldStatus = $permission->status;
-        $userName = $permission->user ? $permission->user->name : 'Unknown';
+        $oldStatus      = $permission->status;
+        $userName       = $permission->user ? $permission->user->name : 'Unknown';
         $permissionType = $permission->type;
         $permissionDate = $permission->schedule ? $permission->schedule->schedule_date : null;
-        
+
         $permission->update([
-            'status' => 'approved',
+            'status'      => 'approved',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
         ]);
 
         // Update attendance based on permission type
-        $isEarlyCheckout = ($permission->type === 'izin') && (strpos((string)$permission->reason, '[EARLY_CHECKOUT]') === 0);
+        $isEarlyCheckout = ($permission->type === 'izin') && (strpos((string) $permission->reason, '[EARLY_CHECKOUT]') === 0);
         if ($isEarlyCheckout) {
             // Multi-shift support: checkout all attendances on the same date
             $scheduleDate = optional($permission->schedule)?->schedule_date;
-            $requested = Carbon::parse($permission->created_at);
+            $requested    = Carbon::parse($permission->created_at);
 
             if ($scheduleDate) {
                 // Get all same-day schedules for the user
@@ -172,7 +186,7 @@ class AttendancesController extends Controller
                     }
                     $att->update([
                         'check_out_time' => $checkoutTime,
-                        'status' => 'early_checkout',
+                        'status'         => 'early_checkout',
                     ]);
                     $affected++;
                 }
@@ -181,14 +195,14 @@ class AttendancesController extends Controller
                 $attendance = Attendance::where('user_id', $permission->user_id)
                     ->where('schedule_id', $permission->schedule_id)
                     ->first();
-                if ($attendance && !$attendance->check_out_time) {
+                if ($attendance && ! $attendance->check_out_time) {
                     $checkoutTime = $requested;
                     if ($attendance->check_in_time && $checkoutTime->lt(Carbon::parse($attendance->check_in_time))) {
                         $checkoutTime = Carbon::parse($attendance->check_in_time);
                     }
                     $attendance->update([
                         'check_out_time' => $checkoutTime,
-                        'status' => 'early_checkout',
+                        'status'         => 'early_checkout',
                     ]);
                 }
             }
@@ -196,18 +210,18 @@ class AttendancesController extends Controller
             // Default behavior for izin/cuti/sakit: set attendance to izin
             Attendance::updateOrCreate(
                 [
-                    'user_id' => $permission->user_id,
+                    'user_id'     => $permission->user_id,
                     'schedule_id' => $permission->schedule_id,
                 ],
                 [
-                    'status' => 'izin',
-                    'is_late' => false,
-                    'late_minutes' => 0,
-                    'check_in_time' => null,
-                    'check_out_time' => null,
-                    'latitude' => null,
-                    'longitude' => null,
-                    'latitude_checkout' => null,
+                    'status'             => 'izin',
+                    'is_late'            => false,
+                    'late_minutes'       => 0,
+                    'check_in_time'      => null,
+                    'check_out_time'     => null,
+                    'latitude'           => null,
+                    'longitude'          => null,
+                    'latitude_checkout'  => null,
                     'longitude_checkout' => null,
                 ]
             );
@@ -225,9 +239,9 @@ class AttendancesController extends Controller
             $oldStatus,
             'approved',
             [
-                'approved_by' => Auth::id(),
-                'approved_at' => now(),
-                'attendance_updated' => true,
+                'approved_by'             => Auth::id(),
+                'approved_at'             => now(),
+                'attendance_updated'      => true,
                 'requested_checkout_time' => optional($permission->created_at)?->toDateTimeString(),
                 // Optional: number of attendances affected for early checkout
                 'affected_attendances_same_day' => isset($affected) ? $affected : null,
@@ -249,19 +263,19 @@ class AttendancesController extends Controller
             return back()->with('error', 'Izin ini sudah diproses sebelumnya.');
         }
 
-        $oldStatus = $permission->status;
-        $userName = $permission->user ? $permission->user->name : 'Unknown';
+        $oldStatus      = $permission->status;
+        $userName       = $permission->user ? $permission->user->name : 'Unknown';
         $permissionType = $permission->type;
         $permissionDate = $permission->schedule ? $permission->schedule->schedule_date : null;
-        
+
         $permission->update([
-            'status' => 'rejected',
+            'status'      => 'rejected',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
         ]);
 
-        $isEarlyCheckout = ($permission->type === 'izin') && (strpos((string)$permission->reason, '[EARLY_CHECKOUT]') === 0);
-        $attendance = Attendance::where('user_id', $permission->user_id)
+        $isEarlyCheckout = ($permission->type === 'izin') && (strpos((string) $permission->reason, '[EARLY_CHECKOUT]') === 0);
+        $attendance      = Attendance::where('user_id', $permission->user_id)
             ->where('schedule_id', $permission->schedule_id)
             ->first();
 
@@ -273,14 +287,14 @@ class AttendancesController extends Controller
             if ($attendance) {
                 // Permission selain early checkout: reset ke alpha agar user bisa check-in normal
                 $attendance->update([
-                    'status' => 'alpha',
-                    'is_late' => false,
-                    'late_minutes' => 0,
-                    'check_in_time' => null,
-                    'check_out_time' => null,
-                    'latitude' => null,
-                    'longitude' => null,
-                    'latitude_checkout' => null,
+                    'status'             => 'alpha',
+                    'is_late'            => false,
+                    'late_minutes'       => 0,
+                    'check_in_time'      => null,
+                    'check_out_time'     => null,
+                    'latitude'           => null,
+                    'longitude'          => null,
+                    'latitude_checkout'  => null,
                     'longitude_checkout' => null,
                 ]);
             } else {
@@ -310,7 +324,7 @@ class AttendancesController extends Controller
     {
         // Ambil tanggal dari request, default hari ini
         $date = $request->input('date', now()->toDateString());
-        
+
         // Ambil search parameter
         $search = $request->input('search', '');
 
@@ -319,9 +333,9 @@ class AttendancesController extends Controller
             ->whereDate('schedule_date', $date);
 
         // Jika ada search, filter berdasarkan nama user
-        if (!empty($search)) {
+        if (! empty($search)) {
             $schedulesQuery->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%');
+                $q->where('name', 'like', '%'.$search.'%');
             });
         }
 
@@ -345,16 +359,17 @@ class AttendancesController extends Controller
     {
         // implementasi show per user bila perlu
         $userAttendances = Attendance::with('schedule.shift')->where('user_id', $userId)->get();
+
         return view('admin.attendances.show', compact('userAttendances'));
     }
 
     public function destroy(Attendance $attendance)
     {
         $attendanceData = $attendance->toArray();
-        $user = $attendance->user;
-        $schedule = $attendance->schedule;
-        $shift = $schedule->shift ? $schedule->shift : null;
-        
+        $user           = $attendance->user;
+        $schedule       = $attendance->schedule;
+        $shift          = $schedule->shift ? $schedule->shift : null;
+
         $attendance->delete();
 
         // Log admin activity for deleting attendance
@@ -362,16 +377,16 @@ class AttendancesController extends Controller
             'delete_attendance',
             'attendances',
             null,
-            "Kehadiran {$user->name} - " . ($shift ? $shift->shift_name : 'Unknown'),
+            "Kehadiran {$user->name} - ".($shift ? $shift->shift_name : 'Unknown'),
             [
                 'deleted_by_admin' => Auth::id(),
-                'original_status' => $attendanceData['status'],
-                'schedule_date' => $schedule->schedule_date,
-                'deleted_data' => $attendanceData
+                'original_status'  => $attendanceData['status'],
+                'schedule_date'    => $schedule->schedule_date,
+                'deleted_data'     => $attendanceData,
             ],
             "Admin menghapus data kehadiran {$user->name} pada {$schedule->schedule_date}"
         );
-        
+
         return back()->with('success', 'Attendance deleted');
     }
 
@@ -382,13 +397,14 @@ class AttendancesController extends Controller
     {
         $request->validate([
             'month' => 'required|integer|min:1|max:12',
-            'year' => 'required|integer|min:2000|max:' . now()->year,
+            'year'  => 'required|integer|min:2000|max:'.now()->year,
         ]);
 
         $month = (int) $request->input('month');
-        $year = (int) $request->input('year');
+        $year  = (int) $request->input('year');
 
         $filename = sprintf('absensi-bulanan-%04d-%02d.xlsx', $year, $month);
+
         return Excel::download(new AttendancesExport('monthly', $month, $year, null), $filename);
     }
 
@@ -398,11 +414,12 @@ class AttendancesController extends Controller
     public function exportYearly(Request $request)
     {
         $request->validate([
-            'year' => 'required|integer|min:2000|max:' . now()->year,
+            'year' => 'required|integer|min:2000|max:'.now()->year,
         ]);
 
-        $year = (int) $request->input('year');
+        $year     = (int) $request->input('year');
         $filename = sprintf('absensi-tahunan-%04d.xlsx', $year);
+
         return Excel::download(new AttendancesExport('yearly', null, $year, null), $filename);
     }
 
@@ -413,21 +430,25 @@ class AttendancesController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'month' => 'nullable|integer|min:1|max:12',
-            'year' => 'nullable|integer|min:2000|max:' . now()->year,
+            'month'   => 'nullable|integer|min:1|max:12',
+            'year'    => 'nullable|integer|min:2000|max:'.now()->year,
         ]);
 
         $userId = (int) $request->input('user_id');
-        $month = $request->filled('month') ? (int) $request->input('month') : null;
-        $year = $request->filled('year') ? (int) $request->input('year') : null;
+        $month  = $request->filled('month') ? (int) $request->input('month') : null;
+        $year   = $request->filled('year') ? (int) $request->input('year') : null;
 
         $userName = optional(User::find($userId))->name ?? 'user';
-        $suffix = [];
-        if ($year) { $suffix[] = $year; }
-        if ($month) { $suffix[] = sprintf('%02d', $month); }
-        $suffixStr = $suffix ? ('-' . implode('-', $suffix)) : '';
+        $suffix   = [];
+        if ($year) {
+            $suffix[] = $year;
+        }
+        if ($month) {
+            $suffix[] = sprintf('%02d', $month);
+        }
+        $suffixStr = $suffix ? ('-'.implode('-', $suffix)) : '';
 
-        $safeUser = str_replace([' ', '/','\\',':'], '-', strtolower($userName));
+        $safeUser = str_replace([' ', '/', '\\', ':'], '-', strtolower($userName));
         $filename = sprintf('absensi-%s%s.xlsx', $safeUser, $suffixStr);
 
         return Excel::download(new AttendancesExport('user', $month, $year, $userId), $filename);
@@ -438,7 +459,8 @@ class AttendancesController extends Controller
      */
     public function exportAll(Request $request)
     {
-        $filename = 'absensi-seluruh-data-' . now()->format('Y-m-d') . '.xlsx';
+        $filename = 'absensi-seluruh-data-'.now()->format('Y-m-d').'.xlsx';
+
         return Excel::download(new AttendancesExport('all', null, null, null), $filename);
     }
 
@@ -462,7 +484,7 @@ class AttendancesController extends Controller
     public function leaveRequests(Request $request)
     {
         $statusFilter = $request->input('status');
-        
+
         // Group permissions by user and reason to get leave requests
         $query = DB::table('permissions')
             ->select([
@@ -473,7 +495,7 @@ class AttendancesController extends Controller
                 'created_at',
                 DB::raw('COUNT(*) as schedules_count'),
                 DB::raw('MIN(id) as first_permission_id'),
-                DB::raw('GROUP_CONCAT(id) as permission_ids')
+                DB::raw('GROUP_CONCAT(id) as permission_ids'),
             ])
             ->where('type', 'cuti')
             ->groupBy(['user_id', 'reason', 'type', 'status', 'created_at'])
@@ -487,28 +509,28 @@ class AttendancesController extends Controller
 
         // Transform the data to include user information and date ranges
         $leaveRequests = $leaveRequestsData->through(function ($item) {
-            $user = User::find($item->user_id);
+            $user          = User::find($item->user_id);
             $permissionIds = explode(',', $item->permission_ids);
-            
+
             // Get date range for this leave request
             $permissions = Permissions::with('schedule')
                 ->whereIn('id', $permissionIds)
                 ->get();
-            
-            $dates = $permissions->pluck('schedule.schedule_date')->sort();
-            $dateRange = $dates->count() > 1 
-                ? $dates->first() . ' - ' . $dates->last()
+
+            $dates     = $permissions->pluck('schedule.schedule_date')->sort();
+            $dateRange = $dates->count() > 1
+                ? $dates->first().' - '.$dates->last()
                 : $dates->first();
 
             return (object) [
-                'id' => $item->first_permission_id,
-                'user' => $user,
-                'reason' => $item->reason,
-                'status' => $item->status,
+                'id'              => $item->first_permission_id,
+                'user'            => $user,
+                'reason'          => $item->reason,
+                'status'          => $item->status,
                 'schedules_count' => $item->schedules_count,
-                'date_range' => $dateRange,
-                'created_at' => Carbon::parse($item->created_at),
-                'permission_ids' => $permissionIds
+                'date_range'      => $dateRange,
+                'created_at'      => Carbon::parse($item->created_at),
+                'permission_ids'  => $permissionIds,
             ];
         });
 
@@ -521,7 +543,7 @@ class AttendancesController extends Controller
     public function showLeaveRequest($id)
     {
         $permission = Permissions::with(['user', 'schedule.shift'])->findOrFail($id);
-        
+
         // Get all permissions with same user, reason, and created_at (same leave request)
         $permissions = Permissions::with(['schedule.shift'])
             ->where('user_id', $permission->user_id)
@@ -532,11 +554,11 @@ class AttendancesController extends Controller
             ->get();
 
         $leaveRequest = (object) [
-            'id' => $id,
-            'user' => $permission->user,
-            'reason' => $permission->reason,
-            'status' => $permission->status,
-            'created_at' => $permission->created_at
+            'id'         => $id,
+            'user'       => $permission->user,
+            'reason'     => $permission->reason,
+            'status'     => $permission->status,
+            'created_at' => $permission->created_at,
         ];
 
         return view('admin.attendances.leave-request-detail', compact('leaveRequest', 'permissions'));
@@ -548,14 +570,14 @@ class AttendancesController extends Controller
     public function processLeaveRequestSchedules(Request $request, $id)
     {
         $request->validate([
-            'action' => 'required|in:approve,reject',
-            'approved_permissions' => 'nullable|array',
-            'approved_permissions.*' => 'exists:permissions,id'
+            'action'                 => 'required|in:approve,reject',
+            'approved_permissions'   => 'nullable|array',
+            'approved_permissions.*' => 'exists:permissions,id',
         ]);
 
         $permission = Permissions::findOrFail($id);
-        $action = $request->input('action');
-        
+        $action     = $request->input('action');
+
         // Get all permissions for this leave request
         $allPermissions = Permissions::where('user_id', $permission->user_id)
             ->where('reason', $permission->reason)
@@ -564,17 +586,17 @@ class AttendancesController extends Controller
             ->get();
 
         DB::beginTransaction();
-        
+
         try {
             if ($action === 'approve') {
                 $approvedIds = $request->input('approved_permissions', []);
-                
+
                 // Approve selected permissions
                 foreach ($allPermissions as $perm) {
                     $newStatus = in_array($perm->id, $approvedIds) ? 'approved' : 'rejected';
                     $oldStatus = $perm->status;
-                $perm->update(['status' => $newStatus]);
-                    
+                    $perm->update(['status' => $newStatus]);
+
                     // Log admin action with detailed fields
                     AdminPermissionsLog::log(
                         action: $newStatus === 'approved' ? 'approve' : 'reject',
@@ -587,7 +609,7 @@ class AttendancesController extends Controller
                         oldStatus: $oldStatus,
                         newStatus: $newStatus,
                         additionalData: [
-                            'schedule_id' => $perm->schedule_id,
+                            'schedule_id'         => $perm->schedule_id,
                             'affected_attendance' => $newStatus === 'approved' ? 'set_izin' : 'reset_alpha',
                         ],
                         description: sprintf(
@@ -605,18 +627,18 @@ class AttendancesController extends Controller
                         // Set attendance to izin
                         Attendance::updateOrCreate(
                             [
-                                'user_id' => $perm->user_id,
+                                'user_id'     => $perm->user_id,
                                 'schedule_id' => $perm->schedule_id,
                             ],
                             [
-                                'status' => 'izin',
-                                'is_late' => false,
-                                'late_minutes' => 0,
-                                'check_in_time' => null,
-                                'check_out_time' => null,
-                                'latitude' => null,
-                                'longitude' => null,
-                                'latitude_checkout' => null,
+                                'status'             => 'izin',
+                                'is_late'            => false,
+                                'late_minutes'       => 0,
+                                'check_in_time'      => null,
+                                'check_out_time'     => null,
+                                'latitude'           => null,
+                                'longitude'          => null,
+                                'latitude_checkout'  => null,
                                 'longitude_checkout' => null,
                             ]
                         );
@@ -628,30 +650,30 @@ class AttendancesController extends Controller
 
                         if ($attendance) {
                             $attendance->update([
-                                'status' => 'alpha',
-                                'check_in_time' => null,
-                                'check_out_time' => null,
-                                'latitude' => null,
-                                'longitude' => null,
-                                'latitude_checkout' => null,
+                                'status'             => 'alpha',
+                                'check_in_time'      => null,
+                                'check_out_time'     => null,
+                                'latitude'           => null,
+                                'longitude'          => null,
+                                'latitude_checkout'  => null,
                                 'longitude_checkout' => null,
                             ]);
                         }
                     }
                 }
-                
+
                 $approvedCount = count($approvedIds);
                 $rejectedCount = $allPermissions->count() - $approvedCount;
-                
+
                 $message = "Leave request processed: {$approvedCount} schedules approved";
                 if ($rejectedCount > 0) {
                     $message .= ", {$rejectedCount} schedules rejected";
                 }
-                
+
             } else { // reject all
                 foreach ($allPermissions as $perm) {
                     $perm->update(['status' => 'rejected']);
-                    
+
                     AdminPermissionsLog::log(
                         action: 'reject',
                         permissionId: $perm->id,
@@ -663,9 +685,9 @@ class AttendancesController extends Controller
                         oldStatus: $perm->getOriginal('status'),
                         newStatus: 'rejected',
                         additionalData: [
-                            'schedule_id' => $perm->schedule_id,
+                            'schedule_id'         => $perm->schedule_id,
                             'affected_attendance' => 'reset_alpha',
-                            'scope' => 'reject_all_in_request'
+                            'scope'               => 'reject_all_in_request',
                         ],
                         description: sprintf(
                             'Rejected %s for %s (%s) on %s',
@@ -683,28 +705,29 @@ class AttendancesController extends Controller
 
                     if ($attendance) {
                         $attendance->update([
-                            'status' => 'alpha',
-                            'check_in_time' => null,
-                            'check_out_time' => null,
-                            'latitude' => null,
-                            'longitude' => null,
-                            'latitude_checkout' => null,
+                            'status'             => 'alpha',
+                            'check_in_time'      => null,
+                            'check_out_time'     => null,
+                            'latitude'           => null,
+                            'longitude'          => null,
+                            'latitude_checkout'  => null,
                             'longitude_checkout' => null,
                         ]);
                     }
                 }
-                
+
                 $message = "Entire leave request rejected ({$allPermissions->count()} schedules)";
             }
 
             DB::commit();
-            
+
             return redirect()->route('admin.attendances.leave-requests')
                 ->with('success', $message);
-                
+
         } catch (\Exception $e) {
             DB::rollback();
-            return back()->with('error', 'Failed to process leave request: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to process leave request: '.$e->getMessage());
         }
     }
 
@@ -714,12 +737,12 @@ class AttendancesController extends Controller
     public function processLeaveRequest(Request $request, $id)
     {
         $request->validate([
-            'action' => 'required|in:approve,reject'
+            'action' => 'required|in:approve,reject',
         ]);
 
         $permission = Permissions::findOrFail($id);
-        $action = $request->input('action');
-        
+        $action     = $request->input('action');
+
         // Get all permissions for this leave request (same user, reason, date)
         $allPermissions = Permissions::where('user_id', $permission->user_id)
             ->where('reason', $permission->reason)
@@ -728,14 +751,14 @@ class AttendancesController extends Controller
             ->get();
 
         DB::beginTransaction();
-        
+
         try {
             $newStatus = $action === 'approve' ? 'approved' : 'rejected';
-            
+
             foreach ($allPermissions as $perm) {
                 $oldStatus = $perm->status;
                 $perm->update(['status' => $newStatus]);
-                
+
                 // Log admin action with detailed fields
                 AdminPermissionsLog::log(
                     action: $newStatus === 'approved' ? 'approve' : 'reject',
@@ -748,8 +771,8 @@ class AttendancesController extends Controller
                     oldStatus: $oldStatus,
                     newStatus: $newStatus,
                     additionalData: [
-                        'schedule_id' => $perm->schedule_id,
-                        'affected_attendance' => $newStatus === 'approved' ? 'set_izin' : 'reset_alpha'
+                        'schedule_id'         => $perm->schedule_id,
+                        'affected_attendance' => $newStatus === 'approved' ? 'set_izin' : 'reset_alpha',
                     ],
                     description: sprintf(
                         '%s %s for %s (%s) on %s',
@@ -766,18 +789,18 @@ class AttendancesController extends Controller
                     // Set attendance to izin
                     Attendance::updateOrCreate(
                         [
-                            'user_id' => $perm->user_id,
+                            'user_id'     => $perm->user_id,
                             'schedule_id' => $perm->schedule_id,
                         ],
                         [
-                            'status' => 'izin',
-                            'is_late' => false,
-                            'late_minutes' => 0,
-                            'check_in_time' => null,
-                            'check_out_time' => null,
-                            'latitude' => null,
-                            'longitude' => null,
-                            'latitude_checkout' => null,
+                            'status'             => 'izin',
+                            'is_late'            => false,
+                            'late_minutes'       => 0,
+                            'check_in_time'      => null,
+                            'check_out_time'     => null,
+                            'latitude'           => null,
+                            'longitude'          => null,
+                            'latitude_checkout'  => null,
                             'longitude_checkout' => null,
                         ]
                     );
@@ -789,12 +812,12 @@ class AttendancesController extends Controller
 
                     if ($attendance) {
                         $attendance->update([
-                            'status' => 'alpha',
-                            'check_in_time' => null,
-                            'check_out_time' => null,
-                            'latitude' => null,
-                            'longitude' => null,
-                            'latitude_checkout' => null,
+                            'status'             => 'alpha',
+                            'check_in_time'      => null,
+                            'check_out_time'     => null,
+                            'latitude'           => null,
+                            'longitude'          => null,
+                            'latitude_checkout'  => null,
                             'longitude_checkout' => null,
                         ]);
                     }
@@ -802,17 +825,17 @@ class AttendancesController extends Controller
             }
 
             DB::commit();
-            
-            $message = $action === 'approve' 
+
+            $message = $action === 'approve'
                 ? "Leave request approved ({$allPermissions->count()} schedules)"
                 : "Leave request rejected ({$allPermissions->count()} schedules)";
 
             return response()->json(['success' => true, 'message' => $message]);
-                
+
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['success' => false, 'message' => 'Failed to process leave request: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Failed to process leave request: '.$e->getMessage()], 500);
         }
     }
-
 }
