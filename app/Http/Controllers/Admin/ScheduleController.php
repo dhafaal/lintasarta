@@ -2032,8 +2032,7 @@ class ScheduleController extends Controller
 /**
  * Helper methods (non-functional refactor): Storage operations
  */
-namespace App\Http\Controllers\Admin {
-    trait ScheduleStorageHelpers
+trait ScheduleStorageHelpers
     {
         private function storageExists(string $relativePath): bool
         {
@@ -2050,6 +2049,5 @@ namespace App\Http\Controllers\Admin {
             return \Storage::disk('local')->delete($relativePath);
         }
     }
-}
 
  

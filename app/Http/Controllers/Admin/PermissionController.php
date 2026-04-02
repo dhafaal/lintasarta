@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AdminPermissionsLog;
 use App\Models\Permissions;
+use App\Models\AdminPermissionsLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PermissionController extends Controller
 {
@@ -16,11 +17,11 @@ class PermissionController extends Controller
             'action' => 'required|in:approve,reject',
         ]);
 
-        $oldStatus      = $permission->status;
-        $userName       = $permission->user->name ?? 'Unknown';
+        $oldStatus = $permission->status;
+        $userName = $permission->user->name ?? 'Unknown';
         $permissionType = $permission->type;
         $permissionDate = $permission->schedule->schedule_date ?? null;
-
+        
         if ($request->action === 'approve') {
             $permission->update([
                 'status'      => 'approved',
@@ -68,5 +69,20 @@ class PermissionController extends Controller
         );
 
         return back()->with('error', 'Izin ditolak ❌');
+    }
+
+    public function downloadAttachment(Permissions $permission)
+    {
+        if (!$permission->file) {
+            abort(404);
+        }
+
+        $path = $permission->file;
+
+        if (!Storage::disk('public')->exists($path)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->response($path);
     }
 }
