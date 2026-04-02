@@ -1001,11 +1001,15 @@
                                     :class="{ 'bg-sky-50 ring-2 ring-sky-200': open }"
                                     :aria-expanded="open"
                                 >
-                                    <div
-                                        class="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 shadow-md transition-shadow duration-300 group-hover:shadow-lg"
-                                    >
-                                        <i data-lucide="user" class="h-5 w-5 text-white"></i>
-                                    </div>
+                                    @if(auth()->user()->profile_photo)
+                                        <img src="{{ Storage::url(auth()->user()->profile_photo) }}" alt="Profile Photo" class="h-10 w-10 rounded-2xl object-cover shadow-md transition-shadow duration-300 group-hover:shadow-lg">
+                                    @else
+                                        <div
+                                            class="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 shadow-md transition-shadow duration-300 group-hover:shadow-lg"
+                                        >
+                                            <i data-lucide="user" class="h-5 w-5 text-white"></i>
+                                        </div>
+                                    @endif
                                     <div class="hidden text-left sm:block">
                                         <p
                                             class="text-sm font-semibold text-gray-700 transition-colors group-hover:text-sky-700"
@@ -1036,11 +1040,15 @@
                                     <!-- Header with gradient -->
                                     <div class="bg-gradient-to-r from-sky-500 to-sky-600 px-6 py-4">
                                         <div class="flex items-center space-x-4">
-                                            <div
-                                                class="flex h-16 w-16 items-center justify-center rounded-3xl border border-white/30 bg-white/20 backdrop-blur-sm"
-                                            >
-                                                <i data-lucide="shield-check" class="h-8 w-8 text-white"></i>
-                                            </div>
+                                            @if(auth()->user()->profile_photo)
+                                                <img src="{{ Storage::url(auth()->user()->profile_photo) }}" alt="Profile Photo" class="h-16 w-16 rounded-3xl border border-white/30 object-cover shadow-sm bg-white/20 backdrop-blur-sm">
+                                            @else
+                                                <div
+                                                    class="flex h-16 w-16 items-center justify-center rounded-3xl border border-white/30 bg-white/20 backdrop-blur-sm"
+                                                >
+                                                    <i data-lucide="shield-check" class="h-8 w-8 text-white"></i>
+                                                </div>
+                                            @endif
                                             <div class="flex-1">
                                                 <h3 class="text-lg font-bold text-white">
                                                     {{ auth()->user()->name }}

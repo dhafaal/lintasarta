@@ -318,13 +318,20 @@
                                 <tr class="group transition-colors duration-200 hover:bg-sky-50">
                                     <td class="px-4 py-4 whitespace-nowrap sm:px-6 sm:py-6 lg:px-8">
                                         <div class="flex items-center">
-                                            <div
-                                                class="mr-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 transition-colors group-hover:from-sky-200 group-hover:to-sky-300"
-                                            >
-                                                <span class="text-sm font-bold text-sky-600">
-                                                    {{ substr($summary['employee_name'], 0, 1) }}
-                                                </span>
-                                            </div>
+                                            @php
+                                                $scheduleUser = \App\Models\User::find($summary['user_id']);
+                                            @endphp
+                                            @if($scheduleUser && $scheduleUser->profile_photo)
+                                                <img src="{{ Storage::url($scheduleUser->profile_photo) }}" alt="Profile Photo" class="mr-4 h-10 w-10 rounded-xl object-cover transition-colors hover:opacity-90">
+                                            @else
+                                                <div
+                                                    class="mr-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 transition-colors group-hover:from-sky-200 group-hover:to-sky-300"
+                                                >
+                                                    <span class="text-sm font-bold text-sky-600">
+                                                        {{ substr($summary['employee_name'], 0, 1) }}
+                                                    </span>
+                                                </div>
+                                            @endif
                                             <div>
                                                 <div class="text-base font-semibold text-gray-700">
                                                     {{ $summary['employee_name'] }}

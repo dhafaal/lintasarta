@@ -389,9 +389,13 @@
                         <div class="bg-white rounded-xl border-2 border-sky-100 p-4 shadow-sm hover:shadow-md transition-shadow">
                             <!-- User Info -->
                             <div class="flex items-center mb-4 pb-4 border-b border-gray-100">
-                                <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
-                                    <span class="text-sky-600 font-bold text-base">{{ substr($user->name ?? '-', 0, 1) }}</span>
-                                </div>
+                                @if($user && $user->profile_photo)
+                                    <img src="{{ Storage::url($user->profile_photo) }}" alt="Profile Photo" class="w-12 h-12 rounded-xl object-cover mr-3 flex-shrink-0">
+                                @else
+                                    <div class="w-12 h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
+                                        <span class="text-sky-600 font-bold text-base">{{ substr($user->name ?? '-', 0, 1) }}</span>
+                                    </div>
+                                @endif
                                 <div class="flex-1 min-w-0">
                                     <div class="text-base font-bold text-gray-900 truncate">{{ $user->name ?? '-' }}</div>
                                     <div class="text-xs text-gray-500 truncate">{{ $user->email ?? '-' }}</div>
@@ -700,9 +704,13 @@
                                 <tr class="hover:bg-sky-50 transition-colors duration-200 group">
                                     <td class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-4 group-hover:from-sky-200 group-hover:to-sky-300 transition-colors">
-                                                <span class="text-sky-600 font-bold text-sm">{{ substr($user->name ?? '-', 0, 1) }}</span>
-                                            </div>
+                                            @if($user && $user->profile_photo)
+                                                <img src="{{ Storage::url($user->profile_photo) }}" alt="Profile Photo" class="w-10 h-10 rounded-xl object-cover mr-4 transition-colors group-hover:opacity-90">
+                                            @else
+                                                <div class="w-10 h-10 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center mr-4 group-hover:from-sky-200 group-hover:to-sky-300 transition-colors">
+                                                    <span class="text-sky-600 font-bold text-sm">{{ substr($user->name ?? '-', 0, 1) }}</span>
+                                                </div>
+                                            @endif
                                             <div>
                                                 <div class="text-base font-semibold text-gray-700">{{ $user->name ?? '-' }}</div>
                                                 <div class="text-sm text-gray-500">{{ $user->email ?? '-' }}</div>

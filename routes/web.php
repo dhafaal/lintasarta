@@ -138,6 +138,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class.':Admin'])
         // Profile Management
         Route::prefix('profile')->name('profile.')->group(function () {
             Route::get('/', [AdminProfileController::class, 'index'])->name('index');
+            Route::post('/update', [AdminProfileController::class, 'updateProfile'])->name('update');
             Route::post('/change-password', [AdminProfileController::class, 'changePassword'])->name('change-password');
         });
     });
@@ -189,6 +190,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class.':User'])
         // Profile Management
         Route::prefix('profile')->name('profile.')->group(function () {
             Route::get('/', [UsersProfileController::class, 'index'])->name('index');
+            Route::post('/update', [UsersProfileController::class, 'updateProfile'])->name('update');
             Route::post('/change-password', [UsersProfileController::class, 'changePassword'])->name('change-password');
         });
     });

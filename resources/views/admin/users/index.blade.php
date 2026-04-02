@@ -248,13 +248,17 @@
                                 <tr class="group transition-colors duration-200 hover:bg-sky-50">
                                     <td class="px-8 py-6 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div
-                                                class="mr-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 transition-colors group-hover:from-sky-200 group-hover:to-sky-300"
-                                            >
-                                                <span class="text-sm font-bold text-sky-600">
-                                                    {{ substr($user->name, 0, 1) }}
-                                                </span>
-                                            </div>
+                                            @if($user && $user->profile_photo)
+                                                <img src="{{ Storage::url($user->profile_photo) }}" alt="Profile Photo" class="mr-4 h-10 w-10 rounded-xl object-cover transition-colors hover:opacity-90">
+                                            @else
+                                                <div
+                                                    class="mr-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 transition-colors group-hover:from-sky-200 group-hover:to-sky-300"
+                                                >
+                                                    <span class="text-sm font-bold text-sky-600">
+                                                        {{ substr($user->name, 0, 1) }}
+                                                    </span>
+                                                </div>
+                                            @endif
                                             <div>
                                                 <div class="text-base font-semibold text-gray-700">
                                                     {{ $user->name }}

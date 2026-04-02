@@ -278,11 +278,15 @@
                 <!-- User Profile -->
                 <div class="border-t border-slate-200 p-3">
                     <div class="hover-lift smooth-transition flex items-center rounded-lg bg-slate-50 px-3 py-2">
-                        <div
-                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500 text-sm font-semibold text-white shadow-sm"
-                        >
-                            {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                        </div>
+                        @if(auth()->user()->profile_photo)
+                            <img src="{{ Storage::url(auth()->user()->profile_photo) }}" alt="Profile Photo" class="h-9 w-9 rounded-lg object-cover shadow-sm">
+                        @else
+                            <div
+                                class="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500 text-sm font-semibold text-white shadow-sm"
+                            >
+                                {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                            </div>
+                        @endif
                         <div class="ml-3 min-w-0 flex-1">
                             <p class="truncate text-sm font-medium text-slate-900">{{ auth()->user()->name }}</p>
                             <p class="text-xs text-slate-500">Employee</p>
@@ -329,11 +333,15 @@
                                     class="smooth-transition hover-lift flex items-center space-x-2 rounded-lg px-3 py-2 hover:bg-slate-50 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:outline-none"
                                     :aria-expanded="open"
                                 >
-                                    <div
-                                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500 text-sm font-semibold text-white shadow-sm"
-                                    >
-                                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                                    </div>
+                                    @if(auth()->user()->profile_photo)
+                                        <img src="{{ Storage::url(auth()->user()->profile_photo) }}" alt="Profile Photo" class="h-8 w-8 rounded-lg object-cover shadow-sm">
+                                    @else
+                                        <div
+                                            class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500 text-sm font-semibold text-white shadow-sm"
+                                        >
+                                            {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                                        </div>
+                                    @endif
                                     <div class="hidden text-left sm:block">
                                         <p class="text-sm font-medium text-slate-900">{{ auth()->user()->name }}</p>
                                         <p class="text-xs text-slate-500">Employee</p>
