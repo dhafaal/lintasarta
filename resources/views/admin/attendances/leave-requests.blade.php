@@ -574,7 +574,7 @@
                                             @if ($request->status === 'pending')
                                                 <button
                                                     type="button"
-                                                    onclick="processLeaveRequest({{ $request->id }}, 'approve')"
+                                                    onclick="openLeaveAdminNoteModal({{ $request->id }}, 'approve')"
                                                     class="inline-flex items-center rounded-lg bg-green-100 px-4 py-2 text-sm font-semibold text-green-700 transition-all duration-200 hover:bg-green-200"
                                                     title="Approve"
                                                 >
@@ -595,7 +595,7 @@
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onclick="processLeaveRequest({{ $request->id }}, 'reject')"
+                                                    onclick="openLeaveAdminNoteModal({{ $request->id }}, 'reject')"
                                                     class="inline-flex items-center rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 transition-all duration-200 hover:bg-red-200"
                                                     title="Reject"
                                                 >
@@ -842,7 +842,7 @@
                                 @if ($request->status === 'pending')
                                     <button
                                         type="button"
-                                        onclick="processLeaveRequest({{ $request->id }}, 'approve')"
+                                        onclick="openLeaveAdminNoteModal({{ $request->id }}, 'approve')"
                                         class="inline-flex min-h-[32px] flex-1 items-center justify-center rounded-lg bg-green-100 px-2 py-1 text-xs font-semibold text-green-700 transition-all duration-200 hover:bg-green-200 sm:min-h-[36px] sm:px-3 sm:py-2"
                                     >
                                         <svg
@@ -863,7 +863,7 @@
                                     </button>
                                     <button
                                         type="button"
-                                        onclick="processLeaveRequest({{ $request->id }}, 'reject')"
+                                        onclick="openLeaveAdminNoteModal({{ $request->id }}, 'reject')"
                                         class="inline-flex min-h-[32px] flex-1 items-center justify-center rounded-lg bg-red-100 px-2 py-1 text-xs font-semibold text-red-700 transition-all duration-200 hover:bg-red-200 sm:min-h-[36px] sm:px-3 sm:py-2"
                                     >
                                         <svg
@@ -1050,10 +1050,49 @@
             modal.style.display = 'none';
         }
 
-        async function processLeaveRequest(requestId, action) {
-            if (!confirm(`Are you sure you want to ${action} this leave request?`)) {
-                return;
+        function openLeaveAdminNoteModal(requestId, actionType) {
+            const modal = document.getElementById('leaveAdminNoteModal');
+            const noteInput = document.getElementById('leaveAdminNoteInput');
+            const title = document.getElementById('leaveAdminNoteModalTitle');
+            const subtitle = document.getElementById('leaveAdminNoteModalSubtitle');
+            
+            // Set data attributes
+            modal.dataset.requestId = requestId;
+            modal.dataset.actionType = actionType;
+            
+            if (actionType === 'approve') {
+                title.textContent = 'Approve Permintaan';
+                subtitle.textContent = '(Opsional) Tambahkan catatan untuk penyetujuan ini';
+                noteInput.required = false;
+                noteInput.placeholder = 'Catatan dari admin...';
+            } else {
+                title.textContent = 'Tolak Permintaan';
+                subtitle.textContent = '(Wajib) Berikan alasan penolakan permintaan ini';
+                noteInput.required = true;
+                noteInput.placeholder = 'Alasan penolakan...';
             }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeLeaveAdminNoteModal() {
+            const modal = document.getElementById('leaveAdminNoteModal');
+            modal.classList.add('hidden');
+            document.getElementById('leaveAdminNoteInput').value = '';
+        }
+
+        document.getElementById('leaveAdminNoteForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const modal = document.getElementById('leaveAdminNoteModal');
+            const requestId = modal.dataset.requestId;
+            const actionType = modal.dataset.actionType;
+            const note = document.getElementById('leaveAdminNoteInput').value;
+            
+            processLeaveRequest(requestId, actionType, note);
+            closeLeaveAdminNoteModal();
+        });
+
+        async function processLeaveRequest(requestId, action, admin_note = null) {
 
             try {
                 const response = await fetch(`/admin/attendances/leave-requests/${requestId}/process-simple`, {
@@ -1064,6 +1103,7 @@
                     },
                     body: JSON.stringify({
                         action: action,
+                        admin_note: admin_note
                     }),
                 });
 
@@ -1090,7 +1130,44 @@
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeLeaveDetailModal();
+                closeLeaveAdminNoteModal();
             }
         });
     </script>
+
+    <!-- Admin Note Modal -->
+    <div id="leaveAdminNoteModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <div>
+                    <h3 id="leaveAdminNoteModalTitle" class="text-lg font-bold text-gray-900">Konfirmasi</h3>
+                    <p id="leaveAdminNoteModalSubtitle" class="text-xs text-gray-500 mt-1">Tambahkan catatan</p>
+                </div>
+                <button type="button" onclick="closeLeaveAdminNoteModal()" class="text-gray-400 hover:text-gray-500 hover:bg-gray-200 p-2 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            
+            <form id="leaveAdminNoteForm" class="p-6">
+                <div class="mb-5">
+                    <label for="leaveAdminNoteInput" class="block text-sm font-semibold text-gray-700 mb-2">Admin Note</label>
+                    <textarea 
+                        id="leaveAdminNoteInput" 
+                        rows="3" 
+                        class="w-full rounded-xl border-gray-200 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm p-3 border resize-none"
+                        placeholder="Catatan..."
+                    ></textarea>
+                </div>
+                
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeLeaveAdminNoteModal()" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-sky-600 border border-transparent rounded-xl hover:bg-sky-700 transition-colors shadow-sm">
+                        Submit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection

@@ -139,8 +139,11 @@ class AttendancesController extends Controller
     /**
      * Approve permission -> set permission status dan pastikan attendance.status = 'izin'
      */
-    public function approvePermission(Permissions $permission)
+    public function approvePermission(Request $request, Permissions $permission)
     {
+        $request->validate([
+            'admin_note' => 'nullable|string|max:500'
+        ]);
         // Validasi permission masih pending
         if ($permission->status !== 'pending') {
             return back()->with('error', 'Izin ini sudah diproses sebelumnya.');
@@ -155,6 +158,7 @@ class AttendancesController extends Controller
             'status'      => 'approved',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
+            'admin_note'  => $request->admin_note,
         ]);
 
         // Update attendance based on permission type
@@ -256,8 +260,13 @@ class AttendancesController extends Controller
      * Reject permission -> set permission status, dan kembalikan attendance jadi 'alpha'
      * (jika belum ada check in)
      */
-    public function rejectPermission(Permissions $permission)
+    public function rejectPermission(Request $request, Permissions $permission)
     {
+        $request->validate([
+            'admin_note' => 'required|string|max:500'
+        ], [
+            'admin_note.required' => 'Catatan penolakan (Admin Note) wajib diisi.'
+        ]);
         // Validasi permission masih pending
         if ($permission->status !== 'pending') {
             return back()->with('error', 'Izin ini sudah diproses sebelumnya.');
@@ -272,6 +281,7 @@ class AttendancesController extends Controller
             'status'      => 'rejected',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
+            'admin_note'  => $request->admin_note,
         ]);
 
         $isEarlyCheckout = ($permission->type === 'izin') && (strpos((string) $permission->reason, '[EARLY_CHECKOUT]') === 0);
@@ -573,6 +583,9 @@ class AttendancesController extends Controller
             'action'                 => 'required|in:approve,reject',
             'approved_permissions'   => 'nullable|array',
             'approved_permissions.*' => 'exists:permissions,id',
+            'admin_note'             => $request->action === 'reject' ? 'required|string|max:500' : 'nullable|string|max:500',
+        ], [
+            'admin_note.required' => 'Catatan penolakan wajib diisi.'
         ]);
 
         $permission = Permissions::findOrFail($id);
@@ -595,7 +608,10 @@ class AttendancesController extends Controller
                 foreach ($allPermissions as $perm) {
                     $newStatus = in_array($perm->id, $approvedIds) ? 'approved' : 'rejected';
                     $oldStatus = $perm->status;
-                    $perm->update(['status' => $newStatus]);
+                    $perm->update([
+                        'status' => $newStatus,
+                        'admin_note' => $request->admin_note,
+                    ]);
 
                     // Log admin action with detailed fields
                     AdminPermissionsLog::log(
@@ -672,7 +688,10 @@ class AttendancesController extends Controller
 
             } else { // reject all
                 foreach ($allPermissions as $perm) {
-                    $perm->update(['status' => 'rejected']);
+                    $perm->update([
+                        'status' => 'rejected',
+                        'admin_note' => $request->admin_note,
+                    ]);
 
                     AdminPermissionsLog::log(
                         action: 'reject',
@@ -738,6 +757,9 @@ class AttendancesController extends Controller
     {
         $request->validate([
             'action' => 'required|in:approve,reject',
+            'admin_note' => $request->action === 'reject' ? 'required|string|max:500' : 'nullable|string|max:500',
+        ], [
+            'admin_note.required' => 'Catatan penolakan wajib diisi bila menolak izin/cuti.'
         ]);
 
         $permission = Permissions::findOrFail($id);
@@ -757,7 +779,10 @@ class AttendancesController extends Controller
 
             foreach ($allPermissions as $perm) {
                 $oldStatus = $perm->status;
-                $perm->update(['status' => $newStatus]);
+                $perm->update([
+                    'status' => $newStatus,
+                    'admin_note' => $request->admin_note,
+                ]);
 
                 // Log admin action with detailed fields
                 AdminPermissionsLog::log(

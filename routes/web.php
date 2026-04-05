@@ -117,6 +117,13 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class.':Admin'])
             Route::post('/{permission}/approve', [AdminPermissionController::class, 'approve'])->name('approve');
         });
 
+        // Swap Requests (Admin)
+        Route::prefix('swaps')->name('swaps.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\SwapRequestController::class, 'index'])->name('index');
+            Route::post('/{swap}/approve', [\App\Http\Controllers\Admin\SwapRequestController::class, 'approve'])->name('approve');
+            Route::post('/{swap}/reject', [\App\Http\Controllers\Admin\SwapRequestController::class, 'reject'])->name('reject');
+        });
+
         // Activity Logs
         Route::prefix('activity-logs')->name('activity-logs.')->group(function () {
             Route::get('/', [ActivityLogController::class, 'index'])->name('index');
@@ -182,6 +189,16 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class.':User'])
             Route::post('/', [UsersPermissionController::class, 'store'])->name('store');
             Route::post('/store-leave', [UsersPermissionController::class, 'storeLeave'])->name('store-leave');
             Route::delete('/{schedule}', [UsersPermissionController::class, 'cancel'])->name('cancel');
+        });
+
+        // Swap Requests
+        Route::prefix('swaps')->name('swaps.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Users\SwapRequestController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Users\SwapRequestController::class, 'store'])->name('store');
+            Route::post('/target-schedules', [\App\Http\Controllers\Users\SwapRequestController::class, 'getTargetSchedules'])->name('target-schedules');
+            Route::get('/search-users', [\App\Http\Controllers\Users\SwapRequestController::class, 'searchUsers'])->name('search-users');
+            Route::post('/{swap}/accept', [\App\Http\Controllers\Users\SwapRequestController::class, 'accept'])->name('accept');
+            Route::post('/{swap}/reject', [\App\Http\Controllers\Users\SwapRequestController::class, 'reject'])->name('reject');
         });
 
         // Schedules

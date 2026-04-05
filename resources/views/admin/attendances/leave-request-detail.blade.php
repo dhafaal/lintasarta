@@ -114,6 +114,23 @@
     </div>
 </div>
 
+@if ($permissions->first()->admin_note)
+<!-- Admin Note -->
+<div class="mb-6 rounded-2xl border-2 border-sky-200 bg-sky-50 p-6 shadow-lg">
+    <h4 class="mb-3 flex items-center text-lg font-bold text-sky-900">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-edit mr-2 text-sky-600">
+          <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <path d="M10.42 12.61a2.1 2.1 0 1 1 2.97 2.97L7.95 21 4 22l.99-3.95 5.43-5.44Z"/>
+        </svg>
+        Admin Note
+    </h4>
+    <div class="rounded-xl border border-sky-100 bg-white p-4">
+        <p class="leading-relaxed text-sky-800">{{ $permissions->first()->admin_note }}</p>
+    </div>
+</div>
+@endif
+
 <!-- Schedules Selection -->
 <div class="rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-lg">
     <div class="mb-4 flex items-center justify-between">
@@ -288,8 +305,21 @@
         </div>
 
         @if ($leaveRequest->status === 'pending')
+            <!-- Admin Note Input -->
+            <div class="mt-6 border-t-2 border-gray-100 pt-6">
+                <label for="admin_note_{{ $leaveRequest->id }}" class="block text-sm font-semibold text-gray-900 mb-2">Admin Note</label>
+                <textarea
+                    id="admin_note_{{ $leaveRequest->id }}"
+                    name="admin_note"
+                    rows="3"
+                    class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm p-3"
+                    placeholder="Wajib diisi bila menolak, disarankan bila menyetujui..."
+                ></textarea>
+                <p class="mt-2 text-xs text-red-500 hidden" id="admin_note_error_{{ $leaveRequest->id }}">Catatan penolakan wajib diisi bila menolak izin/cuti.</p>
+            </div>
+
             <!-- Action Buttons -->
-            <div class="mt-6 flex justify-end space-x-3 border-t-2 border-gray-100 pt-6">
+            <div class="mt-6 flex justify-end space-x-3 pt-4">
                 <button
                     type="button"
                     onclick="closeLeaveDetailModal()"
@@ -300,7 +330,24 @@
 
                 <button
                     type="button"
-                    onclick="(function(){const f=document.getElementById('schedule-approval-form');document.getElementById('lr-action').value='reject'; if(confirm('Reject ALL schedules in this leave request?')) f.submit();})();"
+                    onclick="(function(){
+                        const f=document.getElementById('schedule-approval-form');
+                        document.getElementById('lr-action').value='reject'; 
+                        
+                        const noteInput = document.getElementById('admin_note_{{ $leaveRequest->id }}');
+                        const errorMsg = document.getElementById('admin_note_error_{{ $leaveRequest->id }}');
+                        if (!noteInput.value.trim()) {
+                            errorMsg.classList.remove('hidden');
+                            noteInput.classList.add('border-red-300', 'focus:border-red-500', 'focus:ring-red-500');
+                            noteInput.focus();
+                            return;
+                        } else {
+                            errorMsg.classList.add('hidden');
+                            noteInput.classList.remove('border-red-300', 'focus:border-red-500', 'focus:ring-red-500');
+                        }
+
+                        if(confirm('Reject ALL schedules in this leave request?')) f.submit();
+                    })();"
                     class="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none"
                 >
                     <span class="flex items-center space-x-2">
@@ -367,6 +414,9 @@
         // Kept for safety if form submit used elsewhere
         const actionInput = document.getElementById('lr-action');
         const action = actionInput ? actionInput.value : '';
+        const noteInput = e.target.querySelector('textarea[name="admin_note"]');
+        const errorMsg = e.target.querySelector('p[id^="admin_note_error_"]');
+
         if (action === 'approve') {
             const selected = Array.from(document.querySelectorAll('input[name="approved_permissions[]"]:checked'));
             if (selected.length === 0) {
@@ -377,6 +427,15 @@
             return confirm(`Approve ${selected.length} selected schedule(s)?`);
         }
         if (action === 'reject') {
+            if (noteInput && !noteInput.value.trim()) {
+                if (errorMsg) errorMsg.classList.remove('hidden');
+                if (noteInput) {
+                    noteInput.classList.add('border-red-300', 'focus:border-red-500', 'focus:ring-red-500');
+                    noteInput.focus();
+                }
+                e.preventDefault();
+                return false;
+            }
             return confirm('Reject ALL schedules in this leave request?');
         }
         return true;

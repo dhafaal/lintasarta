@@ -47,4 +47,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\Attendance::class);
     }
+
+    public function leaveQuotas()
+    {
+        return $this->hasMany(LeaveQuota::class);
+    }
+
+    protected static function booted()
+    {
+        static::created(function ($user) {
+            \App\Models\LeaveQuota::create([
+                'user_id' => $user->id,
+                'year' => date('Y'),
+                'remaining_quota' => 12, // Default kuota
+            ]);
+        });
+    }
 }

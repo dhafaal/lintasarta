@@ -156,7 +156,7 @@
                 mobileMenuOpen: false,
                 userMenuOpen: false,
                 attendancesOpen:
-                    {{ request()->routeIs('user.attendances.*') || request()->routeIs('user.permissions.*') ? 'true' : 'false' }},
+                    {{ request()->routeIs('user.attendances.*') || request()->routeIs('user.permissions.*') || request()->routeIs('user.swaps.*') ? 'true' : 'false' }},
             }"
         >
             <!-- Mobile Menu Overlay -->
@@ -212,12 +212,12 @@
                     <div class="space-y-1">
                         <button
                             @click="attendancesOpen = !attendancesOpen"
-                            class="smooth-transition {{ request()->routeIs('user.attendances.*') || request()->routeIs('user.permissions.*') ? 'nav-active' : 'text-slate-700 hover:bg-slate-50' }} flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium"
+                            class="smooth-transition {{ request()->routeIs('user.attendances.*') || request()->routeIs('user.permissions.*') || request()->routeIs('user.swaps.*') ? 'nav-active' : 'text-slate-700 hover:bg-slate-50' }} flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium"
                         >
                             <div class="flex items-center">
                                 <i
                                     data-lucide="clock"
-                                    class="{{ request()->routeIs('user.attendances.*') || request()->routeIs('user.permissions.*') ? 'text-sky-600' : 'text-slate-400' }} mr-3 h-5 w-5"
+                                    class="{{ request()->routeIs('user.attendances.*') || request()->routeIs('user.permissions.*') || request()->routeIs('user.swaps.*') ? 'text-sky-600' : 'text-slate-400' }} mr-3 h-5 w-5"
                                 ></i>
                                 <span>Attendances</span>
                             </div>
@@ -252,13 +252,23 @@
 
                             <a
                                 href="{{ route('user.permissions.index') }}"
-                                class="smooth-transition {{ request()->routeIs('user.permissions.*') ? 'bg-purple-50 text-purple-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} flex items-center rounded-lg px-3 py-2 text-sm font-medium"
+                                class="smooth-transition {{ request()->routeIs('user.permissions.index') ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} flex items-center rounded-lg px-3 py-2 text-sm font-medium"
                             >
                                 <i
-                                    data-lucide="file-text"
-                                    class="{{ request()->routeIs('user.permissions.*') ? 'text-purple-600' : 'text-slate-400' }} mr-2 h-4 w-4"
+                                    data-lucide="file-check"
+                                    class="{{ request()->routeIs('user.permissions.index') ? 'text-sky-600' : 'text-slate-400' }} mr-2 h-4 w-4"
                                 ></i>
                                 <span>Permissions</span>
+                            </a>
+                            <a
+                                href="{{ route('user.swaps.index') }}"
+                                class="smooth-transition {{ request()->routeIs('user.swaps.*') ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }} flex items-center rounded-lg px-3 py-2 text-sm font-medium"
+                            >
+                                <i
+                                    data-lucide="arrow-right-left"
+                                    class="{{ request()->routeIs('user.swaps.*') ? 'text-sky-600' : 'text-slate-400' }} mr-2 h-4 w-4"
+                                ></i>
+                                <span>Swap Requests</span>
                             </a>
 
                             <a

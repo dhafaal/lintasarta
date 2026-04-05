@@ -17,6 +17,7 @@ class Permissions extends Model
         'status',
         'approved_by',
         'approved_at',
+        'admin_note'
     ];
 
     public function user()

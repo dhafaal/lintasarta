@@ -455,6 +455,11 @@
                                     <p class="text-xs break-words text-amber-700">
                                         Reason: {{ $todayPermission->reason }}
                                     </p>
+                                    @if ($todayPermission->admin_note)
+                                        <div class="mt-2 rounded-md bg-amber-50 p-2 text-xs text-amber-800 border border-amber-100">
+                                            <strong>Admin Note:</strong> {{ $todayPermission->admin_note }}
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -476,6 +481,11 @@
                                         <p class="text-xs break-words text-purple-700">
                                             Reason: {{ $todayPermission->reason }}
                                         </p>
+                                        @if ($todayPermission->admin_note)
+                                            <div class="mt-2 rounded-md bg-purple-50 p-2 text-xs text-purple-800 border border-purple-100">
+                                                <strong>Admin Note:</strong> {{ $todayPermission->admin_note }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -498,6 +508,11 @@
                                         <p class="text-xs break-words text-emerald-700">
                                             Reason: {{ $todayPermission->reason }}
                                         </p>
+                                        @if ($todayPermission->admin_note)
+                                            <div class="mt-2 rounded-md bg-emerald-50 p-2 text-xs text-emerald-800 border border-emerald-100">
+                                                <strong>Admin Note:</strong> {{ $todayPermission->admin_note }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -542,6 +557,11 @@
                                         <p class="text-xs break-words text-blue-700">
                                             Permission reason (rejected): {{ $rejectedPermission->reason }}
                                         </p>
+                                        @if ($rejectedPermission->admin_note)
+                                            <div class="mt-2 rounded-md bg-blue-50 p-2 text-xs text-blue-800 border border-blue-100">
+                                                <strong>Admin Note:</strong> {{ $rejectedPermission->admin_note }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                                 <button
@@ -568,6 +588,11 @@
                                         <p class="text-xs break-words text-blue-700">
                                             Permission reason: {{ $rejectedPermission->reason }}
                                         </p>
+                                        @if ($rejectedPermission->admin_note)
+                                            <div class="mt-2 rounded-md bg-blue-50 p-2 text-xs text-blue-800 border border-blue-100">
+                                                <strong>Admin Note:</strong> {{ $rejectedPermission->admin_note }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                                 @if ($attendance && $attendance->check_in_time && ! $attendance->check_out_time)
@@ -726,25 +751,23 @@
                                 onclick="document.getElementById('cuti-modal').classList.remove('hidden'); loadUserSchedules()"
                                 class="flex h-full w-full transform flex-col items-center justify-center gap-1 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 px-3 py-3 font-semibold text-white shadow-md transition-all duration-300 hover:from-purple-600 hover:to-purple-700 hover:shadow-lg sm:gap-2 sm:px-4 sm:py-4"
                             >
-                                <div
-                                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 sm:h-12 sm:w-12"
-                                >
+                                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 sm:h-12 sm:w-12">
                                     <i data-lucide="calendar-x" class="h-5 w-5 text-white sm:h-6 sm:w-6"></i>
                                 </div>
                                 <span class="text-xs sm:text-lg">Request Leave</span>
                             </button>
 
-                            {{-- View History Button --}}
+                            {{-- Request Swap Button --}}
                             <a
-                                href="{{ route('user.attendances.history') }}"
-                                class="flex h-full w-full transform flex-col items-center justify-center gap-1 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600 px-3 py-3 font-semibold text-white shadow-md transition-all duration-300 hover:from-gray-600 hover:to-gray-700 hover:shadow-lg sm:gap-2 sm:px-4 sm:py-4"
+                                href="{{ route('user.swaps.index') }}"
+                                class="flex h-full w-full transform flex-col items-center justify-center gap-1 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 px-3 py-3 font-semibold text-white shadow-md transition-all duration-300 hover:from-indigo-600 hover:to-indigo-700 hover:shadow-lg sm:gap-2 sm:px-4 sm:py-4"
                             >
                                 <div
                                     class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 sm:h-12 sm:w-12"
                                 >
-                                    <i data-lucide="history" class="h-5 w-5 text-white sm:h-6 sm:w-6"></i>
+                                    <i data-lucide="arrow-right-left" class="h-5 w-5 text-white sm:h-6 sm:w-6"></i>
                                 </div>
-                                <span class="text-xs sm:text-lg">View History</span>
+                                <span class="text-xs sm:text-lg">Request Swap</span>
                             </a>
                         </div>
                     @else
@@ -1171,9 +1194,24 @@
                 </button>
             </div>
 
-            <form action="{{ route('user.permissions.store-leave') }}" method="POST" class="space-y-4 p-4 sm:p-5">
+            <form action="{{ route('user.permissions.store-leave') }}" method="POST" id="form-cuti" class="space-y-4 p-4 sm:p-5">
                 @csrf
                 <input type="hidden" name="type" value="cuti" />
+
+                {{-- Remaining Quota Alert --}}
+                <div class="rounded-lg border {{ $remainingQuota > 0 ? 'border-purple-200 bg-purple-50' : 'border-rose-200 bg-rose-50' }} p-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="info" class="h-4 w-4 {{ $remainingQuota > 0 ? 'text-purple-600' : 'text-rose-600' }}"></i>
+                            <span class="text-xs font-semibold {{ $remainingQuota > 0 ? 'text-purple-900' : 'text-rose-900' }}">
+                                Sisa Kuota Cuti Tahun Ini:
+                            </span>
+                        </div>
+                        <span class="text-sm font-bold {{ $remainingQuota > 0 ? 'text-purple-700' : 'text-rose-700' }}">
+                            {{ $remainingQuota }} Hari
+                        </span>
+                    </div>
+                </div>
 
                 <div class="space-y-3">
                     <div class="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
@@ -1394,9 +1432,21 @@
 
         function selectAllSchedules() {
             const checkboxes = document.querySelectorAll('input[name="schedule_ids[]"]');
+            const maxQuota = {{ $remainingQuota }};
+            let checkedCount = 0;
+            
             checkboxes.forEach((checkbox) => {
-                checkbox.checked = true;
+                if (checkedCount < maxQuota) {
+                    checkbox.checked = true;
+                    checkedCount++;
+                } else {
+                    checkbox.checked = false;
+                }
             });
+            
+            if (checkboxes.length > maxQuota && maxQuota > 0) {
+                 alert('Hanya ' + maxQuota + ' jadwal yang dipilih sesuai sisa kuota cuti Anda.');
+            }
             updateSelectedSchedules();
         }
 
@@ -1412,13 +1462,38 @@
             const checkboxes = document.querySelectorAll('input[name="schedule_ids[]"]:checked');
             const summaryDiv = document.getElementById('selected-summary');
             const listDiv = document.getElementById('selected-list');
+            const maxQuota = {{ $remainingQuota }};
 
-            selectedSchedules = Array.from(checkboxes)
+            // Enforce limit visually and programmatically
+            if (checkboxes.length > maxQuota) {
+                // Uncheck the last checked item that triggered this event (or just enforce limit)
+                const lastChecked = event?.target;
+                if (lastChecked && lastChecked.checked) {
+                    lastChecked.checked = false;
+                    alert('Anda tidak bisa memilih lebih dari sisa kuota cuti (' + maxQuota + ' hari).');
+                }
+            }
+
+            const validCheckboxes = document.querySelectorAll('input[name="schedule_ids[]"]:checked');
+
+            selectedSchedules = Array.from(validCheckboxes)
                 .map((cb) => {
                     const scheduleId = parseInt(cb.value);
                     return userSchedules.find((s) => s.id === scheduleId);
                 })
                 .filter(Boolean);
+
+            // Update submit button status
+            const submitBtn = document.querySelector('#form-cuti button[type="submit"]');
+            if (submitBtn) {
+                if (selectedSchedules.length === 0 || maxQuota <= 0) {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
 
             if (selectedSchedules.length > 0) {
                 summaryDiv.classList.remove('hidden');
@@ -1438,6 +1513,10 @@
                 summaryDiv.classList.add('hidden');
             }
         }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelectedSchedules(); // Initial call to disable button if quota is 0
+        });
     </script>
 
     <style>

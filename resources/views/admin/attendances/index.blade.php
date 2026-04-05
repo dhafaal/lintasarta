@@ -516,6 +516,11 @@
                                         <div class="text-xs mt-1">
                                             Status: <span class="font-semibold {{ $latestPerm->status === 'rejected' ? 'text-red-600' : ($latestPerm->status === 'pending' ? 'text-yellow-700' : 'text-green-700') }}">{{ ucfirst($latestPerm->status) }}</span>
                                         </div>
+                                        @if($latestPerm->admin_note)
+                                        <div class="text-xs mt-1 text-sky-700 bg-sky-50 p-2 rounded border border-sky-100">
+                                            <strong>Admin Note:</strong> {{ $latestPerm->admin_note }}
+                                        </div>
+                                        @endif
                                     </div>
                                 </div>
                                 @endif
@@ -524,35 +529,23 @@
                                 @if($earlyPending || $otherPending)
                                 <div class="pt-3 border-t border-gray-100 flex gap-2">
                                     @if($earlyPending)
-                                        <form action="{{ route('admin.attendances.permission.approve', $earlyPending) }}" method="post" class="flex-1" onsubmit="return confirm('Setujui early checkout ini?')">
-                                            @csrf
-                                            <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
-                                                <i data-lucide="check" class="w-3 h-3 mr-1"></i>
-                                                Setujui
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('admin.attendances.permission.reject', $earlyPending) }}" method="post" class="flex-1" onsubmit="return confirm('Tolak early checkout ini?')">
-                                            @csrf
-                                            <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all">
-                                                <i data-lucide="x" class="w-3 h-3 mr-1"></i>
-                                                Tolak
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $earlyPending) }}', 'approve')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
+                                            <i data-lucide="check" class="w-3 h-3 mr-1"></i>
+                                            Setujui
+                                        </button>
+                                        <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.reject', $earlyPending) }}', 'reject')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all">
+                                            <i data-lucide="x" class="w-3 h-3 mr-1"></i>
+                                            Tolak
+                                        </button>
                                     @elseif($otherPending)
-                                        <form action="{{ route('admin.attendances.permission.approve', $otherPending) }}" method="post" class="flex-1" onsubmit="return confirm('Yakin ingin menyetujui izin ini?')">
-                                            @csrf
-                                            <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
-                                                <i data-lucide="check" class="w-3 h-3 mr-1"></i>
-                                                Setujui
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('admin.attendances.permission.reject', $otherPending) }}" method="post" class="flex-1" onsubmit="return confirm('Yakin ingin menolak izin ini?')">
-                                            @csrf
-                                            <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all">
-                                                <i data-lucide="x" class="w-3 h-3 mr-1"></i>
-                                                Tolak
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $otherPending) }}', 'approve')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
+                                            <i data-lucide="check" class="w-3 h-3 mr-1"></i>
+                                            Setujui
+                                        </button>
+                                        <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.reject', $otherPending) }}', 'reject')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all">
+                                            <i data-lucide="x" class="w-3 h-3 mr-1"></i>
+                                            Tolak
+                                        </button>
                                     @endif
                                 </div>
                                 @endif
@@ -827,6 +820,11 @@
                                                         {{ ucfirst($latestPerm->status) }}
                                                     </span>
                                                 </div>
+                                                @if($latestPerm->admin_note)
+                                                <div class="text-xs mt-1 text-sky-700 bg-sky-50 p-1 rounded border border-sky-100 whitespace-normal">
+                                                    <strong>Admin Note:</strong> {{ $latestPerm->admin_note }}
+                                                </div>
+                                                @endif
                                             </div>
                                         @else
                                             <span class="text-gray-400">-</span>
@@ -835,45 +833,33 @@
                                     <td class="px-3 py-4 whitespace-nowrap text-left">
                                         <div class="flex items-center justify-start space-x-1">
                                             @if($earlyPending)
-                                                <form action="{{ route('admin.attendances.permission.approve', $earlyPending) }}" method="post" class="inline" onsubmit="return confirm('Setujui early checkout ini?')">
-                                                    @csrf
-                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
-                                                            <polyline points="20 6 9 17 4 12"/>
-                                                        </svg>
-                                                        Setujui
-                                                    </button>
-                                                </form>
-                                                <form action="{{ route('admin.attendances.permission.reject', $earlyPending) }}" method="post" class="inline" onsubmit="return confirm('Tolak early checkout ini?')">
-                                                    @csrf
-                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
-                                                            <path d="M18 6 6 18"/>
-                                                            <path d="m6 6 12 12"/>
-                                                        </svg>
-                                                        Tolak
-                                                    </button>
-                                                </form>
+                                                <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $earlyPending) }}', 'approve')" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
+                                                        <polyline points="20 6 9 17 4 12"/>
+                                                    </svg>
+                                                    Setujui
+                                                </button>
+                                                <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.reject', $earlyPending) }}', 'reject')" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
+                                                        <path d="M18 6 6 18"/>
+                                                        <path d="m6 6 12 12"/>
+                                                    </svg>
+                                                    Tolak
+                                                </button>
                                             @elseif($otherPending)
-                                                <form action="{{ route('admin.attendances.permission.approve', $otherPending) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menyetujui izin ini?')">
-                                                    @csrf
-                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
-                                                            <polyline points="20 6 9 17 4 12"/>
-                                                        </svg>
-                                                        Setujui
-                                                    </button>
-                                                </form>
-                                                <form action="{{ route('admin.attendances.permission.reject', $otherPending) }}" method="post" class="inline" onsubmit="return confirm('Yakin ingin menolak izin ini?')">
-                                                    @csrf
-                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
-                                                            <path d="M18 6 6 18"/>
-                                                            <path d="m6 6 12 12"/>
-                                                        </svg>
-                                                        Tolak
-                                                    </button>
-                                                </form>
+                                                <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $otherPending) }}', 'approve')" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
+                                                        <polyline points="20 6 9 17 4 12"/>
+                                                    </svg>
+                                                    Setujui
+                                                </button>
+                                                <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.reject', $otherPending) }}', 'reject')" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
+                                                        <path d="M18 6 6 18"/>
+                                                        <path d="m6 6 12 12"/>
+                                                    </svg>
+                                                    Tolak
+                                                </button>
                                             @else
                                                 <span class="text-gray-400 text-sm">-</span>
                                             @endif
@@ -1144,5 +1130,75 @@
             searchInput?.addEventListener('input', filterAttendances);
             statusFilter?.addEventListener('change', filterAttendances);
         });
+
+        // Modal Logic for Admin Note
+        function openAdminNoteModal(actionUrl, actionType) {
+            const modal = document.getElementById('adminNoteModal');
+            const form = document.getElementById('adminNoteForm');
+            const noteInput = document.getElementById('adminNoteInput');
+            const title = document.getElementById('adminNoteModalTitle');
+            const subtitle = document.getElementById('adminNoteModalSubtitle');
+            
+            form.action = actionUrl;
+            
+            if (actionType === 'approve') {
+                title.textContent = 'Approve Permintaan';
+                subtitle.textContent = '(Opsional) Tambahkan catatan untuk penyetujuan ini';
+                noteInput.required = false;
+                noteInput.placeholder = 'Catatan dari admin...';
+            } else {
+                title.textContent = 'Tolak Permintaan';
+                subtitle.textContent = '(Wajib) Berikan alasan penolakan permintaan ini';
+                noteInput.required = true;
+                noteInput.placeholder = 'Alasan penolakan...';
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeAdminNoteModal() {
+            const modal = document.getElementById('adminNoteModal');
+            modal.classList.add('hidden');
+            document.getElementById('adminNoteInput').value = '';
+        }
     </script>
+
+    <!-- Admin Note Modal -->
+    <div id="adminNoteModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <div>
+                    <h3 id="adminNoteModalTitle" class="text-lg font-bold text-gray-900">Konfirmasi</h3>
+                    <p id="adminNoteModalSubtitle" class="text-xs text-gray-500 mt-1">Tambahkan catatan</p>
+                </div>
+                <button type="button" onclick="closeAdminNoteModal()" class="text-gray-400 hover:text-gray-500 hover:bg-gray-200 p-2 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            
+            <form id="adminNoteForm" method="POST" class="p-6">
+                @csrf
+                <div class="mb-5">
+                    <label for="adminNoteInput" class="block text-sm font-semibold text-gray-700 mb-2">Admin Note</label>
+                    <textarea 
+                        id="adminNoteInput" 
+                        name="admin_note" 
+                        rows="3" 
+                        class="w-full rounded-xl border-gray-200 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm p-3 border resize-none"
+                        placeholder="Catatan..."
+                    ></textarea>
+                </div>
+                
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeAdminNoteModal()" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-sky-600 border border-transparent rounded-xl hover:bg-sky-700 transition-colors shadow-sm">
+                        Submit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 @endsection

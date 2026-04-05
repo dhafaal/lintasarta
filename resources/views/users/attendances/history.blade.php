@@ -441,6 +441,11 @@
                                                             {{ \Carbon\Carbon::parse($latestPerm->approved_at)->format("d/m/Y H:i") }}
                                                         </div>
                                                     @endif
+                                                    @if ($latestPerm->admin_note)
+                                                        <div class="mt-2 text-xs text-sky-800 bg-sky-50 rounded p-1 border border-sky-100 whitespace-normal">
+                                                            <strong>Note:</strong> {{ $latestPerm->admin_note }}
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             @else
                                                 <span class="text-gray-400">-</span>

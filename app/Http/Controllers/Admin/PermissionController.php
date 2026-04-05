@@ -5,16 +5,28 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Permissions;
 use App\Models\AdminPermissionsLog;
+use App\Services\LeaveService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class PermissionController extends Controller
 {
+    protected $leaveService;
+
+    public function __construct(LeaveService $leaveService)
+    {
+        $this->leaveService = $leaveService;
+    }
+
     public function approve(Request $request, Permissions $permission)
     {
         $request->validate([
             'action' => 'required|in:approve,reject',
+            'admin_note' => $request->action === 'reject' ? 'required|string|max:500' : 'nullable|string|max:500',
+        ], [
+            'admin_note.required' => 'Catatan penolakan wajib diisi bila menolak izin/cuti.'
         ]);
 
         $oldStatus = $permission->status;
@@ -23,11 +35,20 @@ class PermissionController extends Controller
         $permissionDate = $permission->schedule->schedule_date ?? null;
         
         if ($request->action === 'approve') {
-            $permission->update([
-                'status'      => 'approved',
-                'approved_by' => Auth::id(),
-                'approved_at' => now(),
-            ]);
+            try {
+                if ($permissionType === 'cuti') {
+                    $this->leaveService->approveLeaveRequest($permission->id, Auth::id());
+                } else {
+                    $permission->update([
+                        'status'      => 'approved',
+                        'approved_by' => Auth::id(),
+                        'approved_at' => now(),
+                        'admin_note'  => $request->admin_note,
+                    ]);
+                }
+            } catch (Exception $e) {
+                return back()->with('error', $e->getMessage());
+            }
 
             // Log admin permission activity
             AdminPermissionsLog::log(
@@ -51,6 +72,7 @@ class PermissionController extends Controller
             'status'      => 'rejected',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
+            'admin_note'  => $request->admin_note,
         ]);
 
         // Log admin permission activity

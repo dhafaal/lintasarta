@@ -69,7 +69,10 @@ class AttendancesController extends Controller
             ->orderBy('schedule_date')
             ->get();
 
-        return view('users.attendances.index', compact('schedule', 'attendance', 'schedules', 'todayPermission'));
+        $leaveQuota = $user->leaveQuotas()->where('year', date('Y'))->first();
+        $remainingQuota = $leaveQuota ? $leaveQuota->remaining_quota : 0;
+
+        return view('users.attendances.index', compact('schedule', 'attendance', 'schedules', 'todayPermission', 'leaveQuota', 'remainingQuota'));
     }
 
     /**

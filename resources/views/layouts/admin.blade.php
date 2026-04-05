@@ -900,6 +900,17 @@
                                     <span x-text="$store.badges.cuti"></span>
                                 </span>
                             </a>
+                            <a
+                                href="{{ route('admin.swaps.index') }}"
+                                @click="closeMobileMenu()"
+                                class="group menu-item-transition {{ request()->routeIs('admin.swaps.*') ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-sky-100 hover:text-sky-700' }} flex items-center rounded-xl px-3 py-2 text-sm font-semibold"
+                            >
+                                <i
+                                    data-lucide="arrow-right-left"
+                                    class="mr-3 h-4 w-4 text-gray-500 group-hover:text-sky-700"
+                                ></i>
+                                <span>Swap Requests</span>
+                            </a>
                         </div>
                     </div>
 

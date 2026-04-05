@@ -1588,7 +1588,7 @@ class ScheduleController extends Controller
         try {
             $schedule1 = Schedules::with(['user', 'shift'])->findOrFail($request->schedule_id);
             $schedule2 = Schedules::with(['user', 'shift'])->findOrFail($request->target_schedule_id);
-            
+
             // Store original values for logging
             $originalUser1 = $schedule1->user;
             $originalUser2 = $schedule2->user;
