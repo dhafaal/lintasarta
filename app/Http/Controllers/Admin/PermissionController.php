@@ -43,7 +43,7 @@ class PermissionController extends Controller
                         'status'      => 'approved',
                         'approved_by' => Auth::id(),
                         'approved_at' => now(),
-                        'admin_note'  => $request->admin_note,
+                        'admin_note'  => null,
                     ]);
                 }
             } catch (Exception $e) {

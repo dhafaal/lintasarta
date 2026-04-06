@@ -158,7 +158,7 @@ class AttendancesController extends Controller
             'status'      => 'approved',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
-            'admin_note'  => $request->admin_note,
+            'admin_note'  => null,
         ]);
 
         // Update attendance based on permission type
@@ -610,7 +610,7 @@ class AttendancesController extends Controller
                     $oldStatus = $perm->status;
                     $perm->update([
                         'status' => $newStatus,
-                        'admin_note' => $request->admin_note,
+                        'admin_note' => $newStatus === 'rejected' ? $request->admin_note : null,
                     ]);
 
                     // Log admin action with detailed fields

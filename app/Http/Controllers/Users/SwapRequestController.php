@@ -102,9 +102,13 @@ class SwapRequestController extends Controller
             return back()->with('error', 'Jadwal target tidak sesuai dengan user target.');
         }
 
-        // Rule 1: Cannot swap past schedules
-        if (Carbon::parse($mySchedule->schedule_date)->isPast() && !Carbon::parse($mySchedule->schedule_date)->isToday()) {
-            return back()->with('error', 'Tidak bisa melakukan swap untuk jadwal di masa lalu.');
+        // Rule 1: Cannot swap today's or past schedules
+        $today = Carbon::today();
+        if (Carbon::parse($mySchedule->schedule_date)->startOfDay()->lte($today)) {
+            return back()->with('error', 'Tidak bisa melakukan swap untuk jadwal hari ini atau masa lalu.');
+        }
+        if (Carbon::parse($targetSchedule->schedule_date)->startOfDay()->lte($today)) {
+            return back()->with('error', 'Jadwal target tidak bisa di hari ini atau masa lalu.');
         }
 
         // Avoid duplicating pending requests for same schedules
@@ -140,6 +144,12 @@ class SwapRequestController extends Controller
 
         if ($swap->status !== 'pending_target') {
             return back()->with('error', 'Swap request ini tidak valid untuk disetujui.');
+        }
+
+        $today = Carbon::today();
+        if (Carbon::parse($swap->requestedSchedule->schedule_date)->startOfDay()->lte($today) || 
+            Carbon::parse($swap->targetSchedule->schedule_date)->startOfDay()->lte($today)) {
+            return back()->with('error', 'Swap request kadaluarsa karena jadwal sudah memasuki hari H atau berlalu.');
         }
 
         $swap->update(['status' => 'pending_admin']);

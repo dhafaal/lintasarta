@@ -574,7 +574,7 @@
                                             @if ($request->status === 'pending')
                                                 <button
                                                     type="button"
-                                                    onclick="openLeaveAdminNoteModal({{ $request->id }}, 'approve')"
+                                                    onclick="approveLeaveRequest({{ $request->id }})"
                                                     class="inline-flex items-center rounded-lg bg-green-100 px-4 py-2 text-sm font-semibold text-green-700 transition-all duration-200 hover:bg-green-200"
                                                     title="Approve"
                                                 >
@@ -842,7 +842,7 @@
                                 @if ($request->status === 'pending')
                                     <button
                                         type="button"
-                                        onclick="openLeaveAdminNoteModal({{ $request->id }}, 'approve')"
+                                        onclick="approveLeaveRequest({{ $request->id }})"
                                         class="inline-flex min-h-[32px] flex-1 items-center justify-center rounded-lg bg-green-100 px-2 py-1 text-xs font-semibold text-green-700 transition-all duration-200 hover:bg-green-200 sm:min-h-[36px] sm:px-3 sm:py-2"
                                     >
                                         <svg
@@ -1050,6 +1050,12 @@
             modal.style.display = 'none';
         }
 
+        function approveLeaveRequest(requestId) {
+            if (confirm('Approve permintaan ini?')) {
+                processLeaveRequest(requestId, 'approve');
+            }
+        }
+
         function openLeaveAdminNoteModal(requestId, actionType) {
             const modal = document.getElementById('leaveAdminNoteModal');
             const noteInput = document.getElementById('leaveAdminNoteInput');
@@ -1060,17 +1066,10 @@
             modal.dataset.requestId = requestId;
             modal.dataset.actionType = actionType;
             
-            if (actionType === 'approve') {
-                title.textContent = 'Approve Permintaan';
-                subtitle.textContent = '(Opsional) Tambahkan catatan untuk penyetujuan ini';
-                noteInput.required = false;
-                noteInput.placeholder = 'Catatan dari admin...';
-            } else {
-                title.textContent = 'Tolak Permintaan';
-                subtitle.textContent = '(Wajib) Berikan alasan penolakan permintaan ini';
-                noteInput.required = true;
-                noteInput.placeholder = 'Alasan penolakan...';
-            }
+            title.textContent = 'Tolak Permintaan';
+            subtitle.textContent = '(Wajib) Berikan alasan penolakan permintaan ini';
+            noteInput.required = true;
+            noteInput.placeholder = 'Alasan penolakan...';
             
             modal.classList.remove('hidden');
         }

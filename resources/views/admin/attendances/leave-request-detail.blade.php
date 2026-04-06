@@ -307,13 +307,13 @@
         @if ($leaveRequest->status === 'pending')
             <!-- Admin Note Input -->
             <div class="mt-6 border-t-2 border-gray-100 pt-6">
-                <label for="admin_note_{{ $leaveRequest->id }}" class="block text-sm font-semibold text-gray-900 mb-2">Admin Note</label>
+                <label for="admin_note_{{ $leaveRequest->id }}" class="block text-sm font-semibold text-gray-900 mb-2">Admin Note (Khusus Penolakan)</label>
                 <textarea
                     id="admin_note_{{ $leaveRequest->id }}"
                     name="admin_note"
                     rows="3"
                     class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm p-3"
-                    placeholder="Wajib diisi bila menolak, disarankan bila menyetujui..."
+                    placeholder="Wajib diisi bila menolak izin/cuti..."
                 ></textarea>
                 <p class="mt-2 text-xs text-red-500 hidden" id="admin_note_error_{{ $leaveRequest->id }}">Catatan penolakan wajib diisi bila menolak izin/cuti.</p>
             </div>

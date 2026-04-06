@@ -95,7 +95,7 @@
                                         <button type="button" onclick="openSwapAdminNoteModal('{{ route('admin.swaps.reject', $req->id) }}', 'reject')" class="flex items-center justify-center h-8 w-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200" title="Tolak">
                                             <i data-lucide="x" class="h-4 w-4"></i>
                                         </button>
-                                        <button type="button" onclick="openSwapAdminNoteModal('{{ route('admin.swaps.approve', $req->id) }}', 'approve')" class="flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200" title="Terima">
+                                        <button type="button" onclick="approveSwapRequest('{{ route('admin.swaps.approve', $req->id) }}')" class="flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200" title="Terima">
                                             <i data-lucide="check" class="h-4 w-4"></i>
                                         </button>
                                     </div>
@@ -157,6 +157,23 @@
 </div>
 
 <script>
+    function approveSwapRequest(actionUrl) {
+        if (confirm('Approve swap schedule ini?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = actionUrl;
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = document.querySelector('meta[name="csrf-token"]').content;
+            form.appendChild(csrfInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
     function openSwapAdminNoteModal(actionUrl, actionType) {
         const modal = document.getElementById('swapAdminNoteModal');
         const form = document.getElementById('swapAdminNoteForm');
@@ -166,17 +183,10 @@
         
         form.action = actionUrl;
         
-        if (actionType === 'approve') {
-            title.textContent = 'Setujui Swap';
-            subtitle.textContent = '(Opsional) Tambahkan catatan untuk penyetujuan ini';
-            noteInput.required = false;
-            noteInput.placeholder = 'Catatan dari admin...';
-        } else {
-            title.textContent = 'Tolak Swap';
-            subtitle.textContent = '(Wajib) Berikan alasan penolakan swap schedule ini';
-            noteInput.required = true;
-            noteInput.placeholder = 'Alasan penolakan...';
-        }
+        title.textContent = 'Tolak Swap';
+        subtitle.textContent = '(Wajib) Berikan alasan penolakan swap schedule ini';
+        noteInput.required = true;
+        noteInput.placeholder = 'Alasan penolakan...';
         
         modal.classList.remove('hidden');
     }

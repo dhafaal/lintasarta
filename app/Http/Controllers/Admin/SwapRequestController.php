@@ -36,9 +36,11 @@ class SwapRequestController extends Controller
                 $schedule1 = $swap->requestedSchedule;
                 $schedule2 = $swap->targetSchedule;
 
-                // Extra safety check in case schedule dates changed magically to past
-                if (Carbon::parse($schedule1->schedule_date)->isPast() && !Carbon::parse($schedule1->schedule_date)->isToday()) {
-                    // Do not strictly throw error here, but logically they shouldn't swap past schedules. 
+                // Extra safety check in case schedule dates changed magically to past or it's currently today
+                $today = Carbon::today();
+                if (Carbon::parse($schedule1->schedule_date)->startOfDay()->lte($today) || 
+                    Carbon::parse($schedule2->schedule_date)->startOfDay()->lte($today)) {
+                    throw new \Exception('Tidak bisa menyetujui swap untuk jadwal hari ini atau masa lalu. Swap telah kadaluarsa.');
                 }
 
                 $originalUser1Id = $schedule1->user_id;
@@ -55,7 +57,7 @@ class SwapRequestController extends Controller
                 $swap->update([
                     'status' => 'approved',
                     'admin_id' => Auth::id(),
-                    'admin_note' => $request->admin_note
+                    'admin_note' => null
                 ]);
 
                 // Log the swap for both schedules
