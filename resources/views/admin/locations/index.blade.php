@@ -44,7 +44,7 @@
             </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
                 <div class="rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 p-6 text-white shadow-xl">
                     <div class="flex items-center justify-between">
                         <div>
@@ -77,20 +77,6 @@
                     subtitle="Siap digunakan"
                     bgColor="bg-gradient-to-br from-green-100 to-green-200"
                     icon='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 text-green-600 lucide lucide-check-circle-2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>'
-                />
-                <x-stats-card
-                    title="Radius Rata-rata"
-                    :count="$locations->avg('radius') ? number_format($locations->avg('radius'), 0) . 'm' : '0m'"
-                    subtitle="Jangkauan lokasi"
-                    bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
-                    icon='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 text-purple-600 lucide lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
-                />
-                <x-stats-card
-                    title="Jangkauan Terluas"
-                    :count="$locations->max('radius') ? $locations->max('radius') . 'm' : '0m'"
-                    subtitle="Radius maksimal"
-                    bgColor="bg-gradient-to-br from-orange-100 to-orange-200"
-                    icon='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 text-orange-600 lucide lucide-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>'
                 />
             </div>
 

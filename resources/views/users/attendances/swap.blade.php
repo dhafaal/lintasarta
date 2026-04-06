@@ -1,8 +1,8 @@
 @extends('layouts.user')
 
 @section('content')
-<div class="h-full bg-gray-50 pb-20 sm:pb-0">
-    <div class="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+<div class="h-full pb-20 sm:pb-0">
+    <div class="">
         {{-- Header Section --}}
         <div class="mb-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
