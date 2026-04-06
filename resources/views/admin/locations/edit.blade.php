@@ -2,6 +2,25 @@
 
 @section('title', 'Edit Lokasi')
 
+@push('styles')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 0.75rem;
+            border: 2px solid #e0f2fe;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        .leaflet-control-geocoder {
+            border-radius: 8px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+            border: none !important;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="min-h-screen bg-white">
         {{-- Header Section --}}
@@ -399,46 +418,57 @@
                         </div>
 
                         {{-- Radius --}}
-                        <div class="space-y-2">
-                            <label for="radius" class="block text-sm font-semibold text-gray-700">
-                                <div class="flex items-center gap-2">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        class="lucide lucide-target text-sky-600"
-                                    >
+                        <div class="space-y-4">
+                            <div class="space-y-2">
+                                <label for="radius" class="block text-sm font-semibold text-gray-700">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target text-sky-600">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <circle cx="12" cy="12" r="6" />
+                                            <circle cx="12" cy="12" r="2" />
+                                        </svg>
+                                        <span>Radius (meter) <span class="text-red-500">*</span></span>
+                                    </div>
+                                </label>
+                                <input type="number" name="radius" id="radius" class="@error('radius') border-red-500 @enderror block w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:border-sky-500 focus:ring-2 focus:ring-sky-500" value="{{ old('radius', $location->radius) }}" required placeholder="500" />
+                                <p class="text-xs text-gray-500">Jarak maksimal dari titik lokasi untuk dapat melakukan absensi</p>
+                            </div>
+
+                            {{-- Leaflet Map --}}
+                            <div class="space-y-3">
+                                <label class="block text-sm font-semibold text-gray-700">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map text-sky-600">
+                                                <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+                                                <line x1="9" x2="9" y1="3" y2="18" />
+                                                <line x1="15" x2="15" y1="6" y2="21" />
+                                            </svg>
+                                            <span>Pilih Lokasi di Peta</span>
+                                        </div>
+                                        <button type="button" onclick="getCurrentLocation()" class="text-xs font-medium text-sky-600 hover:text-sky-700 underline flex items-center gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-locate-fixed">
+                                                <line x1="2" x2="5" y1="12" y2="12" />
+                                                <line x1="19" x2="22" y1="12" y2="12" />
+                                                <line x1="12" x2="12" y1="2" y2="5" />
+                                                <line x1="12" x2="12" y1="19" y2="22" />
+                                                <circle cx="12" cy="12" r="7" />
+                                                <circle cx="12" cy="12" r="3" />
+                                            </svg>
+                                            Gunakan Lokasi Saat Ini
+                                        </button>
+                                    </div>
+                                </label>
+                                <div id="map"></div>
+                                <p class="text-xs text-gray-500 italic flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info">
                                         <circle cx="12" cy="12" r="10" />
-                                        <circle cx="12" cy="12" r="6" />
-                                        <circle cx="12" cy="12" r="2" />
+                                        <path d="M12 16v-4" />
+                                        <path d="M12 8h.01" />
                                     </svg>
-                                    <span>
-                                        Radius (meter)
-                                        <span class="text-red-500">*</span>
-                                    </span>
-                                </div>
-                            </label>
-                            <input
-                                type="number"
-                                name="radius"
-                                id="radius"
-                                class="@error('radius') @enderror block w-full rounded-lg border border-gray-300 border-red-500 bg-white px-4 py-2.5 focus:border-sky-500 focus:ring-2 focus:ring-sky-500"
-                                value="{{ old('radius', $location->radius) }}"
-                                required
-                                placeholder="500"
-                            />
-                            <p class="text-xs text-gray-500">
-                                Jarak maksimal dari titik lokasi untuk dapat melakukan absensi
-                            </p>
-                            @error('radius')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+                                    Klik pada peta atau geser penanda untuk menentukan lokasi. Gunakan kotak pencarian di dalam peta untuk mencari alamat.
+                                </p>
+                            </div>
                         </div>
                         {{-- Action Buttons --}}
                         <div class="flex flex-col gap-3 border-t border-gray-200 pt-6 sm:flex-row">
@@ -493,4 +523,122 @@
             </div>
         </div>
     </div>
+@push('scripts')
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script>
+        let map, marker, circle;
+        const defaultLat = -6.2088;
+        const defaultLng = 106.8456;
+        const defaultZoom = 13;
+
+        const latInput = document.getElementById('latitude');
+        const lngInput = document.getElementById('longitude');
+        const radInput = document.getElementById('radius');
+
+        function initMap() {
+            const initialLat = parseFloat(latInput.value) || defaultLat;
+            const initialLng = parseFloat(lngInput.value) || defaultLng;
+            const initialZoom = latInput.value ? 16 : defaultZoom;
+
+            map = L.map('map').setView([initialLat, initialLng], initialZoom);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Add search control
+            const geocoder = L.Control.geocoder({
+                defaultMarkGeocode: false,
+                placeholder: "Cari alamat...",
+                errorMessage: "Alamat tidak ditemukan."
+            })
+            .on('markgeocode', function(e) {
+                const center = e.geocode.center;
+                updateLocation(center.lat, center.lng, true);
+            })
+            .addTo(map);
+
+            // Initialize marker
+            marker = L.marker([initialLat, initialLng], {
+                draggable: true
+            }).addTo(map);
+
+            // Initialize radius circle
+            const radius = parseInt(radInput.value) || 0;
+            circle = L.circle([initialLat, initialLng], {
+                radius: radius,
+                color: '#0ea5e9',
+                fillColor: '#0ea5e9',
+                fillOpacity: 0.2
+            }).addTo(map);
+
+            // Map click event
+            map.on('click', function(e) {
+                updateLocation(e.latlng.lat, e.latlng.lng);
+            });
+
+            // Marker drag event
+            marker.on('dragend', function(e) {
+                const pos = marker.getLatLng();
+                updateLocation(pos.lat, pos.lng);
+            });
+
+            // Input change events
+            latInput.addEventListener('input', () => syncInputsToMap());
+            lngInput.addEventListener('input', () => syncInputsToMap());
+            radInput.addEventListener('input', () => {
+                const r = parseInt(radInput.value) || 0;
+                circle.setRadius(r);
+            });
+        }
+
+        function updateLocation(lat, lng, moveMap = false) {
+            latInput.value = parseFloat(lat).toFixed(6);
+            lngInput.value = parseFloat(lng).toFixed(6);
+            
+            marker.setLatLng([lat, lng]);
+            circle.setLatLng([lat, lng]);
+
+            if (moveMap) {
+                map.setView([lat, lng], 16);
+            }
+        }
+
+        function syncInputsToMap() {
+            const lat = parseFloat(latInput.value);
+            const lng = parseFloat(lngInput.value);
+
+            if (!isNaN(lat) && !isNaN(lng)) {
+                marker.setLatLng([lat, lng]);
+                circle.setLatLng([lat, lng]);
+                map.panTo([lat, lng]);
+            }
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        updateLocation(position.coords.latitude, position.coords.longitude, true);
+                    },
+                    (error) => {
+                        alert("Gagal mendapatkan lokasi: " + error.message);
+                    }
+                );
+            } else {
+                alert("Geolocation tidak didukung oleh browser ini.");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initMap);
+
+        // Fix Leaflet rendering issues when modal/container size changes
+        window.addEventListener('resize', () => {
+            if (map) {
+                map.invalidateSize();
+            }
+        });
+    </script>
+@endpush
 @endsection
