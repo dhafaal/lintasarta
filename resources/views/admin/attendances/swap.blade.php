@@ -90,14 +90,23 @@
                                 @endif
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-right text-sm font-medium">
+                                @php
+                                    $isExpired = \Carbon\Carbon::parse($req->requestedSchedule->schedule_date)->startOfDay()->lte(\Carbon\Carbon::today()) || \Carbon\Carbon::parse($req->targetSchedule->schedule_date)->startOfDay()->lte(\Carbon\Carbon::today());
+                                @endphp
                                 @if($req->status === 'pending_admin')
                                     <div class="flex space-x-2">
                                         <button type="button" onclick="openSwapAdminNoteModal('{{ route('admin.swaps.reject', $req->id) }}', 'reject')" class="flex items-center justify-center h-8 w-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200" title="Tolak">
                                             <i data-lucide="x" class="h-4 w-4"></i>
                                         </button>
-                                        <button type="button" onclick="approveSwapRequest('{{ route('admin.swaps.approve', $req->id) }}')" class="flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200" title="Terima">
-                                            <i data-lucide="check" class="h-4 w-4"></i>
-                                        </button>
+                                        @if(!$isExpired)
+                                            <button type="button" onclick="approveSwapRequest('{{ route('admin.swaps.approve', $req->id) }}')" class="flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200" title="Terima">
+                                                <i data-lucide="check" class="h-4 w-4"></i>
+                                            </button>
+                                        @else
+                                            <button type="button" class="flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 text-emerald-600 opacity-50 cursor-not-allowed" title="Tidak dapat disetujui (jadwal hari ini atau lewat)" disabled>
+                                                <i data-lucide="check" class="h-4 w-4"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 @endif
                             </td>

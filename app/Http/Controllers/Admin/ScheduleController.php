@@ -1558,7 +1558,7 @@ class ScheduleController extends Controller
     {
         $schedules = Schedules::with('shift')
             ->where('user_id', $userId)
-            ->whereDate('schedule_date', '>=', Carbon::today())
+            ->whereDate('schedule_date', '>', Carbon::today())
             ->orderBy('schedule_date', 'asc')
             ->get()
             ->map(function ($schedule) {
@@ -1588,6 +1588,16 @@ class ScheduleController extends Controller
         try {
             $schedule1 = Schedules::with(['user', 'shift'])->findOrFail($request->schedule_id);
             $schedule2 = Schedules::with(['user', 'shift'])->findOrFail($request->target_schedule_id);
+            
+            // Prevent swapping today's or past schedules
+            $today = Carbon::today();
+            if (Carbon::parse($schedule1->schedule_date)->startOfDay()->lte($today) || 
+                Carbon::parse($schedule2->schedule_date)->startOfDay()->lte($today)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak bisa menukar jadwal hari ini atau masa lalu.'
+                ], 422);
+            }
 
             // Store original values for logging
             $originalUser1 = $schedule1->user;

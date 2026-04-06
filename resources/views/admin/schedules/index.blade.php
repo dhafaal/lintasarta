@@ -388,29 +388,61 @@
                                     </td>
                                     <td class="px-8 py-6 text-left whitespace-nowrap">
                                         <div class="flex items-center justify-start space-x-3">
-                                            <button
-                                                onclick="openSwapModal({{ $summary['user_id'] }}, '{{ $summary['employee_name'] }}')"
-                                                class="inline-flex items-center rounded-lg bg-green-100 px-4 py-2 text-sm font-semibold text-green-700 transition-all duration-200 hover:bg-green-200"
-                                            >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    width="16"
-                                                    height="16"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    class="lucide lucide-arrow-left-right mr-2"
+                                            @php
+                                                $hasFuture = \App\Models\Schedules::where('user_id', $summary['user_id'])
+                                                    ->whereDate('schedule_date', '>', \Carbon\Carbon::today())
+                                                    ->exists();
+                                            @endphp
+                                            @if($hasFuture)
+                                                <button
+                                                    onclick="openSwapModal({{ $summary['user_id'] }}, '{{ $summary['employee_name'] }}')"
+                                                    class="inline-flex items-center rounded-lg bg-green-100 px-4 py-2 text-sm font-semibold text-green-700 transition-all duration-200 hover:bg-green-200"
                                                 >
-                                                    <path d="M8 3 4 7l4 4" />
-                                                    <path d="M4 7h16" />
-                                                    <path d="m16 21 4-4-4-4" />
-                                                    <path d="M20 17H4" />
-                                                </svg>
-                                                Swap Jadwal
-                                            </button>
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="16"
+                                                        height="16"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        stroke-width="2"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        class="lucide lucide-arrow-left-right mr-2"
+                                                    >
+                                                        <path d="M8 3 4 7l4 4" />
+                                                        <path d="M4 7h16" />
+                                                        <path d="m16 21 4-4-4-4" />
+                                                        <path d="M20 17H4" />
+                                                    </svg>
+                                                    Swap Jadwal
+                                                </button>
+                                            @else
+                                                <button
+                                                    class="inline-flex items-center rounded-lg bg-green-100 px-4 py-2 text-sm font-semibold text-green-700 opacity-50 cursor-not-allowed"
+                                                    disabled
+                                                    title="Tidak dapat swap (tidak ada jadwal masa depan)"
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="16"
+                                                        height="16"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        stroke-width="2"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        class="lucide lucide-arrow-left-right mr-2"
+                                                    >
+                                                        <path d="M8 3 4 7l4 4" />
+                                                        <path d="M4 7h16" />
+                                                        <path d="m16 21 4-4-4-4" />
+                                                        <path d="M20 17H4" />
+                                                    </svg>
+                                                    Swap Jadwal
+                                                </button>
+                                            @endif
 
                                             <a
                                                 href="{{ route('admin.schedules.edit', ['schedule' => 'bulk']) }}?user_id={{ $summary['user_id'] }}"
