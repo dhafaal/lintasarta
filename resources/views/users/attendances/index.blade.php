@@ -914,6 +914,7 @@
                             rows="4"
                             placeholder="Explain your reason..."
                             required
+                            minlength="5"
                         ></textarea>
                         <p class="text-xs text-gray-500">Minimum 5 characters</p>
                     </div>
@@ -1144,8 +1145,9 @@
                         rows="4"
                         placeholder="Clearly explain your permission reason..."
                         required
+                        minlength="5"
                     ></textarea>
-                    <p class="text-xs text-gray-500">Minimum 10 characters</p>
+                    <p class="text-xs text-gray-500">Minimum 5 characters</p>
                 </div>
 
                 <div class="flex justify-end gap-2 border-t border-gray-200 pt-3">
@@ -1263,8 +1265,9 @@
                         rows="4"
                         placeholder="Clearly explain your leave reason..."
                         required
+                        minlength="5"
                     ></textarea>
-                    <p class="text-xs text-gray-500">Minimum 10 characters</p>
+                    <p class="text-xs text-gray-500">Minimum 5 characters</p>
                 </div>
 
                 <div id="selected-summary" class="hidden rounded-lg border border-purple-200 bg-purple-50 p-3">

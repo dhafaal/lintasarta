@@ -35,7 +35,7 @@ class PermissionController extends Controller
         $request->validate([
             'schedule_id' => 'required|exists:schedules,id',
             'type' => 'required|in:izin,sakit,cuti',
-            'reason' => 'required|string|min:10|max:255',
+            'reason' => 'required|string|min:5|max:255',
             'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
@@ -90,7 +90,7 @@ class PermissionController extends Controller
             'schedule_ids' => 'required|array|min:1|max:12',
             'schedule_ids.*' => 'exists:schedules,id',
             'type' => 'required|in:cuti',
-            'reason' => 'required|string|min:10|max:500',
+            'reason' => 'required|string|min:5|max:500',
             'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ], [
             'schedule_ids.max' => 'Maksimal 12 hari cuti yang bisa diajukan dalam satu permintaan.',

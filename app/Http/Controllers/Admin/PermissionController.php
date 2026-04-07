@@ -24,9 +24,10 @@ class PermissionController extends Controller
     {
         $request->validate([
             'action' => 'required|in:approve,reject',
-            'admin_note' => $request->action === 'reject' ? 'required|string|max:500' : 'nullable|string|max:500',
+            'admin_note' => 'required|string|min:5|max:500',
         ], [
-            'admin_note.required' => 'Catatan penolakan wajib diisi bila menolak izin/cuti.'
+            'admin_note.required' => 'Catatan wajib diisi.',
+            'admin_note.min'      => 'Catatan minimal 5 karakter.',
         ]);
 
         $oldStatus = $permission->status;
@@ -43,7 +44,7 @@ class PermissionController extends Controller
                         'status'      => 'approved',
                         'approved_by' => Auth::id(),
                         'approved_at' => now(),
-                        'admin_note'  => null,
+                        'admin_note'  => $request->admin_note,
                     ]);
                 }
             } catch (Exception $e) {

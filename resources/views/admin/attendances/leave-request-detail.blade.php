@@ -307,15 +307,16 @@
         @if ($leaveRequest->status === 'pending')
             <!-- Admin Note Input -->
             <div class="mt-6 border-t-2 border-gray-100 pt-6">
-                <label for="admin_note_{{ $leaveRequest->id }}" class="block text-sm font-semibold text-gray-900 mb-2">Admin Note (Khusus Penolakan)</label>
+                <label for="admin_note_{{ $leaveRequest->id }}" class="block text-sm font-semibold text-gray-900 mb-2">Admin Note <span class="text-red-500">*</span></label>
                 <textarea
                     id="admin_note_{{ $leaveRequest->id }}"
                     name="admin_note"
                     rows="3"
                     class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm p-3"
-                    placeholder="Wajib diisi bila menolak izin/cuti..."
+                    placeholder="Catatan wajib diisi (minimal 5 karakter)..."
+                    required minlength="5"
                 ></textarea>
-                <p class="mt-2 text-xs text-red-500 hidden" id="admin_note_error_{{ $leaveRequest->id }}">Catatan penolakan wajib diisi bila menolak izin/cuti.</p>
+                <p class="mt-2 text-xs text-red-500 hidden" id="admin_note_error_{{ $leaveRequest->id }}">Catatan wajib diisi (min 5 karakter).</p>
             </div>
 
             <!-- Action Buttons -->
@@ -336,7 +337,7 @@
                         
                         const noteInput = document.getElementById('admin_note_{{ $leaveRequest->id }}');
                         const errorMsg = document.getElementById('admin_note_error_{{ $leaveRequest->id }}');
-                        if (!noteInput.value.trim()) {
+                        if (!noteInput.value.trim() || noteInput.value.trim().length < 5) {
                             errorMsg.classList.remove('hidden');
                             noteInput.classList.add('border-red-300', 'focus:border-red-500', 'focus:ring-red-500');
                             noteInput.focus();
@@ -377,6 +378,19 @@
                             document.getElementById('lr-action').value='approve';
                             const selected=[...document.querySelectorAll('input[name=\'approved_permissions[]\']:checked')];
                             if(selected.length===0){ alert('Please select at least one schedule to approve.'); return; }
+                            
+                            const noteInput = document.getElementById('admin_note_{{ $leaveRequest->id }}');
+                            const errorMsg = document.getElementById('admin_note_error_{{ $leaveRequest->id }}');
+                            if (!noteInput.value.trim() || noteInput.value.trim().length < 5) {
+                                errorMsg.classList.remove('hidden');
+                                noteInput.classList.add('border-red-300', 'focus:border-red-500', 'focus:ring-red-500');
+                                noteInput.focus();
+                                return;
+                            } else {
+                                errorMsg.classList.add('hidden');
+                                noteInput.classList.remove('border-red-300', 'focus:border-red-500', 'focus:ring-red-500');
+                            }
+
                             if(confirm(`Approve ${selected.length} selected schedule(s)?`)) f.submit();
                         })();"
                     class="rounded-xl bg-green-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
@@ -417,6 +431,16 @@
         const noteInput = e.target.querySelector('textarea[name="admin_note"]');
         const errorMsg = e.target.querySelector('p[id^="admin_note_error_"]');
 
+        if (noteInput && (!noteInput.value.trim() || noteInput.value.trim().length < 5)) {
+            if (errorMsg) errorMsg.classList.remove('hidden');
+            if (noteInput) {
+                noteInput.classList.add('border-red-300', 'focus:border-red-500', 'focus:ring-red-500');
+                noteInput.focus();
+            }
+            e.preventDefault();
+            return false;
+        }
+
         if (action === 'approve') {
             const selected = Array.from(document.querySelectorAll('input[name="approved_permissions[]"]:checked'));
             if (selected.length === 0) {
@@ -427,15 +451,6 @@
             return confirm(`Approve ${selected.length} selected schedule(s)?`);
         }
         if (action === 'reject') {
-            if (noteInput && !noteInput.value.trim()) {
-                if (errorMsg) errorMsg.classList.remove('hidden');
-                if (noteInput) {
-                    noteInput.classList.add('border-red-300', 'focus:border-red-500', 'focus:ring-red-500');
-                    noteInput.focus();
-                }
-                e.preventDefault();
-                return false;
-            }
             return confirm('Reject ALL schedules in this leave request?');
         }
         return true;

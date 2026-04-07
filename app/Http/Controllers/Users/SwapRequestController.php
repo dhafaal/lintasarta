@@ -88,7 +88,7 @@ class SwapRequestController extends Controller
             'requested_schedule_id' => 'required|exists:schedules,id',
             'target_user_id' => 'required|exists:users,id',
             'target_schedule_id' => 'required|exists:schedules,id',
-            'reason' => 'nullable|string|max:500'
+            'reason' => 'required|string|min:5|max:500'
         ]);
 
         $mySchedule = Schedules::findOrFail($request->requested_schedule_id);
@@ -157,7 +157,7 @@ class SwapRequestController extends Controller
         return back()->with('success', 'Permintaan swap diterima. Menunggu persetujuan Admin.');
     }
 
-    public function reject(ScheduleSwapRequest $swap)
+    public function reject(Request $request, ScheduleSwapRequest $swap)
     {
         if ($swap->target_user_id !== Auth::id() && $swap->requester_id !== Auth::id()) {
             return back()->with('error', 'Akses ditolak.');
@@ -172,11 +172,18 @@ class SwapRequestController extends Controller
             return back()->with('success', 'Permintaan swap dibatalkan.');
         }
 
+        $request->validate([
+            'target_rejection_reason' => 'required|string|min:5|max:500'
+        ]);
+
         if ($swap->status !== 'pending_target') {
             return back()->with('error', 'Swap request ini tidak valid untuk ditolak.');
         }
 
-        $swap->update(['status' => 'rejected_by_target']);
+        $swap->update([
+            'status' => 'rejected_by_target',
+            'target_rejection_reason' => $request->target_rejection_reason
+        ]);
 
         return back()->with('success', 'Permintaan swap ditolak.');
     }

@@ -142,7 +142,10 @@ class AttendancesController extends Controller
     public function approvePermission(Request $request, Permissions $permission)
     {
         $request->validate([
-            'admin_note' => 'nullable|string|max:500'
+            'admin_note' => 'required|string|min:5|max:500'
+        ], [
+            'admin_note.required' => 'Catatan wajib diisi.',
+            'admin_note.min' => 'Catatan minimal 5 karakter.'
         ]);
         // Validasi permission masih pending
         if ($permission->status !== 'pending') {
@@ -158,7 +161,7 @@ class AttendancesController extends Controller
             'status'      => 'approved',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
-            'admin_note'  => null,
+            'admin_note'  => $request->admin_note,
         ]);
 
         // Update attendance based on permission type
@@ -263,9 +266,10 @@ class AttendancesController extends Controller
     public function rejectPermission(Request $request, Permissions $permission)
     {
         $request->validate([
-            'admin_note' => 'required|string|max:500'
+            'admin_note' => 'required|string|min:5|max:500'
         ], [
-            'admin_note.required' => 'Catatan penolakan (Admin Note) wajib diisi.'
+            'admin_note.required' => 'Catatan (Admin Note) wajib diisi.',
+            'admin_note.min' => 'Catatan minimal 5 karakter.'
         ]);
         // Validasi permission masih pending
         if ($permission->status !== 'pending') {
@@ -496,8 +500,7 @@ class AttendancesController extends Controller
         $statusFilter = $request->input('status');
 
         // Group permissions by user and reason to get leave requests
-        $query = DB::table('permissions')
-            ->select([
+        $query = Permissions::select([
                 'user_id',
                 'reason',
                 'type',
@@ -583,9 +586,10 @@ class AttendancesController extends Controller
             'action'                 => 'required|in:approve,reject',
             'approved_permissions'   => 'nullable|array',
             'approved_permissions.*' => 'exists:permissions,id',
-            'admin_note'             => $request->action === 'reject' ? 'required|string|max:500' : 'nullable|string|max:500',
+            'admin_note'             => 'required|string|min:5|max:500',
         ], [
-            'admin_note.required' => 'Catatan penolakan wajib diisi.'
+            'admin_note.required' => 'Catatan wajib diisi.',
+            'admin_note.min' => 'Catatan minimal 5 karakter.'
         ]);
 
         $permission = Permissions::findOrFail($id);
@@ -606,11 +610,12 @@ class AttendancesController extends Controller
 
                 // Approve selected permissions
                 foreach ($allPermissions as $perm) {
+                    /** @var \App\Models\Permissions $perm */
                     $newStatus = in_array($perm->id, $approvedIds) ? 'approved' : 'rejected';
                     $oldStatus = $perm->status;
                     $perm->update([
                         'status' => $newStatus,
-                        'admin_note' => $newStatus === 'rejected' ? $request->admin_note : null,
+                        'admin_note' => $request->admin_note,
                     ]);
 
                     // Log admin action with detailed fields
@@ -688,6 +693,7 @@ class AttendancesController extends Controller
 
             } else { // reject all
                 foreach ($allPermissions as $perm) {
+                    /** @var \App\Models\Permissions $perm */
                     $perm->update([
                         'status' => 'rejected',
                         'admin_note' => $request->admin_note,
@@ -757,9 +763,10 @@ class AttendancesController extends Controller
     {
         $request->validate([
             'action' => 'required|in:approve,reject',
-            'admin_note' => $request->action === 'reject' ? 'required|string|max:500' : 'nullable|string|max:500',
+            'admin_note' => 'required|string|min:5|max:500',
         ], [
-            'admin_note.required' => 'Catatan penolakan wajib diisi bila menolak izin/cuti.'
+            'admin_note.required' => 'Catatan wajib diisi.',
+            'admin_note.min' => 'Catatan minimal 5 karakter.'
         ]);
 
         $permission = Permissions::findOrFail($id);
@@ -778,6 +785,7 @@ class AttendancesController extends Controller
             $newStatus = $action === 'approve' ? 'approved' : 'rejected';
 
             foreach ($allPermissions as $perm) {
+                /** @var \App\Models\Permissions $perm */
                 $oldStatus = $perm->status;
                 $perm->update([
                     'status' => $newStatus,

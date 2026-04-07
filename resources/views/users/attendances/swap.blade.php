@@ -86,10 +86,7 @@
                         @endif
 
                         <div class="flex gap-2 justify-end">
-                            <form action="{{ route('user.swaps.reject', $req->id) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="rounded-lg bg-white px-4 py-2 text-sm font-medium text-red-600 ring-1 ring-inset ring-red-200 hover:bg-red-50 focus:outline-none">Tolak</button>
-                            </form>
+                            <button type="button" onclick="showRejectModal({{ $req->id }})" class="rounded-lg bg-white px-4 py-2 text-sm font-medium text-red-600 ring-1 ring-inset ring-red-200 hover:bg-red-50 focus:outline-none">Tolak</button>
                             <form action="{{ route('user.swaps.accept', $req->id) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus:outline-none">Terima</button>
@@ -145,6 +142,12 @@
                         @if($req->reason)
                             <div class="mb-3 text-sm text-gray-600 bg-gray-50 p-3 rounded border border-gray-100 italic">
                                 "{{ $req->reason }}"
+                            </div>
+                        @endif
+
+                        @if($req->target_rejection_reason)
+                            <div class="mb-3 rounded-md bg-red-50 p-3 text-sm text-red-800 border border-red-100 italic">
+                                <span class="font-bold">Alasan Penolakan:</span> "{{ $req->target_rejection_reason }}"
                             </div>
                         @endif
 
@@ -235,14 +238,47 @@
 
                     {{-- Reason --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Alasan Swap (Opsional)</label>
-                        <textarea name="reason" rows="2" class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 focus:border-purple-500 focus:ring-purple-500 sm:text-sm" placeholder="Kenapa ingin bertukar jadwal?"></textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Alasan Swap <span class="text-purple-500">*</span></label>
+                        <textarea name="reason" rows="2" class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 focus:border-purple-500 focus:ring-purple-500 sm:text-sm" placeholder="Kenapa ingin bertukar jadwal?" required minlength="5"></textarea>
                     </div>
                 </div>
 
                 <div class="bg-gray-50 px-4 py-3 pb-6 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-200">
                     <button type="submit" id="btn-submit-swap" class="inline-flex w-full justify-center rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 disabled:opacity-50 sm:ml-3 sm:w-auto" disabled>Kirim Request</button>
                     <button type="button" onclick="document.getElementById('swap-request-modal').classList.add('hidden')" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Reject Swap Request Modal --}}
+<div id="reject-swap-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-900/75 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="hideRejectModal()"></div>
+
+        <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+
+        <div class="inline-block transform overflow-hidden rounded-2xl bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle relative z-10">
+            <form id="form-reject-swap" method="POST" class="flex flex-col">
+                @csrf
+                <div class="bg-red-600 px-4 py-5 sm:px-6">
+                    <h3 class="text-base font-semibold leading-6 text-white flex items-center gap-2">
+                        <i data-lucide="x-circle" class="h-5 w-5"></i>
+                        Tolak Request Swap
+                    </h3>
+                </div>
+
+                <div class="p-6 space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Alasan Penolakan <span class="text-red-500">*</span></label>
+                        <textarea name="target_rejection_reason" rows="3" class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 focus:border-red-500 focus:ring-red-500 sm:text-sm" placeholder="Masukkan alasan kenapa menolak swap ini..." required minlength="5"></textarea>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-4 py-3 pb-6 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-200">
+                    <button type="submit" class="inline-flex w-full justify-center rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Tolak Request</button>
+                    <button type="button" onclick="hideRejectModal()" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Batal</button>
                 </div>
             </form>
         </div>
@@ -366,6 +402,16 @@
         const targetSchedule = document.getElementById('target_schedule_id').value;
 
         document.getElementById('btn-submit-swap').disabled = !(mySchedule && targetUser && targetSchedule);
+    }
+
+    function showRejectModal(reqId) {
+        const form = document.getElementById('form-reject-swap');
+        form.action = `/user/swaps/${reqId}/reject`;
+        document.getElementById('reject-swap-modal').classList.remove('hidden');
+    }
+
+    function hideRejectModal() {
+        document.getElementById('reject-swap-modal').classList.add('hidden');
     }
 </script>
 @endsection

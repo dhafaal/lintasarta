@@ -529,7 +529,7 @@
                                 @if($earlyPending || $otherPending)
                                 <div class="pt-3 border-t border-gray-100 flex gap-2">
                                     @if($earlyPending)
-                                        <button type="button" onclick="approveRequest('{{ route('admin.attendances.permission.approve', $earlyPending) }}')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
+                                        <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $earlyPending) }}', 'approve')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
                                             <i data-lucide="check" class="w-3 h-3 mr-1"></i>
                                             Setujui
                                         </button>
@@ -538,7 +538,7 @@
                                             Tolak
                                         </button>
                                     @elseif($otherPending)
-                                        <button type="button" onclick="approveRequest('{{ route('admin.attendances.permission.approve', $otherPending) }}')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
+                                        <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $otherPending) }}', 'approve')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
                                             <i data-lucide="check" class="w-3 h-3 mr-1"></i>
                                             Setujui
                                         </button>
@@ -833,7 +833,7 @@
                                     <td class="px-3 py-4 whitespace-nowrap text-left">
                                         <div class="flex items-center justify-start space-x-1">
                                             @if($earlyPending)
-                                                <button type="button" onclick="approveRequest('{{ route('admin.attendances.permission.approve', $earlyPending) }}')" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $earlyPending) }}', 'approve')" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
                                                         <polyline points="20 6 9 17 4 12"/>
                                                     </svg>
@@ -847,7 +847,7 @@
                                                     Tolak
                                                 </button>
                                             @elseif($otherPending)
-                                                <button type="button" onclick="approveRequest('{{ route('admin.attendances.permission.approve', $otherPending) }}')" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $otherPending) }}', 'approve')" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
                                                         <polyline points="20 6 9 17 4 12"/>
                                                     </svg>
@@ -1132,22 +1132,7 @@
         });
 
         // Modal Logic for Admin Note
-        function approveRequest(actionUrl) {
-            if (confirm('Approve permintaan ini?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = actionUrl;
-                
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = document.querySelector('meta[name="csrf-token"]').content;
-                form.appendChild(csrfInput);
-                
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
+
 
         function openAdminNoteModal(actionUrl, actionType) {
             const modal = document.getElementById('adminNoteModal');
@@ -1158,10 +1143,15 @@
             
             form.action = actionUrl;
             
-            title.textContent = 'Tolak Permintaan';
-            subtitle.textContent = '(Wajib) Berikan alasan penolakan permintaan ini';
-            noteInput.required = true;
-            noteInput.placeholder = 'Alasan penolakan...';
+            if (actionType === 'approve') {
+                title.textContent = 'Terima Permintaan';
+                subtitle.textContent = '(Wajib) Berikan catatan persetujuan (min 5 karakter)';
+                noteInput.placeholder = 'Keterangan persetujuan...';
+            } else {
+                title.textContent = 'Tolak Permintaan';
+                subtitle.textContent = '(Wajib) Berikan alasan penolakan (min 5 karakter)';
+                noteInput.placeholder = 'Alasan penolakan...';
+            }
             
             modal.classList.remove('hidden');
         }
@@ -1196,6 +1186,7 @@
                         rows="3" 
                         class="w-full rounded-xl border-gray-200 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm p-3 border resize-none"
                         placeholder="Catatan..."
+                        required minlength="5"
                     ></textarea>
                 </div>
                 

@@ -16,6 +16,7 @@ class ScheduleSwapRequest extends Model
         'target_schedule_id',
         'reason',
         'status',
+        'target_rejection_reason',
         'admin_id',
         'admin_note',
     ];

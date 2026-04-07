@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('target_schedule_id')->constrained('schedules')->cascadeOnDelete();
             $table->text('reason')->nullable();
             $table->enum('status', ['pending_target', 'rejected_by_target', 'pending_admin', 'rejected_by_admin', 'approved', 'canceled'])->default('pending_target');
+            $table->text('target_rejection_reason')->nullable();
             $table->foreignId('admin_id')->nullable()->constrained('users')->nullOnDelete();
             $table->text('admin_note')->nullable();
             $table->timestamps();

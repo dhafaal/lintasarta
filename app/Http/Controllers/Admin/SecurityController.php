@@ -56,7 +56,7 @@ class SecurityController extends Controller
     {
         $request->validate([
             'ip_address' => 'required|ip',
-            'reason'     => 'required|string|max:255',
+            'reason'     => 'required|string|min:5|max:255',
             'duration'   => 'required|in:1,24,168,permanent', // 1h, 24h, 1week, permanent
         ]);
 

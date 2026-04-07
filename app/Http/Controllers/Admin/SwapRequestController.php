@@ -25,7 +25,7 @@ class SwapRequestController extends Controller
     public function approve(Request $request, ScheduleSwapRequest $swap)
     {
         $request->validate([
-            'admin_note' => 'nullable|string|max:500'
+            'admin_note' => 'required|string|min:5|max:500'
         ]);
         if ($swap->status !== 'pending_admin') {
             return back()->with('error', 'Status request tidak valid untuk di-approve.');
@@ -57,7 +57,7 @@ class SwapRequestController extends Controller
                 $swap->update([
                     'status' => 'approved',
                     'admin_id' => Auth::id(),
-                    'admin_note' => null
+                    'admin_note' => $request->admin_note
                 ]);
 
                 // Log the swap for both schedules
@@ -97,9 +97,10 @@ class SwapRequestController extends Controller
     public function reject(Request $request, ScheduleSwapRequest $swap)
     {
         $request->validate([
-            'admin_note' => 'required|string|max:500'
+            'admin_note' => 'required|string|min:5|max:500'
         ], [
-            'admin_note.required' => 'Catatan penolakan (Admin Note) wajib diisi.'
+            'admin_note.required' => 'Catatan penolakan (Admin Note) wajib diisi.',
+            'admin_note.min' => 'Catatan minimal 5 karakter.'
         ]);
 
         if ($swap->status !== 'pending_admin') {

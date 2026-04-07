@@ -409,10 +409,9 @@
                                 rows="4"
                                 class="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 transition-colors focus:border-red-500 focus:ring-2 focus:ring-red-500"
                                 placeholder="Enter detailed reason for blocking this IP address..."
-                                required
-                                minlength="10"
+                                minlength="5"
                             ></textarea>
-                            <p class="mt-1 text-xs text-gray-500">Minimum 10 characters required</p>
+                            <p class="mt-1 text-xs text-gray-500">Minimum 5 characters required</p>
                         </div>
 
                         <!-- Duration Selection -->
@@ -605,8 +604,8 @@
                 return false;
             }
 
-            if (!reason || reason.length < 10) {
-                alert('Please provide a detailed reason (at least 10 characters).');
+            if (!reason || reason.length < 5) {
+                alert('Please provide a detailed reason (at least 5 characters).');
                 e.preventDefault();
                 return false;
             }
