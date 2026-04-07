@@ -178,20 +178,14 @@
                 :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
             >
                 <!-- Logo -->
-                <div
-                    class="flex h-16 items-center border-b border-slate-200 bg-gradient-to-r from-sky-500 to-blue-600 px-6"
-                >
-                    <div class="flex items-center space-x-3">
-                        <div
-                            class="hover-lift smooth-transition flex h-8 w-8 items-center justify-center rounded-lg bg-white"
-                        >
-                            <i data-lucide="building-2" class="h-5 w-5 text-sky-500"></i>
+                <div class="flex h-20 flex-shrink-0 items-center justify-center border-b border-slate-200/80 bg-white/70 px-4 backdrop-blur-xl">
+                    <a href="{{ route('user.dashboard') }}" class="group flex w-full items-center justify-start rounded-xl p-2 transition-all duration-300 hover:bg-slate-50/80">
+                        <img src="{{ asset('Logo-Lintasarta-new.webp') }}" alt="Lintasarta" class="h-9 w-auto object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105" />
+                        <div class="ml-3 flex flex-col border-l-2 border-sky-500 pl-3">
+                            <span class="text-xs font-bold tracking-widest text-slate-800 uppercase">Employee</span>
+                            <span class="text-[10px] font-medium tracking-widest text-slate-500 uppercase">Self Service</span>
                         </div>
-                        <div>
-                            <h1 class="text-lg font-bold text-white">Scheduler</h1>
-                            <p class="text-xs text-blue-100">Employee</p>
-                        </div>
-                    </div>
+                    </a>
                 </div>
 
                 <!-- Navigation -->

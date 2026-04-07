@@ -447,15 +447,18 @@
                     >
                         <a
                             href="{{ route('admin.dashboard') }}"
-                            class="flex items-center space-x-3"
+                            class="group relative flex w-full items-center overflow-hidden"
                             x-show="!sidebarCollapsed || isMobile"
                             x-transition:enter="transition duration-300 ease-out"
-                            x-transition:enter-start="scale-95 opacity-0"
-                            x-transition:enter-end="scale-100 opacity-100"
+                            x-transition:enter-start="translate-x-[-10px] opacity-0"
+                            x-transition:enter-end="translate-x-0 opacity-100"
                         >
-                            <div>
-                                <h1 class="text-2xl font-semibold tracking-tight text-gray-700">Admin Panel</h1>
-                                <p class="text-sm font-medium text-gray-500">v1.0.0</p>
+                            <div class="flex w-full items-center justify-start rounded-xl p-1.5 transition-all duration-300 group-hover:bg-slate-50">
+                                <img src="{{ asset('Logo-Lintasarta-new.webp') }}" alt="Lintasarta" class="h-9 w-auto object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105" />
+                                <div class="ml-3 flex flex-col border-l-2 border-sky-500 pl-3">
+                                    <span class="text-xs font-bold tracking-widest text-slate-800 uppercase">Portal</span>
+                                    <span class="text-[10px] font-medium tracking-widest text-slate-500 uppercase">Admin</span>
+                                </div>
                             </div>
                         </a>
 
