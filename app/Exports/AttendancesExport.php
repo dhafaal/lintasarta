@@ -12,13 +12,15 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithDrawings;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class AttendancesExport implements FromCollection, ShouldAutoSize, WithColumnFormatting, WithEvents, WithHeadings, WithMapping, WithStyles
+class AttendancesExport implements FromCollection, ShouldAutoSize, WithColumnFormatting, WithEvents, WithHeadings, WithMapping, WithStyles, WithDrawings
 {
     use \Maatwebsite\Excel\Concerns\Exportable;
 
@@ -187,7 +189,45 @@ class AttendancesExport implements FromCollection, ShouldAutoSize, WithColumnFor
 
     public function headings(): array
     {
-        return ['Tanggal', 'Nama', 'Shift', 'Kategori Shift', 'Check In', 'Check Out', 'Jam Kerja', 'Status'];
+        $typeLabel = '';
+        if ($this->type === 'monthly') {
+            $monthName = Carbon::createFromDate($this->year ?? date('Y'), $this->month ?? date('m'), 1)->translatedFormat('F Y');
+            $typeLabel = "Periode: {$monthName}";
+        } elseif ($this->type === 'yearly') {
+            $typeLabel = "Periode Tahun: {$this->year}";
+        } elseif ($this->type === 'user') {
+            $userName = $this->userId ? (\App\Models\User::find($this->userId)->name ?? 'User') : 'Pegawai';
+            if ($this->month && $this->year) {
+                 $monthName = Carbon::createFromDate($this->year, $this->month, 1)->translatedFormat('F Y');
+                 $typeLabel = "Pegawai: {$userName} | Periode: {$monthName}";
+            } else {
+                 $typeLabel = "Pegawai: {$userName}";
+            }
+        } else {
+            $typeLabel = "Laporan Kehadiran Karyawan";
+        }
+
+        return [
+            ['PT. APLIKANUSA LINTASARTA'],
+            ['LAPORAN KEHADIRAN PEGAWAI'],
+            [$typeLabel],
+            [],
+            ['Tanggal', 'Nama', 'Shift', 'Kategori Shift', 'Check In', 'Check Out', 'Jam Kerja', 'Status']
+        ];
+    }
+
+    public function drawings()
+    {
+        $drawing = new Drawing();
+        $drawing->setName('Logo Lintasarta');
+        $drawing->setDescription('Logo');
+        $drawing->setPath(public_path('Logo-Lintasarta-new.webp'));
+        $drawing->setHeight(65);
+        $drawing->setCoordinates('A1');
+        $drawing->setOffsetX(20);
+        $drawing->setOffsetY(10);
+
+        return $drawing;
     }
 
     public function map($item): array
@@ -208,12 +248,37 @@ class AttendancesExport implements FromCollection, ShouldAutoSize, WithColumnFor
     {
         $rowCount = $sheet->getHighestRow();
 
-        // ===== HEADER STYLE =====
-        $sheet->getStyle('A1:H1')->applyFromArray([
+        // Style for titles
+        $sheet->mergeCells('A1:H1');
+        $sheet->mergeCells('A2:H2');
+        $sheet->mergeCells('A3:H3');
+
+        $sheet->getStyle('A1:A3')->applyFromArray([
             'font' => [
+                'name'  => 'Arial',
+                'color' => ['argb' => 'FF0A4B8F'], // Lintasarta Blue
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical'   => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A3')->getFont()->setItalic(true)->setSize(11)->getColor()->setARGB('FF4A5568');
+
+        $sheet->getRowDimension(1)->setRowHeight(35);
+        $sheet->getRowDimension(2)->setRowHeight(25);
+        $sheet->getRowDimension(3)->setRowHeight(25);
+        $sheet->getRowDimension(4)->setRowHeight(15);
+
+        // ===== HEADER STYLE (Row 5) =====
+        $sheet->getStyle('A5:H5')->applyFromArray([
+            'font' => [
+                'name'  => 'Arial',
                 'bold'  => true,
-                'size'  => 12,
-                'color' => ['argb' => 'FF1E293B'], // Slate-800
+                'size'  => 10,
+                'color' => ['argb' => 'FFFFFFFF'], 
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -221,46 +286,52 @@ class AttendancesExport implements FromCollection, ShouldAutoSize, WithColumnFor
             ],
             'fill' => [
                 'fillType'   => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FFF1F5F9'], // Slate-100
+                'startColor' => ['argb' => 'FF0A4B8F'], // Lintasarta Dark Blue Header
             ],
             'borders' => [
-                'bottom' => [
+                'allBorders' => [
                     'borderStyle' => Border::BORDER_MEDIUM,
-                    'color'       => ['argb' => 'FFE2E8F0'], // Light gray
+                    'color'       => ['argb' => 'FFFFFFFF'],
                 ],
             ],
         ]);
 
-        // Set tinggi header agar lebih lapang
-        $sheet->getRowDimension(1)->setRowHeight(28);
+        $sheet->getRowDimension(5)->setRowHeight(28);
 
         // ===== BODY STYLE =====
-        for ($row = 2; $row <= $rowCount; $row++) {
+        for ($row = 6; $row <= $rowCount; $row++) {
             $sheet->getStyle("A{$row}:H{$row}")->applyFromArray([
                 'font' => [
-                    'size'  => 11,
-                    'color' => ['argb' => 'FF1E293B'], // Slate-800
+                    'size'  => 9,
+                    'name'  => 'Arial',
+                    'color' => ['argb' => 'FF1A202C'], // Sangat gelap, almost black tapi lebih natural
                 ],
                 'alignment' => [
                     'vertical' => Alignment::VERTICAL_CENTER,
                 ],
                 'borders' => [
                     'bottom' => [
-                        'borderStyle' => Border::BORDER_HAIR,
-                        'color'       => ['argb' => 'FFE5E7EB'], // super light border
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color'       => ['argb' => 'FFCBD5E1'], // Border abu kebiruan tipis
                     ],
+                    'left' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color'       => ['argb' => 'FFE2E8F0'],
+                    ],
+                    'right' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color'       => ['argb' => 'FFE2E8F0'],
+                    ]
                 ],
             ]);
 
-            // Zebra stripes minimalis (hanya background tipis)
             if ($row % 2 === 0) {
                 $sheet->getStyle("A{$row}:H{$row}")
                     ->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFFAFAFA'); // Soft gray
+                    ->getStartColor()->setARGB('FFF4F7FB'); // Latar biru sangat-sangat muda untuk zebra
             }
         }
 
-        // Lebarkan semua kolom biar lebih "lapang"
         foreach (range('A', 'H') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
@@ -284,7 +355,7 @@ class AttendancesExport implements FromCollection, ShouldAutoSize, WithColumnFor
                 $sheet    = $event->sheet->getDelegate();
                 $rowCount = $sheet->getHighestRow();
 
-                for ($row = 2; $row <= $rowCount; $row++) {
+                for ($row = 6; $row <= $rowCount; $row++) {
                     $statusCell = strtolower((string) $sheet->getCell("H{$row}")->getValue());
                     $fillColor  = null;
                     $textColor  = null;

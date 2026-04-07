@@ -14,8 +14,10 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\WithDrawings;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-class ScheduleReportExport implements FromArray, WithHeadings, WithStyles, WithTitle
+class ScheduleReportExport implements FromArray, WithHeadings, WithStyles, WithTitle, WithDrawings
 {
     protected $month;
 
@@ -196,6 +198,20 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithStyles, WithT
         return 'Jadwal';
     }
 
+    public function drawings()
+    {
+        $drawing = new Drawing();
+        $drawing->setName('Logo Lintasarta');
+        $drawing->setDescription('Logo');
+        $drawing->setPath(public_path('Logo-Lintasarta-new.webp'));
+        $drawing->setHeight(65);
+        $drawing->setCoordinates('A1');
+        $drawing->setOffsetX(20);
+        $drawing->setOffsetY(10);
+
+        return $drawing;
+    }
+
     public function styles(Worksheet $sheet)
     {
         $highestCol   = $sheet->getHighestColumn();
@@ -230,9 +246,9 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithStyles, WithT
     {
         // More formal colors and fonts
         $titles = [
-            ['row' => 1, 'size' => 16, 'color' => 'FF003087', 'bold' => true], // Dark blue for company name
-            ['row' => 2, 'size' => 14, 'color' => 'FF003087', 'bold' => true], // Consistent dark blue for report title
-            ['row' => 3, 'size' => 11, 'color' => 'FF333333', 'italic' => true], // Dark gray for period
+            ['row' => 1, 'size' => 16, 'color' => 'FF0A4B8F', 'bold' => true],
+            ['row' => 2, 'size' => 14, 'color' => 'FF0A4B8F', 'bold' => true],
+            ['row' => 3, 'size' => 11, 'color' => 'FF4A5568', 'italic' => true],
         ];
 
         foreach ($titles as $t) {
@@ -248,6 +264,11 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithStyles, WithT
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
             ]);
         }
+        
+        $sheet->getRowDimension(1)->setRowHeight(35);
+        $sheet->getRowDimension(2)->setRowHeight(25);
+        $sheet->getRowDimension(3)->setRowHeight(25);
+        $sheet->getRowDimension(4)->setRowHeight(15);
     }
 
     private function styleHeaderTabel(Worksheet $sheet, $highestCol)
@@ -266,7 +287,7 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithStyles, WithT
             ],
             'fill' => [
                 'fillType'   => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF4B5EAA'], // Professional dark blue-gray
+                'startColor' => ['argb' => 'FF0A4B8F'], // Lintasarta Corporate Blue
             ],
             'borders' => [
                 'allBorders' => [
@@ -294,7 +315,7 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithStyles, WithT
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN, // Thin borders for clean look
-                    'color'       => ['argb' => 'FF999999'], // Light gray borders
+                    'color'       => ['argb' => 'FFCBD5E1'], // Light blue-gray borders
                 ],
             ],
         ]);
@@ -305,7 +326,7 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithStyles, WithT
             if ($row % 2 === 0) {
                 $sheet->getStyle("A{$row}:{$highestCol}{$row}")->getFill()
                     ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFF8F9FA'); // Very light gray for zebra
+                    ->getStartColor()->setARGB('FFF4F7FB'); // Very light blue for zebra
             }
         }
 
@@ -361,16 +382,16 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithStyles, WithT
                 'name'  => 'Arial',
                 'bold'  => true,
                 'size'  => 10,
-                'color' => ['argb' => 'FF003087'], // Dark blue for totals
+                'color' => ['argb' => 'FF0A4B8F'], // Lintasarta Blue for totals
             ],
             'fill' => [
                 'fillType'   => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FFE6EEFF'], // Light blue background
+                'startColor' => ['argb' => 'FFEBF1F8'], // Light blue background
             ],
             'borders' => [
                 'left' => [
                     'borderStyle' => Border::BORDER_MEDIUM,
-                    'color'       => ['argb' => 'FF4B5EAA'], // Blue-gray border
+                    'color'       => ['argb' => 'FF0A4B8F'], // Lintasarta Blue border
                 ],
             ],
         ]);
@@ -388,7 +409,7 @@ class ScheduleReportExport implements FromArray, WithHeadings, WithStyles, WithT
             ],
             'fill' => [
                 'fillType'   => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF4B5EAA'], // Dark blue-gray
+                'startColor' => ['argb' => 'FF0A4B8F'], // Dark blue
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
