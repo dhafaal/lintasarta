@@ -81,8 +81,24 @@
             });
         </script>
         <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @stack('styles')
+        <style>
+            ::-webkit-scrollbar {
+                width: 5px;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background-color: #e0f2fe;
+                border-radius: 10px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: #f8fafc;
+            }
+        </style>
         <style>
             ::-webkit-scrollbar {
                 width: 5px;

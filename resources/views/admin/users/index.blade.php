@@ -36,16 +36,11 @@
                 </div>
 
                 <a
-                    href="{{ route("admin.users.create") }}"
-                    class="inline-flex transform items-center rounded-xl bg-sky-500 px-6 py-3 font-bold whitespace-normal text-white shadow-sm transition-all hover:bg-sky-600 hover:shadow-md focus:ring-4 focus:ring-sky-200 focus:outline-none"
+                    href="{{ route('admin.users.create') }}"
+                    class="inline-flex transform items-center rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 px-6 py-3 font-bold text-white shadow-lg transition-all duration-200 hover:from-sky-600 hover:to-sky-700 focus:ring-4 focus:ring-sky-200 focus:outline-none"
                 >
                     <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        ></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     Tambah User
                 </a>
@@ -141,29 +136,15 @@
                     </div>
                 </div>
 
-                <div class="-mx-4 overflow-x-auto sm:mx-0">
-                    <table class="w-full min-w-[700px]">
+                <div class="overflow-x-auto overflow-y-visible">
+                    <table id="usersTable" class="w-full">
                         <thead class="border-b-2 border-gray-200 bg-gray-50">
                             <tr>
                                 <th
-                                    class="px-4 py-3 text-left text-xs font-bold tracking-wider text-gray-700 uppercase sm:px-6 sm:py-4 lg:px-8"
+                                    class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
                                 >
                                     <div class="flex items-center">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            class="lucide lucide-user mr-2 text-sky-600"
-                                        >
-                                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                                            <circle cx="12" cy="7" r="4" />
-                                        </svg>
+                                        <i data-lucide="user" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         User
                                     </div>
                                 </th>
@@ -171,23 +152,7 @@
                                     class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
                                 >
                                     <div class="flex items-center">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            class="lucide lucide-mail mr-2 text-sky-600"
-                                        >
-                                            <path
-                                                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2Z"
-                                            />
-                                            <path d="m22 6-10 7L2 6" />
-                                        </svg>
+                                        <i data-lucide="mail" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Email
                                     </div>
                                 </th>
@@ -195,20 +160,7 @@
                                     class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
                                 >
                                     <div class="flex items-center">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            class="lucide lucide-shield mr-2 text-sky-600"
-                                        >
-                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                                        </svg>
+                                        <i data-lucide="shield" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Role
                                     </div>
                                 </th>
@@ -216,36 +168,23 @@
                                     class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
                                 >
                                     <div class="flex items-center">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            class="lucide lucide-calendar mr-2 text-sky-600"
-                                        >
-                                            <path d="M8 2v4" />
-                                            <path d="M16 2v4" />
-                                            <rect width="18" height="18" x="3" y="4" rx="2" />
-                                            <path d="M3 10h18" />
-                                        </svg>
+                                        <i data-lucide="calendar" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Bergabung
                                     </div>
                                 </th>
                                 <th
-                                    class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
+                                    class="px-8 py-4 text-center text-xs font-bold tracking-wider text-gray-700 uppercase"
                                 >
-                                    Aksi
+                                    <div class="flex items-center justify-center">
+                                        <i data-lucide="settings" class="mr-2 h-4 w-4 text-sky-600"></i>
+                                        Aksi
+                                    </div>
                                 </th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse ($users as $user)
-                                <tr class="group transition-colors duration-200 hover:bg-sky-50">
+                                <tr class="group transition-colors duration-200 hover:bg-sky-50" data-role="{{ $user->role }}">
                                     <td class="px-8 py-6 whitespace-nowrap">
                                         <div class="flex items-center">
                                             @if($user && $user->profile_photo)
@@ -260,7 +199,7 @@
                                                 </div>
                                             @endif
                                             <div>
-                                                <div class="text-base font-semibold text-gray-700">
+                                                <div class="text-base font-semibold text-gray-900">
                                                     {{ $user->name }}
                                                 </div>
                                                 <div class="text-xs text-gray-500">ID: {{ $user->id }}</div>
@@ -274,15 +213,20 @@
                                         <span
                                             class="@if ($user->role == "Admin")
                                                 bg-red-100
-                                                text-red-800
+                                                text-red-700
                                             @elseif ($user->role == "Operator")
                                                 bg-sky-100
-                                                text-sky-800
+                                                text-sky-700
                                             @else
                                                 bg-green-100
-                                                text-green-800
-                                            @endif inline-flex items-center rounded-full px-3 py-1 text-sm font-medium"
+                                                text-green-700
+                                            @endif inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
                                         >
+                                            <span class="mr-1.5 h-1.5 w-1.5 rounded-full 
+                                                @if ($user->role == 'Admin') bg-red-500
+                                                @elseif ($user->role == 'Operator') bg-sky-500
+                                                @else bg-green-500 @endif
+                                            "></span>
                                             {{ ucfirst($user->role) }}
                                         </span>
                                     </td>
@@ -295,25 +239,27 @@
                                         </div>
                                     </td>
                                     <td class="px-8 py-6 text-left whitespace-nowrap">
-                                        <div class="flex items-center justify-start space-x-3">
+                                        <div class="flex items-center justify-start space-x-2">
                                             <a
-                                                href="{{ route("admin.users.edit", $user->id) }}"
+                                                href="{{ route('admin.users.edit', $user->id) }}"
                                                 class="inline-flex items-center rounded-lg bg-sky-100 px-4 py-2 text-sm font-semibold text-sky-700 transition-all duration-200 hover:bg-sky-200"
                                             >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                                 Edit
                                             </a>
                                             <form
-                                                action="{{ route("admin.users.destroy", $user->id) }}"
+                                                action="{{ route('admin.users.destroy', $user->id) }}"
                                                 method="POST"
-                                                class="inline"
+                                                class="inline-block"
+                                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')"
                                             >
                                                 @csrf
-                                                @method("DELETE")
+                                                @method('DELETE')
                                                 <button
                                                     type="submit"
-                                                    onclick="return confirm('Yakin ingin menghapus user {{ $user->name }}? Tindakan ini tidak dapat dibatalkan.')"
                                                     class="inline-flex items-center rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 transition-all duration-200 hover:bg-red-200"
                                                 >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
                                                     Hapus
                                                 </button>
                                             </form>
@@ -371,57 +317,126 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Manual Pagination Footer (Matches Locations Module) -->
+                <div id="pagination-footer" class="flex items-center justify-between px-8 py-6 border-t border-gray-100 bg-white">
+                    <div class="flex items-center space-x-3 text-sm font-medium text-gray-600">
+                        <span>Tampilkan</span>
+                        <select id="pageSize" class="rounded-lg border-gray-200 bg-white py-1.5 pl-3 pr-8 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all cursor-pointer">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>data</span>
+                    </div>
+                    <div class="flex items-center space-x-6">
+                        <div id="paginationInfo" class="text-sm font-medium text-gray-500"></div>
+                        <div id="paginationButtons" class="flex items-center space-x-2"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const table = document.getElementById('usersTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => !row.querySelector('td[colspan]'));
             const searchInput = document.getElementById('searchInput');
             const roleFilter = document.getElementById('roleFilter');
-            const tableRows = document.querySelectorAll('tbody tr');
+            const pageSizeSelect = document.getElementById('pageSize');
+            const infoText = document.getElementById('paginationInfo');
+            const buttonsContainer = document.getElementById('paginationButtons');
 
-            function filterTable() {
-                const searchTerm = searchInput.value.toLowerCase();
-                const roleValue = roleFilter.value.toLowerCase();
-                let visibleCount = 0;
+            let currentPage = 1;
+            let pageSize = parseInt(pageSizeSelect.value);
+            let filteredRows = [...rows];
 
-                tableRows.forEach((row) => {
-                    // Skip empty state row
-                    if (row.querySelector('td[colspan]')) {
-                        return;
-                    }
+            function render() {
+                // Apply filters
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const roleTerm = roleFilter.value;
 
-                    const userName = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
-                    const userEmail = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
-                    const userRole = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
-                    const joinDate = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
-
-                    const matchesSearch =
-                        userName.includes(searchTerm) ||
-                        userEmail.includes(searchTerm) ||
-                        userRole.includes(searchTerm) ||
-                        joinDate.includes(searchTerm);
-
-                    const matchesRole = !roleValue || userRole.includes(roleValue);
-
-                    if (matchesSearch && matchesRole) {
-                        row.style.display = '';
-                        visibleCount++;
-                    } else {
-                        row.style.display = 'none';
-                    }
+                filteredRows = rows.filter(row => {
+                    const name = row.cells[0].textContent.toLowerCase();
+                    const email = row.cells[1].textContent.toLowerCase();
+                    const role = row.getAttribute('data-role') || ''; // Add data-role to TR if needed, or check cell text
+                    
+                    const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm);
+                    const matchesRole = roleTerm === '' || role === roleTerm;
+                    
+                    return matchesSearch && matchesRole;
                 });
 
-                // Show/hide empty state
-                const emptyRow = document.querySelector('tbody tr td[colspan]')?.parentElement;
-                if (emptyRow) {
-                    emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+                const total = filteredRows.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                // Update info text
+                const start = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+                const end = Math.min(currentPage * pageSize, total);
+                infoText.textContent = total === 0 
+                    ? 'Tidak ada data' 
+                    : `Menampilkan ${start} – ${end} dari ${total} pengguna`;
+
+                // Show/hide rows
+                rows.forEach(row => row.style.display = 'none');
+                filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize).forEach(row => {
+                    row.style.display = '';
+                });
+
+                // Render buttons
+                buttonsContainer.innerHTML = '';
+                
+                const btnClass = 'inline-flex items-center justify-center min-w-[2.25rem] h-[2.25rem] px-2 rounded-xl text-sm font-bold transition-all duration-200 border-none';
+                const inactiveClass = 'bg-sky-100 text-sky-700 hover:bg-sky-200';
+                const activeClass = 'bg-sky-500 text-white shadow-md shadow-sky-200';
+                const disabledClass = 'opacity-30 cursor-not-allowed bg-gray-100 text-gray-400';
+
+                function createBtn(label, page, disabled = false, active = false) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.innerHTML = label;
+                    btn.className = `${btnClass} ${disabled ? disabledClass : (active ? activeClass : inactiveClass)}`;
+                    if (!disabled && !active) {
+                        btn.onclick = () => {
+                            currentPage = page;
+                            render();
+                            window.scrollTo({ top: table.offsetTop - 100, behavior: 'smooth' });
+                        };
+                    }
+                    buttonsContainer.appendChild(btn);
                 }
+
+                // Prev
+                createBtn('‹', currentPage - 1, currentPage === 1);
+
+                // Page numbers
+                // For simplicity, showing all pages. Can be optimized if many pages.
+                for (let i = 1; i <= totalPages; i++) {
+                    createBtn(i, i, false, i === currentPage);
+                }
+
+                // Next
+                createBtn('›', currentPage + 1, currentPage === totalPages);
             }
 
-            searchInput.addEventListener('input', filterTable);
-            roleFilter.addEventListener('change', filterTable);
+            // Listeners
+            searchInput.addEventListener('input', () => { currentPage = 1; render(); });
+            roleFilter.addEventListener('change', () => { currentPage = 1; render(); });
+            pageSizeSelect.addEventListener('change', (e) => {
+                pageSize = parseInt(e.target.value);
+                currentPage = 1;
+                render();
+            });
+
+            // Initial render
+            render();
         });
     </script>
 @endsection
+

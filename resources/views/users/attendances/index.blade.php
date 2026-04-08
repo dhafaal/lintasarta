@@ -192,7 +192,7 @@
                                 <div
                                     class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-sky-500"
                                 >
-                                    <i data-lucide="calendar-clock" class="h-4 w-4 text-white"></i>
+                                    <i data-lucide="calendar-days" class="h-4 w-4 text-white"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <p class="mb-1 text-xs font-semibold text-gray-600">Working Hours</p>

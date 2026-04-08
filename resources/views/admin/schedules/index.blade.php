@@ -7,22 +7,8 @@
         <div class="space-y-6 sm:space-y-8">
             <div class="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex items-center space-x-3 sm:space-x-4">
-                    <div
-                        class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 shadow-sm sm:h-12 sm:w-12"
-                    >
-                        <svg
-                            class="h-5 w-5 text-sky-600 sm:h-6 sm:w-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            ></path>
-                        </svg>
+                    <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 shadow-sm">
+                        <i data-lucide="calendar" class="h-6 w-6 text-sky-600"></i>
                     </div>
                     <div class="min-w-0">
                         <h1 class="text-xl font-bold tracking-tight text-gray-700 sm:text-2xl lg:text-3xl">
@@ -35,23 +21,10 @@
                 </div>
                 <a
                     href="{{ route('admin.schedules.create') }}"
-                    class="inline-flex transform items-center rounded-xl bg-sky-500 px-6 py-3 font-bold whitespace-normal text-white shadow-sm transition-all hover:bg-sky-600 hover:shadow-md focus:ring-4 focus:ring-sky-200 focus:outline-none"
+                    class="inline-flex transform items-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-6 py-2.5 font-bold text-white shadow-lg transition-all duration-200 hover:from-sky-600 hover:to-indigo-700 hover:scale-105 active:scale-95 focus:ring-4 focus:ring-sky-200 focus:outline-none whitespace-nowrap"
                 >
-                    <svg
-                        class="mr-1 h-4 w-4 sm:mr-2 sm:h-5 sm:w-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        ></path>
-                    </svg>
-                    <span class="hidden sm:inline">Tambah Jadwal Baru</span>
-                    <span class="sm:hidden">Tambah Jadwal</span>
+                    <i data-lucide="plus" class="mr-2 h-5 w-5"></i>
+                    Tambah Jadwal Baru
                 </a>
             </div>
 
@@ -130,7 +103,7 @@
                 />
             </div>
 
-            <div class="overflow-hidden rounded-xl border-2 border-sky-100 bg-white shadow-xl sm:rounded-2xl">
+            <div class="overflow-hidden rounded-2xl border-2 border-sky-100 bg-white shadow-xl">
                 <div
                     class="border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50 px-4 py-4 sm:px-6 sm:py-6 lg:px-8"
                 >
@@ -148,6 +121,7 @@
                                 method="GET"
                                 action="{{ route('admin.schedules.index') }}"
                                 class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3"
+                                onsubmit="return false;"
                             >
                                 <!-- User Search -->
                                 <div class="relative flex-1 sm:flex-initial">
@@ -156,25 +130,13 @@
                                         <div
                                             class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
                                         >
-                                            <svg
-                                                class="h-3 w-3 text-gray-400 sm:h-4 sm:w-4"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                                ></path>
-                                            </svg>
+                                            <i data-lucide="search" class="h-4 w-4 text-gray-400"></i>
                                         </div>
                                         <input
                                             type="text"
-                                            id="schedule_search"
-                                            class="block w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pr-3 pl-9 text-xs transition-all duration-200 focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500 sm:w-64 sm:pr-10 sm:pl-10 sm:text-sm"
-                                            placeholder="Ketik untuk mencari karyawan..."
+                                            id="searchInput"
+                                            class="block w-full rounded-lg border border-sky-100 bg-white py-2.5 pr-10 pl-10 text-sm font-semibold text-sky-900 transition-all duration-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-100 sm:w-72"
+                                            placeholder="Cari nama karyawan..."
                                             autocomplete="off"
                                         />
                                         <input type="hidden" name="search" id="schedule_search_value" />
@@ -234,29 +196,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="-mx-4 overflow-x-auto sm:mx-0">
-                    <table class="w-full min-w-[600px]">
+                <div class="overflow-x-auto">
+                    <table id="schedulesTable" class="w-full">
                         <thead class="border-b-2 border-gray-200 bg-gray-50">
                             <tr>
-                                <th
-                                    class="px-4 py-3 text-left text-xs font-bold tracking-wider text-gray-700 uppercase sm:px-6 sm:py-4 lg:px-8"
-                                >
+                                <th class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                                     <div class="flex items-center">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            class="lucide lucide-user mr-2 text-sky-600"
-                                        >
-                                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                                            <circle cx="12" cy="7" r="4" />
-                                        </svg>
+                                        <i data-lucide="user" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Nama Karyawan
                                     </div>
                                 </th>
@@ -284,39 +230,24 @@
                                         Total Shift
                                     </div>
                                 </th>
-                                <th
-                                    class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
-                                >
+                                <th class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                                     <div class="flex items-center">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            class="lucide lucide-clock mr-2 text-sky-600"
-                                        >
-                                            <circle cx="12" cy="12" r="10" />
-                                            <polyline points="12 6 12 12 16 14" />
-                                        </svg>
+                                        <i data-lucide="clock" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Total Jam Kerja
                                     </div>
                                 </th>
-                                <th
-                                    class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
-                                >
-                                    Aksi
+                                <th class="px-8 py-4 text-center text-xs font-bold tracking-wider text-gray-700 uppercase">
+                                    <div class="flex items-center justify-center">
+                                        <i data-lucide="settings" class="mr-2 h-4 w-4 text-sky-600"></i>
+                                        Aksi
+                                    </div>
                                 </th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse ($workHoursSummary as $summary)
                                 <tr class="group transition-colors duration-200 hover:bg-sky-50">
-                                    <td class="px-4 py-4 whitespace-nowrap sm:px-6 sm:py-6 lg:px-8">
+                                    <td class="px-8 py-6 whitespace-nowrap">
                                         <div class="flex items-center">
                                             @php
                                                 $scheduleUser = \App\Models\User::find($summary['user_id']);
@@ -333,7 +264,7 @@
                                                 </div>
                                             @endif
                                             <div>
-                                                <div class="text-base font-semibold text-gray-700">
+                                                <div class="text-base font-semibold text-gray-900">
                                                     {{ $summary['employee_name'] }}
                                                 </div>
                                                 <div class="text-sm text-gray-500">Karyawan</div>
@@ -387,7 +318,7 @@
                                         </span>
                                     </td>
                                     <td class="px-8 py-6 text-left whitespace-nowrap">
-                                        <div class="flex items-center justify-start space-x-3">
+                                        <div class="flex items-center justify-start space-x-2">
                                             @php
                                                 $hasFuture = \App\Models\Schedules::where('user_id', $summary['user_id'])
                                                     ->whereDate('schedule_date', '>', \Carbon\Carbon::today())
@@ -445,50 +376,19 @@
                                             @endif
 
                                             <a
-                                                href="{{ route('admin.schedules.edit', ['schedule' => 'bulk']) }}?user_id={{ $summary['user_id'] }}"
-                                                class="inline-flex items-center rounded-lg bg-sky-100 px-4 py-2 text-sm font-semibold text-sky-700 transition-all duration-200 hover:bg-sky-200"
+                                                href="{{ route('admin.schedules.history', ['user' => $summary['user_id']]) }}"
+                                                class="inline-flex items-center rounded-lg bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700 transition-all duration-200 hover:bg-emerald-200"
                                             >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    width="16"
-                                                    height="16"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    class="lucide lucide-edit mr-2"
-                                                >
-                                                    <path
-                                                        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                                                    />
-                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                                </svg>
-                                                Lihat Jadwal
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                Jadwal
                                             </a>
 
                                             <a
-                                                href="{{ route('admin.schedules.history', $summary['user_id']) }}"
-                                                class="inline-flex items-center rounded-lg bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700 transition-all duration-200 hover:bg-emerald-200"
+                                                href="{{ route('admin.schedules.edit', ['schedule' => 'bulk']) }}?user_id={{ $summary['user_id'] }}"
+                                                class="inline-flex items-center rounded-lg bg-sky-100 px-4 py-2 text-sm font-semibold text-sky-700 transition-all duration-200 hover:bg-sky-200"
                                             >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    width="16"
-                                                    height="16"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    class="lucide lucide-history mr-2"
-                                                >
-                                                    <path d="M3 3v5h5" />
-                                                    <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
-                                                    <path d="M12 7v5l4 2" />
-                                                </svg>
-                                                History
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                Edit
                                             </a>
                                         </div>
                                     </td>
@@ -549,6 +449,25 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Manual Pagination Footer (Matches Locations Module) -->
+                <div id="pagination-footer" class="flex items-center justify-between px-8 py-6 border-t border-gray-100 bg-white">
+                    <div class="flex items-center space-x-3 text-sm font-medium text-gray-600">
+                        <span>Tampilkan</span>
+                        <select id="pageSize" class="rounded-lg border-gray-200 bg-white py-1.5 pl-3 pr-8 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all cursor-pointer">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>data</span>
+                    </div>
+                    <div class="flex items-center space-x-6">
+                        <div id="paginationInfo" class="text-sm font-medium text-gray-500"></div>
+                        <div id="paginationButtons" class="flex items-center space-x-2"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1078,6 +997,90 @@
             if (e.target === this) {
                 closeSwapModal();
             }
+        });
+
+        // Manual Pagination logic for the work-hours summary table
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = document.getElementById('schedulesTable');
+            const tbody = table ? table.querySelector('tbody') : null;
+            if (!tbody) return;
+
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => !row.querySelector('td[colspan]'));
+            const searchInput = document.getElementById('schedule_search');
+            const pageSizeSelect = document.getElementById('pageSize');
+            const infoText = document.getElementById('paginationInfo');
+            const buttonsContainer = document.getElementById('paginationButtons');
+
+            let currentPage = 1;
+            let pageSize = parseInt(pageSizeSelect.value);
+
+            function render() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+
+                const filteredRows = rows.filter(row => {
+                    const employeeName = row.cells[0].textContent.toLowerCase();
+                    return employeeName.includes(searchTerm);
+                });
+
+                const total = filteredRows.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                // Update info text
+                const start = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+                const end = Math.min(currentPage * pageSize, total);
+                infoText.textContent = total === 0 
+                    ? 'Tidak ada data' 
+                    : `Menampilkan ${start} – ${end} dari ${total} jadwal`;
+
+                // Show/hide rows
+                rows.forEach(row => row.style.display = 'none');
+                filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize).forEach(row => {
+                    row.style.display = '';
+                });
+
+                // Render buttons
+                buttonsContainer.innerHTML = '';
+                
+                const btnClass = 'inline-flex items-center justify-center min-w-[2.25rem] h-[2.25rem] px-2 rounded-xl text-sm font-bold transition-all duration-200 border-none';
+                const inactiveClass = 'bg-sky-100 text-sky-700 hover:bg-sky-200';
+                const activeClass = 'bg-sky-500 text-white shadow-md shadow-sky-200';
+                const disabledClass = 'opacity-30 cursor-not-allowed bg-gray-100 text-gray-400';
+
+                function createBtn(label, page, disabled = false, active = false) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.innerHTML = label;
+                    btn.className = `${btnClass} ${disabled ? disabledClass : (active ? activeClass : inactiveClass)}`;
+                    if (!disabled && !active) {
+                        btn.onclick = () => {
+                            currentPage = page;
+                            render();
+                            window.scrollTo({ top: table.offsetTop - 100, behavior: 'smooth' });
+                        };
+                    }
+                    buttonsContainer.appendChild(btn);
+                }
+
+                createBtn('‹', currentPage - 1, currentPage === 1);
+                for (let i = 1; i <= totalPages; i++) {
+                    createBtn(i, i, false, i === currentPage);
+                }
+                createBtn('›', currentPage + 1, currentPage === totalPages);
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', () => { currentPage = 1; render(); });
+            }
+            
+            pageSizeSelect.addEventListener('change', (e) => {
+                pageSize = parseInt(e.target.value);
+                currentPage = 1;
+                render();
+            });
+
+            render();
         });
     </script>
 @endsection

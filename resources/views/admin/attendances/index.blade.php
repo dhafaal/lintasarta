@@ -8,8 +8,8 @@
             <!-- Enhanced Header Section -->
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
                 <div class="flex items-center space-x-3 sm:space-x-4">
-                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-sky-100 to-sky-200 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
-                        <i data-lucide="calendar-check" class="w-5 h-5 sm:w-6 sm:h-6 text-sky-700"></i>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-700"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     </div>
 
             
@@ -24,26 +24,25 @@
                     <form method="GET" class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                         <div class="relative flex-1 sm:flex-initial">
                             <input type="date" name="date" value="{{ $today }}" 
-                                class="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 px-6 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-xs sm:text-sm">
-                            <i data-lucide="calendar" class="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                class="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 border-2 border-sky-100 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-500 transition-all duration-200 bg-white text-xs sm:text-sm font-semibold text-sky-900">
+                            <i data-lucide="calendar" class="text-sky-500 absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"></i>
                         </div>
-                        <button type="submit" class="inline-flex items-center px-6 py-3 bg-sky-50 text-sky-700 outline-1 outline-sky-100 font-bold rounded-xl transition-all transform focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm hover:shadow-md whitespace-normal">
-                            <i data-lucide="search" class="w-3 h-3 sm:w-4 sm:h-4 mr-1"></i>
-                            <span class="xs:inline">Filter</span>
+                        <button type="submit" class="inline-flex items-center px-6 py-2.5 bg-sky-50 text-sky-700 border-2 border-sky-100 font-bold rounded-xl transition-all transform hover:bg-sky-100 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm whitespace-nowrap">
+                            <i data-lucide="filter" class="mr-2 h-4 w-4"></i>
+                            <span>Filter</span>
                         </button>
                     </form>
                     
                     <a href="{{ route('admin.attendances.history') }}"
-                       class="inline-flex items-center px-6 py-3 bg-sky-500  text-white font-bold rounded-xl hover:bg-sky-600 transition-all transform focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm hover:shadow-md whitespace-normal">
-                        <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2"></i>
-                        <span class="hidden sm:inline">Riwayat Absensi</span>
-                        <span class="sm:hidden">Riwayat</span>
+                       class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold rounded-xl hover:from-sky-600 hover:to-indigo-700 transition-all transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-lg hover:shadow-sky-200/50 whitespace-nowrap">
+                        <i data-lucide="history" class="mr-2 h-4 w-4"></i>
+                        <span>Riwayat Absensi</span>
                     </a>
 
                     <!-- Export Dropdown -->
                     <details class="relative w-full sm:w-auto">
                         <summary class="list-none inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-4 py-3 bg-white border-2 border-sky-200 text-sky-700 font-semibold transition-all rounded-xl hover:bg-sky-50 cursor-pointer select-none text-xs sm:text-sm">
-                            <i data-lucide="download" class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2"></i>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1 sm:mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             Export
                             <svg class="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 text-sky-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
                         </summary>
@@ -52,7 +51,7 @@
                                 <!-- Monthly Export -->
                                 <div class="border border-gray-100 rounded-lg p-3">
                                     <div class="flex items-center mb-2">
-                                        <i data-lucide="calendar" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600 mr-2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                         <span class="text-sm font-semibold text-gray-700">Export Bulanan</span>
                                     </div>
                                     <form method="GET" action="{{ route('admin.attendances.export.monthly') }}" class="flex items-center space-x-2">
@@ -76,8 +75,8 @@
                                 <!-- Yearly Export -->
                                 <div class="border border-gray-100 rounded-lg p-3">
                                     <div class="flex items-center mb-2">
-                                        <i data-lucide="calendar-range" class="w-4 h-4 text-sky-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Export Tahunan</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600 mr-2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M3 14h18"/><path d="M3 18h18"/><path d="M7 4v16"/><path d="M11 4v16"/><path d="M15 4v16"/><path d="M19 4v16"/></svg>
+                                        <span class="text-sm font-semibold text-gray-700">Export Range</span>
                                     </div>
                                     <form method="GET" action="{{ route('admin.attendances.export.yearly') }}" class="flex items-center space-x-2">
                                         <select name="year" class="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
@@ -86,7 +85,7 @@
                                             @endfor
                                         </select>
                                         <button type="submit" class="inline-flex items-center px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg">
-                                            <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h8"/><path d="M10 13h0"/><path d="M12 13h0"/><path d="M14 13h0"/><path d="M16 13h0"/></svg>
                                             Export
                                         </button>
                                     </form>
@@ -95,13 +94,13 @@
                                 <!-- Export All Data -->
                                 <div class="border border-gray-100 rounded-lg p-3">
                                     <div class="flex items-center mb-2">
-                                        <i data-lucide="database" class="w-4 h-4 text-sky-600 mr-2"></i>
-                                        <span class="text-sm font-semibold text-gray-700">Export Seluruh Data</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600 mr-2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+                                        <span class="text-sm font-semibold text-gray-700">Export All Log</span>
                                     </div>
                                     <form method="GET" action="{{ route('admin.attendances.export.all') }}" class="flex items-center justify-between">
                                         <span class="text-xs text-gray-500">Semua karyawan, semua waktu</span>
                                         <button type="submit" class="inline-flex items-center px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg">
-                                            <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h8"/><path d="M10 13h0"/><path d="M12 13h0"/><path d="M14 13h0"/><path d="M16 13h0"/></svg>
                                             Export
                                         </button>
                                     </form>
@@ -110,7 +109,7 @@
                                 <!-- Per User Export -->
                                 <div class="border border-gray-100 rounded-lg p-3">
                                     <div class="flex items-center mb-2">
-                                        <i data-lucide="user-round" class="w-4 h-4 text-sky-600 mr-2"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600 mr-2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
                                         <span class="text-sm font-semibold text-gray-700">Export per User</span>
                                     </div>
                                     <form method="GET" action="{{ route('admin.attendances.export.per-user') }}" class="space-y-3">
@@ -192,7 +191,7 @@
 
                                         <!-- Export Button -->
                                         <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg transition-all duration-200">
-                                            <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h8"/><path d="M10 13h0"/><path d="M12 13h0"/><path d="M14 13h0"/><path d="M16 13h0"/></svg>
                                             Export
                                         </button>
                                     </form>
@@ -213,7 +212,7 @@
                             <p class="text-sky-200 text-xs mt-1 truncate">Jadwal hari ini</p>
                         </div>
                         <div class="w-10 h-10 sm:w-14 sm:h-14 bg-sky-400 bg-opacity-30 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ml-2">
-                            <i data-lucide="calendar-days" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-white"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
                         </div>
                     </div>
                 </div>
@@ -252,7 +251,7 @@
             <div class="bg-amber-50 border border-amber-200 rounded-xl sm:rounded-2xl p-4 sm:p-5">
                 <div class="flex items-start">
                     <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center mr-4">
-                        <i data-lucide="moon" class="w-5 h-5 text-amber-700"></i>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-amber-700"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center justify-between mb-2">
@@ -267,22 +266,23 @@
                                 <div class="bg-white rounded-xl border border-amber-200 p-3">
                                     <div class="flex items-center justify-between mb-1">
                                         <div class="text-sm font-semibold text-gray-900">{{ optional($oa->user)->name ?? '-' }}</div>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-100 text-indigo-800">
-                                            {{ optional($oa->schedule->shift)->shift_name ?? 'Shift' }}
+                                        <span class="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-sm font-medium text-sky-700">
+                                            <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-sky-500"></span>
+                                            {{ ucfirst($oa->schedule->shift->category ?? 'Shift') }}
                                         </span>
                                     </div>
                                     <div class="text-xs text-gray-600 flex items-center space-x-2">
                                         <span class="inline-flex items-center">
-                                            <i data-lucide="calendar" class="w-3 h-3 mr-1"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
                                             {{ \Carbon\Carbon::parse(optional($oa->schedule)->schedule_date)->format('d M Y') }}
                                         </span>
                                         <span class="inline-flex items-center">
-                                            <i data-lucide="log-in" class="w-3 h-3 mr-1"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
                                             Check-in: {{ \Carbon\Carbon::parse($oa->check_in_time)->format('H:i') }}
                                         </span>
                                         @if($oa->location)
                                         <span class="inline-flex items-center">
-                                            <i data-lucide="map-pin" class="w-3 h-3 mr-1"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                                             {{ $oa->location->name }}
                                         </span>
                                         @endif
@@ -296,7 +296,7 @@
             @endif
 
             <!-- Enhanced Table Card -->
-            <div class="bg-white rounded-xl sm:rounded-2xl border-2 border-sky-100 overflow-hidden shadow-xl">
+            <div class="bg-white rounded-2xl border-2 border-sky-100 overflow-hidden shadow-xl">
                 <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50">
                     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div class="min-w-0">
@@ -307,14 +307,14 @@
                             <!-- Search -->
                             <div class="relative flex-1 sm:flex-initial">
                                 <input type="text" id="searchInput" placeholder="Cari karyawan..."
-                                       class="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-xs sm:text-sm">
+                                       class="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-xs sm:text-sm transition-all duration-200">
                                 <svg class="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
                             </div>
 
                             <!-- Filter Status -->
-                            <select id="statusFilter" class="w-full sm:w-auto px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-xs sm:text-sm">
+                            <select id="statusFilter" class="w-full sm:w-auto px-3 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-xs sm:text-sm transition-all duration-200">
                                 <option value="">Semua Status</option>
                                 <option value="hadir">Hadir</option>
                                 <option value="telat">Telat</option>
@@ -327,8 +327,7 @@
                     </div>
                 </div>
 
-                <!-- Mobile Card View -->
-                <div class="block md:hidden space-y-4 px-4">
+                <div class="block md:hidden space-y-4 px-4 py-4" id="attendanceMobileContainer">
                     @php $groups = $schedulesToday->groupBy('user_id'); @endphp
                     @forelse($groups as $userId => $userSchedules)
                         @php
@@ -386,7 +385,7 @@
                             $isEarly = $latestPerm && is_string($latestPerm->reason ?? '') && preg_match('/^\[EARLY_CHECKOUT\]/', $latestPerm->reason);
                         @endphp
                         
-                        <div class="bg-white rounded-xl border-2 border-sky-100 p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="attendance-card bg-white rounded-xl border-2 border-sky-100 p-4 shadow-sm hover:shadow-md transition-shadow" data-name="{{ $user->name ?? '' }}" data-status="{{ $statusText }}">
                             <!-- User Info -->
                             <div class="flex items-center mb-4 pb-4 border-b border-gray-100">
                                 @if($user && $user->profile_photo)
@@ -432,7 +431,7 @@
                                 <!-- Shift -->
                                 <div class="flex items-start">
                                     <div class="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
-                                        <i data-lucide="clock" class="w-4 h-4 text-sky-600"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <div class="text-xs text-gray-500 mb-1">Shift</div>
@@ -443,6 +442,7 @@
                                                     @elseif($us->shift && $us->shift->category == 'Siang') bg-orange-100 text-orange-800
                                                     @elseif($us->shift && $us->shift->category == 'Malam') bg-indigo-100 text-indigo-800
                                                     @else bg-gray-100 text-gray-800 @endif">
+                                                    <span class="mr-1.5 h-1.5 w-1.5 rounded-full {{ $us->shift && $us->shift->category == 'Pagi' ? 'bg-yellow-500' : ($us->shift && $us->shift->category == 'Siang' ? 'bg-orange-500' : ($us->shift && $us->shift->category == 'Malam' ? 'bg-indigo-500' : 'bg-gray-500')) }}"></span>
                                                     {{ $us->shift->shift_name ?? '-' }}
                                                 </span>
                                             @endforeach
@@ -454,7 +454,7 @@
                                 @if($location)
                                 <div class="flex items-start">
                                     <div class="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
-                                        <i data-lucide="map-pin" class="w-4 h-4 text-sky-600"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <div class="text-xs text-gray-500 mb-1">Lokasi</div>
@@ -468,7 +468,7 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div class="flex items-start">
                                         <div class="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
-                                            <i data-lucide="log-in" class="w-4 h-4 text-green-600"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="text-xs text-gray-500 mb-1">Check In</div>
@@ -483,7 +483,7 @@
 
                                     <div class="flex items-start">
                                         <div class="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
-                                            <i data-lucide="log-out" class="w-4 h-4 text-red-600"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="text-xs text-gray-500 mb-1">Check Out</div>
@@ -501,7 +501,7 @@
                                 @if($latestPerm)
                                 <div class="flex items-start">
                                     <div class="w-6 h-6 flex items-center justify-center mr-2 flex-shrink-0">
-                                        <i data-lucide="message-circle" class="w-4 h-4 text-sky-600"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M12 11h.01"/><path d="M16 11h.01"/><path d="M8 11h.01"/></svg>
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <div class="text-xs text-gray-500 mb-1">Keterangan</div>
@@ -530,20 +530,20 @@
                                 <div class="pt-3 border-t border-gray-100 flex gap-2">
                                     @if($earlyPending)
                                         <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $earlyPending) }}', 'approve')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
-                                            <i data-lucide="check" class="w-3 h-3 mr-1"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M20 6 9 17l-5-5"/></svg>
                                             Setujui
                                         </button>
                                         <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.reject', $earlyPending) }}', 'reject')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all">
-                                            <i data-lucide="x" class="w-3 h-3 mr-1"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                             Tolak
                                         </button>
                                     @elseif($otherPending)
                                         <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $otherPending) }}', 'approve')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
-                                            <i data-lucide="check" class="w-3 h-3 mr-1"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M20 6 9 17l-5-5"/></svg>
                                             Setujui
                                         </button>
                                         <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.reject', $otherPending) }}', 'reject')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all">
-                                            <i data-lucide="x" class="w-3 h-3 mr-1"></i>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                             Tolak
                                         </button>
                                     @endif
@@ -554,7 +554,7 @@
                     @empty
                         <div class="bg-white rounded-xl border-2 border-sky-100 p-8 text-center">
                             <div class="w-16 h-16 bg-gradient-to-br from-sky-100 to-sky-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i data-lucide="calendar-x" class="w-8 h-8 text-sky-400"></i>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-400"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="14" x2="14" y2="18"/><line x1="14" y1="14" x2="10" y2="18"/></svg>
                             </div>
                             <h3 class="text-lg font-bold text-gray-900 mb-2">Belum ada data absensi</h3>
                             <p class="text-sm text-gray-600">Data absensi untuk tanggal ini belum tersedia</p>
@@ -564,10 +564,10 @@
 
                 <!-- Desktop Table View -->
                 <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full">
+                    <table id="attendancesTable" class="w-full">
                         <thead class="bg-gray-50 border-b-2 border-gray-200">
                             <tr>
-                                <th class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                                     <div class="flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user text-sky-600 mr-2">
                                             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
@@ -576,7 +576,7 @@
                                         Nama Karyawan
                                     </div>
                                 </th>
-                                <th class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                                     <div class="flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock text-sky-600 mr-2">
                                             <circle cx="12" cy="12" r="10"/>
@@ -585,13 +585,13 @@
                                         Shift
                                     </div>
                                 </th>
-                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                                     <div class="flex items-center">
-                                        <i data-lucide="map-pin" class="w-4 h-4 text-sky-600 mr-1"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600 mr-2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                                         Lokasi
                                     </div>
                                 </th>
-                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                                     <div class="flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in text-sky-600 mr-1">
                                             <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
@@ -601,7 +601,7 @@
                                         Check In
                                     </div>
                                 </th>
-                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                                     <div class="flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out text-sky-600 mr-1">
                                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -611,23 +611,19 @@
                                         Check Out
                                     </div>
                                 </th>
-                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                                     <div class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-activity text-sky-600 mr-1">
-                                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                                        </svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                                         Status
                                     </div>
                                 </th>
-                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                                     <div class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle text-sky-600 mr-1">
-                                            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
-                                        </svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
                                         Keterangan
                                     </div>
                                 </th>
-                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                                     Aksi
                                 </th>
                             </tr>
@@ -694,8 +690,8 @@
                                     $latestPerm = $permGroup->sortByDesc('created_at')->first();
                                     $isEarly = $latestPerm && is_string($latestPerm->reason ?? '') && preg_match('/^\[EARLY_CHECKOUT\]/', $latestPerm->reason);
                                 @endphp
-                                <tr class="hover:bg-sky-50 transition-colors duration-200 group">
-                                    <td class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 whitespace-nowrap">
+                                <tr class="group transition-colors duration-200 hover:bg-sky-50" data-name="{{ $user->name ?? '' }}" data-status="{{ $statusText }}">
+                                    <td class="px-8 py-6 whitespace-nowrap">
                                         <div class="flex items-center">
                                             @if($user && $user->profile_photo)
                                                 <img src="{{ Storage::url($user->profile_photo) }}" alt="Profile Photo" class="w-10 h-10 rounded-xl object-cover mr-4 transition-colors group-hover:opacity-90">
@@ -705,7 +701,7 @@
                                                 </div>
                                             @endif
                                             <div>
-                                                <div class="text-base font-semibold text-gray-700">{{ $user->name ?? '-' }}</div>
+                                                <div class="text-base font-semibold text-gray-900">{{ $user->name ?? '-' }}</div>
                                                 <div class="text-sm text-gray-500">{{ $user->email ?? '-' }}</div>
                                             </div>
                                         </div>
@@ -727,7 +723,7 @@
                                             @endforeach
                                         </div>
                                     </td>
-                                    <td class="px-3 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         @if($location)
                                             <div class="flex items-center">
                                                 <div class="w-7 h-7 bg-gradient-to-br from-sky-100 to-sky-200 rounded-lg flex items-center justify-center mr-2">
@@ -742,7 +738,7 @@
                                             <span class="text-gray-400 text-xs">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         @if($checkInTime)
                                             <div class="flex items-start">
                                                 <div class="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
@@ -757,7 +753,7 @@
                                             <span class="text-gray-400 text-xs">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         @if($checkOutTime)
                                             <div class="flex items-start">
                                                 <div class="w-7 h-7 bg-red-100 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
@@ -772,7 +768,7 @@
                                             <span class="text-gray-400 text-xs">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         @if($showStacked)
                                             @php
                                                 $primaryText = $wasLate ? 'telat' : 'hadir';
@@ -834,30 +830,20 @@
                                         <div class="flex items-center justify-start space-x-1">
                                             @if($earlyPending)
                                                 <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $earlyPending) }}', 'approve')" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
-                                                        <polyline points="20 6 9 17 4 12"/>
-                                                    </svg>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="20 6 9 17 4 12"/></svg>
                                                     Setujui
                                                 </button>
                                                 <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.reject', $earlyPending) }}', 'reject')" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
-                                                        <path d="M18 6 6 18"/>
-                                                        <path d="m6 6 12 12"/>
-                                                    </svg>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                                     Tolak
                                                 </button>
                                             @elseif($otherPending)
                                                 <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $otherPending) }}', 'approve')" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check mr-1">
-                                                        <polyline points="20 6 9 17 4 12"/>
-                                                    </svg>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="20 6 9 17 4 12"/></svg>
                                                     Setujui
                                                 </button>
                                                 <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.reject', $otherPending) }}', 'reject')" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x mr-1">
-                                                        <path d="M18 6 6 18"/>
-                                                        <path d="m6 6 12 12"/>
-                                                    </svg>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                                     Tolak
                                                 </button>
                                             @else
@@ -888,6 +874,33 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Standardized Manual Pagination Footer -->
+                <div id="pagination-footer" class="mt-8 flex flex-col items-center justify-between gap-6 px-8 pb-8 sm:flex-row">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-semibold text-gray-600">Tampilkan</span>
+                        <div class="relative">
+                            <select id="pageSize" class="appearance-none rounded-xl border-2 border-sky-100 bg-white py-2.5 pr-10 pl-4 text-sm font-bold text-sky-700 transition-all hover:border-sky-300 focus:border-sky-500 focus:ring-0">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                <i data-lucide="chevron-down" class="h-4 w-4 text-sky-500"></i>
+                            </div>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-600">data</span>
+                    </div>
+
+                    <div id="paginationInfo" class="text-sm font-bold text-gray-700 bg-sky-50 px-6 py-2.5 rounded-2xl border border-sky-100">
+                        <!-- Info filled by JS -->
+                    </div>
+
+                    <div id="paginationButtons" class="flex items-center gap-2">
+                        <!-- Buttons filled by JS -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -1048,92 +1061,122 @@
                 hideExportLoadingState();
                 hideExportNoResultsState();
             }
+        });
 
-            // Realtime search and filter for attendance table
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = document.getElementById('attendancesTable');
+            const tbody = table ? table.querySelector('tbody') : null;
+            const mobileContainer = document.getElementById('attendanceMobileContainer');
+            
+            if (!tbody && !mobileContainer) return;
+
+            const desktopRows = tbody ? Array.from(tbody.querySelectorAll('tr')).filter(row => !row.querySelector('td[colspan]')) : [];
+            const mobileCards = mobileContainer ? Array.from(mobileContainer.querySelectorAll('.attendance-card')) : [];
+            
             const searchInput = document.getElementById('searchInput');
             const statusFilter = document.getElementById('statusFilter');
+            const pageSizeSelect = document.getElementById('pageSize');
+            const infoText = document.getElementById('paginationInfo');
+            const buttonsContainer = document.getElementById('paginationButtons');
 
-            function filterAttendances() {
-                const searchTerm = searchInput.value.toLowerCase();
-                const statusValue = statusFilter.value.toLowerCase();
-                let visibleCount = 0;
+            let currentPage = 1;
+            let pageSize = parseInt(pageSizeSelect.value);
 
-                // Filter table rows (desktop view)
-                const tableRows = document.querySelectorAll('tbody tr:not([class*="empty"])');
-                tableRows.forEach(row => {
-                    // Skip if it's an empty state row
-                    if (row.querySelector('td[colspan]')) {
-                        return;
-                    }
+            function render() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const statusTerm = statusFilter.value;
 
-                    const userName = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
-                    const shift = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
-                    const location = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
-                    const checkIn = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
-                    const checkOut = row.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || '';
-                    const status = row.querySelector('td:nth-child(6)')?.textContent.toLowerCase() || '';
-
-                    const matchesSearch = userName.includes(searchTerm) || 
-                                        shift.includes(searchTerm) ||
-                                        location.includes(searchTerm) ||
-                                        status.includes(searchTerm) ||
-                                        checkIn.includes(searchTerm) ||
-                                        checkOut.includes(searchTerm);
+                // We filter based on data attributes which are present in both
+                const filterLogic = (item) => {
+                    const name = item.getAttribute('data-name')?.toLowerCase() || '';
+                    const status = item.getAttribute('data-status') || '';
                     
-                    const matchesStatus = !statusValue || status.includes(statusValue);
+                    const matchesSearch = name.includes(searchTerm);
+                    const matchesStatus = statusTerm === '' || status === statusTerm;
+                    
+                    return matchesSearch && matchesStatus;
+                };
 
-                    if (matchesSearch && matchesStatus) {
-                        row.style.display = '';
-                        visibleCount++;
-                    } else {
-                        row.style.display = 'none';
-                    }
+                const filteredDesktop = desktopRows.filter(filterLogic);
+                const filteredMobile = mobileCards.filter(filterLogic);
+
+                // Assuming both have same source data
+                const total = filteredDesktop.length || filteredMobile.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                // Update info text
+                const infoStart = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+                const infoEnd = Math.min(currentPage * pageSize, total);
+                infoText.textContent = total === 0 
+                    ? 'Tidak ada data' 
+                    : `Menampilkan ${infoStart} – ${infoEnd} dari ${total} absensi hari ini`;
+
+                // Show/hide Desktop
+                desktopRows.forEach(row => row.style.display = 'none');
+                filteredDesktop.slice((currentPage - 1) * pageSize, currentPage * pageSize).forEach(row => {
+                    row.style.display = '';
                 });
 
-                // Filter mobile cards
-                const mobileContainer = document.querySelector('.block.md\\:hidden.space-y-4');
-                if (mobileContainer) {
-                    const mobileCards = mobileContainer.querySelectorAll('.bg-white.rounded-xl');
-                    mobileCards.forEach(card => {
-                        // Skip empty state
-                        if (card.querySelector('[data-lucide="calendar-x"]')) {
-                            return;
-                        }
+                // Show/hide Mobile
+                mobileCards.forEach(card => card.style.display = 'none');
+                filteredMobile.slice((currentPage - 1) * pageSize, currentPage * pageSize).forEach(card => {
+                    card.style.display = '';
+                });
 
-                        const userName = card.querySelector('.text-base.font-bold')?.textContent.toLowerCase() || '';
-                        const statusBadges = Array.from(card.querySelectorAll('.inline-flex.items-center.px-2, .inline-flex.items-center.px-3'))
-                            .map(badge => badge.textContent.toLowerCase()).join(' ');
-                        const allText = card.textContent.toLowerCase();
+                // Render pagination buttons
+                buttonsContainer.innerHTML = '';
+                
+                const btnClass = 'inline-flex items-center justify-center min-w-[2.25rem] h-[2.25rem] px-2 rounded-xl text-sm font-bold transition-all duration-200 border-none';
+                const inactiveClass = 'bg-sky-100 text-sky-700 hover:bg-sky-200';
+                const activeClass = 'bg-sky-500 text-white shadow-md shadow-sky-200';
+                const disabledClass = 'opacity-30 cursor-not-allowed bg-gray-100 text-gray-400';
 
-                        const matchesSearch = userName.includes(searchTerm) || 
-                                            statusBadges.includes(searchTerm) ||
-                                            allText.includes(searchTerm);
-                        
-                        const matchesStatus = !statusValue || statusBadges.includes(statusValue);
-
-                        if (matchesSearch && matchesStatus) {
-                            card.style.display = '';
-                            visibleCount++;
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
+                function addBtn(label, page, disabled, active = false) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.innerHTML = label;
+                    btn.className = `${btnClass} ${disabled ? disabledClass : (active ? activeClass : inactiveClass)}`;
+                    if (!disabled && !active) {
+                        btn.onclick = () => {
+                            currentPage = page;
+                            render();
+                            const tableTop = table.getBoundingClientRect().top + window.pageYOffset - 100;
+                            window.scrollTo({ top: tableTop, behavior: 'smooth' });
+                        };
+                    }
+                    buttonsContainer.appendChild(btn);
                 }
 
-                // Show/hide empty state
-                const emptyRow = document.querySelector('tbody tr td[colspan]')?.parentElement;
-                if (emptyRow) {
-                    emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+                // Prev
+                addBtn('‹', currentPage - 1, currentPage === 1);
+
+                // Page numbers
+                let startPage = Math.max(1, currentPage - 1);
+                let endPage = Math.min(totalPages, startPage + 2);
+                if (endPage - startPage < 2) startPage = Math.max(1, endPage - 2);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    addBtn(i.toString(), i, false, i === currentPage);
                 }
+
+                // Next
+                addBtn('›', currentPage + 1, currentPage === totalPages);
             }
 
-            searchInput?.addEventListener('input', filterAttendances);
-            statusFilter?.addEventListener('change', filterAttendances);
+            searchInput.addEventListener('input', () => { currentPage = 1; render(); });
+            statusFilter.addEventListener('change', () => { currentPage = 1; render(); });
+            pageSizeSelect.addEventListener('change', (e) => {
+                pageSize = parseInt(e.target.value);
+                currentPage = 1;
+                render();
+            });
+
+            render();
         });
 
         // Modal Logic for Admin Note
-
-
         function openAdminNoteModal(actionUrl, actionType) {
             const modal = document.getElementById('adminNoteModal');
             const form = document.getElementById('adminNoteForm');

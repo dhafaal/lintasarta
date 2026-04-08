@@ -1528,7 +1528,7 @@ class ScheduleController extends Controller
             $query->whereDate('schedule_date', '<', $today);
         }
 
-        $schedules = $query->orderBy('schedule_date', 'desc')->paginate(10);
+        $schedules = $query->orderBy('schedule_date', 'desc')->get();
 
         // Ambil attendance & permissions untuk schedule-schedule ini
         $scheduleIds = $schedules->pluck('id');

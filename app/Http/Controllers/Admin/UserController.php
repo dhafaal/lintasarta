@@ -27,7 +27,7 @@ class UserController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->latest()->paginate(10)->withQueryString();
+        $users = $query->latest()->get();
 
         $countAdmin = User::where('role', 'admin')->count();
         $countUser  = User::where('role', 'user')->count();

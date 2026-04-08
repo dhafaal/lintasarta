@@ -8,24 +8,8 @@
             <!-- Enhanced Header Section -->
             <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex items-center space-x-4">
-                    <div
-                        class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 shadow-sm"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            class="lucide lucide-map-pin text-sky-700"
-                        >
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 shadow-sm">
+                        <i data-lucide="map-pin" class="h-6 w-6 text-sky-700"></i>
                     </div>
                     <div>
                         <h1 class="text-3xl font-bold tracking-tight text-gray-700">Manajemen Lokasi</h1>
@@ -34,11 +18,9 @@
                 </div>
                 <a
                     href="{{ route('admin.locations.create') }}"
-                    class="inline-flex transform items-center rounded-xl bg-sky-500 px-6 py-3 font-bold whitespace-normal text-white shadow-sm transition-all hover:bg-sky-600 hover:shadow-md focus:ring-4 focus:ring-sky-200 focus:outline-none"
+                    class="inline-flex transform items-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-6 py-2.5 font-bold text-white shadow-lg transition-all duration-200 hover:from-sky-600 hover:to-indigo-700 hover:scale-105 active:scale-95 focus:ring-4 focus:ring-sky-200 focus:outline-none whitespace-nowrap"
                 >
-                    <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
+                    <i data-lucide="plus" class="mr-2 h-5 w-5"></i>
                     Tambah Lokasi Baru
                 </a>
             </div>
@@ -94,21 +76,11 @@
                                     type="text"
                                     id="searchInput"
                                     placeholder="Cari lokasi..."
-                                    class="w-64 rounded-lg border border-gray-200 bg-white py-2 pr-4 pl-10 text-sm transition-all duration-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500"
+                                    class="w-64 rounded-xl border-2 border-sky-100 bg-white py-2.5 pr-10 pl-10 text-sm font-semibold text-sky-900 transition-all duration-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
                                 />
-                                <svg
-                                    class="absolute top-3 left-3 h-4 w-4 text-gray-400"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                    ></path>
-                                </svg>
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <i data-lucide="search" class="h-4 w-4 text-gray-400"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -124,22 +96,7 @@
                                 class="bg-sky-100 px-6 py-2.5 text-sm font-semibold text-sky-800 transition-all duration-200"
                             >
                                 <div class="flex items-center">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        class="mr-2"
-                                    >
-                                        <rect width="18" height="18" x="3" y="3" rx="2" />
-                                        <path d="M3 9h18" />
-                                        <path d="M9 21V9" />
-                                    </svg>
+                                    <i data-lucide="layout-grid" class="mr-2 h-4 w-4"></i>
                                     WFO
                                 </div>
                             </button>
@@ -149,21 +106,7 @@
                                 class="px-6 py-2.5 text-sm font-semibold text-gray-600 transition-all duration-200 hover:bg-gray-50"
                             >
                                 <div class="flex items-center">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        class="mr-2"
-                                    >
-                                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                                        <polyline points="9 22 9 12 15 12 15 22" />
-                                    </svg>
+                                    <i data-lucide="home" class="mr-2 h-4 w-4"></i>
                                     WFA
                                 </div>
                             </button>
@@ -174,14 +117,7 @@
                                 id="btn-bulk-activate"
                                 class="inline-flex items-center rounded-lg bg-green-100 px-4 py-2 text-sm font-semibold text-green-700 transition-all duration-200 hover:bg-green-200"
                             >
-                                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M5 13l4 4L19 7"
-                                    />
-                                </svg>
+                                <i data-lucide="check" class="mr-2 h-4 w-4"></i>
                                 Aktifkan
                             </button>
                             <button
@@ -189,14 +125,7 @@
                                 id="btn-bulk-deactivate"
                                 class="inline-flex items-center rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-200"
                             >
-                                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M18 12H6"
-                                    />
-                                </svg>
+                                <i data-lucide="minus-circle" class="mr-2 h-4 w-4"></i>
                                 Nonaktifkan
                             </button>
                             <button
@@ -204,14 +133,7 @@
                                 id="btn-bulk-delete"
                                 class="inline-flex items-center rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 transition-all duration-200 hover:bg-red-200"
                             >
-                                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                </svg>
+                                <i data-lucide="trash-2" class="mr-2 h-4 w-4"></i>
                                 Hapus
                             </button>
                         </div>
@@ -233,21 +155,7 @@
                                     class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
                                 >
                                     <div class="flex items-center">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            class="lucide lucide-map-pin mr-2 text-sky-600"
-                                        >
-                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                            <circle cx="12" cy="10" r="3"></circle>
-                                        </svg>
+                                        <i data-lucide="map-pin" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Nama Lokasi
                                     </div>
                                 </th>
@@ -255,22 +163,7 @@
                                     class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
                                 >
                                     <div class="flex items-center">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            class="lucide lucide-globe mr-2 text-sky-600"
-                                        >
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-                                            <path d="M2 12h20"></path>
-                                        </svg>
+                                        <i data-lucide="globe" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Koordinat
                                     </div>
                                 </th>
@@ -278,29 +171,15 @@
                                     class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
                                 >
                                     <div class="flex items-center">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            class="lucide lucide-target mr-2 text-sky-600"
-                                        >
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <circle cx="12" cy="12" r="6"></circle>
-                                            <circle cx="12" cy="12" r="2"></circle>
-                                        </svg>
+                                        <i data-lucide="focus" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Radius & Status
                                     </div>
                                 </th>
-                                <th
-                                    class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
-                                >
-                                    Aksi
+                                <th class="px-8 py-4 text-center text-xs font-bold tracking-wider text-gray-700 uppercase">
+                                    <div class="flex items-center justify-center">
+                                        <i data-lucide="settings" class="mr-2 h-4 w-4 text-sky-600"></i>
+                                        Aksi
+                                    </div>
                                 </th>
                             </tr>
                         </thead>
@@ -314,6 +193,26 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Manual Pagination Footer (Standardized) -->
+                <div id="pagination-footer" class="flex items-center justify-between px-8 py-6 border-t border-gray-100 bg-white">
+                    <div class="flex items-center space-x-3 text-sm font-medium text-gray-600">
+                        <span>Tampilkan</span>
+                        <select id="pageSize" class="rounded-lg border-gray-200 bg-white py-1.5 pl-3 pr-8 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all cursor-pointer">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>data</span>
+                    </div>
+                    <div class="flex items-center space-x-6">
+                        <div id="paginationInfo" class="text-sm font-medium text-gray-500"></div>
+                        <div id="paginationButtons" class="flex items-center space-x-2"></div>
+                    </div>
+                </div>
+
                 <form id="bulk-form" method="POST" class="hidden">
                     @csrf
                 </form>
@@ -328,11 +227,87 @@
             const bodyWfa = document.getElementById('tbody-wfa');
             const selectAll = document.getElementById('select-all');
             const bulkForm = document.getElementById('bulk-form');
+            const tableWrapper = document.querySelector('.overflow-x-auto');
             const btnActivate = document.getElementById('btn-bulk-activate');
             const btnDeactivate = document.getElementById('btn-bulk-deactivate');
             const btnDelete = document.getElementById('btn-bulk-delete');
 
+            // --- Pagination State ---
+            let currentPage = 1;
+            let pageSize = 10;
+            let currentTab = 'wfo';
+
+            const pageSizeSelect = document.getElementById('pageSize');
+            const infoText = document.getElementById('paginationInfo');
+            const buttonsContainer = document.getElementById('paginationButtons');
+
+            pageSizeSelect.addEventListener('change', function () {
+                pageSize = parseInt(this.value);
+                currentPage = 1;
+                renderPagination();
+            });
+
+            function getVisibleRows(body) {
+                return Array.from(body.querySelectorAll('tr')).filter(row => {
+                    if (row.querySelector('td[colspan]')) return false;
+                    return row.style.display !== 'none';
+                });
+            }
+
+            function renderPagination() {
+                const body = currentTab === 'wfo' ? bodyWfo : bodyWfa;
+                const rows = getVisibleRows(body);
+                const total = rows.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                // Show/hide rows based on current page
+                rows.forEach((row, idx) => {
+                    const start = (currentPage - 1) * pageSize;
+                    const end = start + pageSize;
+                    row.style.display = (idx >= start && idx < end) ? '' : 'none';
+                });
+
+                // Build info
+                const start = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+                const end = Math.min(currentPage * pageSize, total);
+                infoText.textContent = total === 0
+                    ? 'Tidak ada data'
+                    : `Menampilkan ${start} – ${end} dari ${total} lokasi`;
+
+                // Build page buttons
+                buttonsContainer.innerHTML = '';
+                const btnClass = 'inline-flex items-center justify-center min-w-[2.25rem] h-[2.25rem] px-2 rounded-xl text-sm font-bold transition-all duration-200 border-none';
+                const inactiveClass = 'bg-sky-100 text-sky-700 hover:bg-sky-200';
+                const activeClass = 'bg-sky-500 text-white shadow-md shadow-sky-200';
+                const disabledClass = 'opacity-30 cursor-not-allowed bg-gray-100 text-gray-400';
+
+                function addBtn(label, page, disabled, active = false) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.innerHTML = label;
+                    btn.className = `${btnClass} ${disabled ? disabledClass : (active ? activeClass : inactiveClass)}`;
+                    if (!disabled && !active) {
+                        btn.addEventListener('click', () => { 
+                            currentPage = page; 
+                            renderPagination();
+                            window.scrollTo({ top: tableWrapper.offsetTop - 100, behavior: 'smooth' });
+                        });
+                    }
+                    buttonsContainer.appendChild(btn);
+                }
+
+                addBtn('‹', currentPage - 1, currentPage === 1);
+                for (let p = 1; p <= totalPages; p++) {
+                    addBtn(p.toString(), p, false, p === currentPage);
+                }
+                addBtn('›', currentPage + 1, currentPage === totalPages);
+            }
+
             function activate(tab) {
+                currentTab = tab;
+                currentPage = 1;
                 if (tab === 'wfo') {
                     bodyWfo.classList.remove('hidden');
                     bodyWfa.classList.add('hidden');
@@ -345,17 +320,16 @@
                     tabWfa.classList.add('bg-sky-100', 'text-sky-800');
                     tabWfo.classList.remove('bg-sky-100', 'text-sky-800');
                 }
-                // reset select all when switching
                 if (selectAll) selectAll.checked = false;
+                renderPagination();
             }
-            // bind tab click listeners
+
             tabWfo?.addEventListener('click', () => activate('wfo'));
             tabWfa?.addEventListener('click', () => activate('wfa'));
-            // set default tab
             activate('wfo');
-            // Return NodeList of checkboxes only from the visible tab body
+
             function getAllCheckboxes() {
-                const visibleBody = bodyWfo.classList.contains('hidden') ? bodyWfa : bodyWfo;
+                const visibleBody = currentTab === 'wfo' ? bodyWfo : bodyWfa;
                 return visibleBody.querySelectorAll('input[name="ids[]"]');
             }
             selectAll?.addEventListener('change', (e) => {
@@ -364,19 +338,12 @@
 
             function submitBulk(action) {
                 const selected = Array.from(getAllCheckboxes()).some((cb) => cb.checked);
-                if (!selected) {
-                    alert('Pilih minimal satu lokasi.');
-                    return;
-                }
-                // Clear previous hidden ids
+                if (!selected) { alert('Pilih minimal satu lokasi.'); return; }
                 bulkForm.querySelectorAll('input[name="ids[]"]').forEach((el) => el.remove());
-                // Append current selected ids into hidden form
                 getAllCheckboxes().forEach((cb) => {
                     if (cb.checked) {
                         const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'ids[]';
-                        input.value = cb.value;
+                        input.type = 'hidden'; input.name = 'ids[]'; input.value = cb.value;
                         bulkForm.appendChild(input);
                     }
                 });
@@ -385,9 +352,7 @@
             }
 
             btnActivate?.addEventListener('click', () => submitBulk('{{ route('admin.locations.bulk-activate') }}'));
-            btnDeactivate?.addEventListener('click', () =>
-                submitBulk('{{ route('admin.locations.bulk-deactivate') }}')
-            );
+            btnDeactivate?.addEventListener('click', () => submitBulk('{{ route('admin.locations.bulk-deactivate') }}'));
             btnDelete?.addEventListener('click', () => {
                 if (confirm('Yakin ingin menghapus lokasi terpilih?')) {
                     submitBulk('{{ route('admin.locations.bulk-delete') }}');
@@ -399,49 +364,25 @@
 
             function filterLocations() {
                 const searchTerm = searchInput.value.toLowerCase();
-                const visibleBody = bodyWfo.classList.contains('hidden') ? bodyWfa : bodyWfo;
-                const rows = visibleBody.querySelectorAll('tr');
-                let visibleCount = 0;
-
-                rows.forEach((row) => {
-                    // Skip empty state row
-                    if (row.querySelector('td[colspan]')) {
-                        return;
-                    }
-
-                    const locationName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
-                    const coordinates = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
-                    const radiusStatus = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
-
-                    const matches =
-                        locationName.includes(searchTerm) ||
-                        coordinates.includes(searchTerm) ||
-                        radiusStatus.includes(searchTerm);
-
-                    if (matches) {
-                        row.style.display = '';
-                        visibleCount++;
-                    } else {
-                        row.style.display = 'none';
-                    }
+                const bodies = [bodyWfo, bodyWfa];
+                bodies.forEach(body => {
+                    const rows = body.querySelectorAll('tr');
+                    rows.forEach((row) => {
+                        if (row.querySelector('td[colspan]')) return;
+                        const locationName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+                        const coordinates = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+                        const radiusStatus = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+                        const matches = locationName.includes(searchTerm) || coordinates.includes(searchTerm) || radiusStatus.includes(searchTerm);
+                        row.dataset.hidden = matches ? '' : '1';
+                        row.style.display = matches ? '' : 'none';
+                    });
                 });
-
-                // Show/hide empty state
-                const emptyRow = visibleBody.querySelector('tr td[colspan]')?.parentElement;
-                if (emptyRow) {
-                    emptyRow.style.display = visibleCount === 0 ? '' : 'none';
-                }
+                currentPage = 1;
+                renderPagination();
             }
 
             searchInput?.addEventListener('input', filterLocations);
-
-            // Re-filter when switching tabs
-            tabWfo?.addEventListener('click', () => {
-                setTimeout(filterLocations, 100);
-            });
-            tabWfa?.addEventListener('click', () => {
-                setTimeout(filterLocations, 100);
-            });
         })();
     </script>
 @endsection
+

@@ -11,7 +11,7 @@
                     <div
                         class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 to-sky-200 shadow-lg"
                     >
-                        <i data-lucide="calendar-clock" class="h-7 w-7 text-sky-600"></i>
+                        <i data-lucide="calendar-days" class="h-7 w-7 text-sky-600"></i>
                     </div>
                     <div>
                         <h1 class="text-3xl font-bold tracking-tight text-gray-900">Riwayat Jadwal</h1>
@@ -20,17 +20,13 @@
                         </p>
                     </div>
                 </div>
-                <div
-                    class="flex items-center justify-center rounded-md border-2 border-gray-200 bg-gray-100 transition-colors hover:bg-gray-200"
+                <a
+                    href="{{ route("admin.schedules.index") }}"
+                    class="inline-flex items-center px-6 py-2.5 bg-sky-50 text-sky-700 border-2 border-sky-100 font-bold rounded-xl transition-all transform hover:bg-sky-100 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-sky-200 shadow-sm whitespace-nowrap"
                 >
-                    <a
-                        href="{{ route("admin.schedules.index") }}"
-                        class="inline-flex items-center px-4 py-2 text-sm text-black"
-                    >
-                        <i data-lucide="arrow-left" class="mr-2 h-4 w-4"></i>
-                        Kembali
-                    </a>
-                </div>
+                    <i data-lucide="arrow-left" class="mr-2 h-4 w-4"></i>
+                    Kembali
+                </a>
             </div>
 
             <!-- Compact User Info -->
@@ -120,7 +116,7 @@
                             <div class="relative">
                                 <input
                                     type="text"
-                                    id="realtime_search"
+                                    id="searchInput"
                                     class="block w-full rounded-lg border border-gray-300 py-2 pr-9 pl-9 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500"
                                     placeholder="Ketik untuk mencari..."
                                     autocomplete="off"
@@ -258,24 +254,12 @@
                                         Check Out
                                     </div>
                                 </th>
+                                </th>
                                 <th
                                     class="px-8 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase"
                                 >
                                     <div class="flex items-center">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            class="lucide lucide-activity mr-2 text-sky-600"
-                                        >
-                                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                                        </svg>
+                                        <i data-lucide="info" class="mr-2 h-4 w-4 text-sky-600"></i>
                                         Status
                                     </div>
                                 </th>
@@ -722,87 +706,154 @@
                 </div>
             </div>
 
-            <!-- Enhanced Pagination -->
-            @if (method_exists($schedules, "links"))
-                <div class="flex justify-center">
-                    <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                        {{ $schedules->links() }}
+            <!-- Standardized Manual Pagination Footer -->
+            <div id="pagination-footer" class="mt-8 flex flex-col items-center justify-between gap-6 px-4 pb-8 sm:flex-row sm:px-0">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-semibold text-gray-600">Tampilkan</span>
+                    <div class="relative">
+                        <select id="pageSize" class="appearance-none rounded-xl border-2 border-sky-100 bg-white py-2.5 pr-10 pl-4 text-sm font-bold text-sky-700 transition-all hover:border-sky-300 focus:border-sky-500 focus:ring-0">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                            <i data-lucide="chevron-down" class="h-4 w-4 text-sky-500"></i>
+                        </div>
                     </div>
+                    <span class="text-sm font-semibold text-gray-600">data</span>
                 </div>
-            @endif
+
+                <div id="paginationInfo" class="text-sm font-bold text-gray-700 bg-sky-50 px-6 py-2.5 rounded-2xl border border-sky-100">
+                    <!-- Info will be populated by JS -->
+                </div>
+
+                <div id="paginationButtons" class="flex items-center gap-2">
+                    <!-- Buttons will be populated by JS -->
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Realtime Table Search
-            const realtimeSearch = document.getElementById('realtime_search');
+            const table = document.querySelector('table');
+            const tbody = table ? table.querySelector('tbody') : null;
+            if (!tbody) return;
+
+            const allRows = Array.from(tbody.querySelectorAll('tr')).filter(row => !row.hasAttribute('colspan'));
+            const searchInput = document.getElementById('searchInput');
             const clearSearchBtn = document.getElementById('clear_search');
-            const tableRows = document.querySelectorAll('tbody tr');
+            const pageSizeSelect = document.getElementById('pageSize');
+            const infoText = document.getElementById('paginationInfo');
+            const buttonsContainer = document.getElementById('paginationButtons');
 
-            if (realtimeSearch) {
-                realtimeSearch.addEventListener('input', function (e) {
-                    const searchTerm = e.target.value.toLowerCase().trim();
+            let currentPage = 1;
+            let pageSize = parseInt(pageSizeSelect.value);
 
-                    // Show/hide clear button
-                    if (clearSearchBtn) {
-                        if (searchTerm) {
-                            clearSearchBtn.classList.remove('hidden');
-                        } else {
-                            clearSearchBtn.classList.add('hidden');
-                        }
-                    }
+            function render() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                
+                // Filter rows based on search
+                const filteredRows = allRows.filter(row => {
+                    const text = row.textContent.toLowerCase();
+                    return text.includes(searchTerm);
+                });
 
-                    // Filter table rows - search in shift names and dates
-                    let visibleCount = 0;
-                    tableRows.forEach((row) => {
-                        const cells = row.querySelectorAll('td');
-                        let rowText = '';
-                        cells.forEach((cell) => {
-                            rowText += cell.textContent.toLowerCase() + ' ';
-                        });
+                const total = filteredRows.length;
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-                        if (rowText.includes(searchTerm)) {
-                            row.style.display = '';
-                            visibleCount++;
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
+                if (currentPage > totalPages) currentPage = totalPages;
 
-                    // Show no results message if needed
-                    const tbody = document.querySelector('tbody');
-                    let noResultsRow = tbody.querySelector('.no-results-row');
+                // Hide all rows initially
+                allRows.forEach(row => row.style.display = 'none');
 
-                    if (visibleCount === 0 && searchTerm) {
-                        if (!noResultsRow) {
-                            noResultsRow = document.createElement('tr');
-                            noResultsRow.className = 'no-results-row';
-                            noResultsRow.innerHTML = `
-                        <td colspan="6" class="px-8 py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <i data-lucide="search-x" class="w-12 h-12 text-gray-300 mb-3"></i>
-                                <p class="text-gray-500 text-sm">Tidak ada hasil untuk "<span class="font-semibold">${searchTerm}</span>"</p>
-                            </div>
-                        </td>
-                    `;
-                            tbody.appendChild(noResultsRow);
-                            lucide.createIcons();
-                        }
-                    } else if (noResultsRow) {
-                        noResultsRow.remove();
+                // Show only current page rows
+                const start = (currentPage - 1) * pageSize;
+                const end = start + pageSize;
+                
+                filteredRows.forEach((row, idx) => {
+                    if (idx >= start && idx < end) {
+                        row.style.display = '';
                     }
                 });
 
-                // Clear search
+                // Update info text
+                const infoStart = total === 0 ? 0 : start + 1;
+                const infoEnd = Math.min(start + pageSize, total);
+                infoText.textContent = total === 0 
+                    ? 'Tidak ada data' 
+                    : `Menampilkan ${infoStart} – ${infoEnd} dari ${total} jadwal`;
+
+                // Render pagination buttons
+                buttonsContainer.innerHTML = '';
+                
+                const btnClass = 'inline-flex items-center justify-center min-w-[2.25rem] h-[2.25rem] px-2 rounded-xl text-sm font-bold transition-all duration-200 border-none';
+                const inactiveClass = 'bg-sky-100 text-sky-700 hover:bg-sky-200';
+                const activeClass = 'bg-sky-500 text-white shadow-md shadow-sky-200';
+                const disabledClass = 'opacity-30 cursor-not-allowed bg-gray-100 text-gray-400';
+
+                function addBtn(label, page, disabled, active = false) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.innerHTML = label;
+                    btn.className = `${btnClass} ${disabled ? disabledClass : (active ? activeClass : inactiveClass)}`;
+                    if (!disabled && !active) {
+                        btn.onclick = () => {
+                            currentPage = page;
+                            render();
+                            window.scrollTo({ top: table.offsetTop - 100, behavior: 'smooth' });
+                        };
+                    }
+                    buttonsContainer.appendChild(btn);
+                }
+
+                // Prev
+                addBtn('‹', currentPage - 1, currentPage === 1);
+
+                // Page numbers
+                let startPage = Math.max(1, currentPage - 1);
+                let endPage = Math.min(totalPages, startPage + 2);
+                if (endPage - startPage < 2) startPage = Math.max(1, endPage - 2);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    addBtn(i.toString(), i, false, i === currentPage);
+                }
+
+                // Next
+                addBtn('›', currentPage + 1, currentPage === totalPages);
+
+                // Show/hide clear search button
                 if (clearSearchBtn) {
-                    clearSearchBtn.addEventListener('click', function () {
-                        realtimeSearch.value = '';
-                        realtimeSearch.dispatchEvent(new Event('input'));
-                        realtimeSearch.focus();
-                    });
+                    clearSearchBtn.style.display = searchTerm ? 'flex' : 'none';
+                    if (searchTerm) clearSearchBtn.classList.remove('hidden');
                 }
             }
+
+            // Listeners
+            searchInput.addEventListener('input', () => {
+                currentPage = 1;
+                render();
+            });
+
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', () => {
+                    searchInput.value = '';
+                    currentPage = 1;
+                    render();
+                    searchInput.focus();
+                });
+            }
+
+            pageSizeSelect.addEventListener('change', () => {
+                pageSize = parseInt(pageSizeSelect.value);
+                currentPage = 1;
+                render();
+            });
+
+            // Initial render
+            render();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         });
     </script>
 @endsection
