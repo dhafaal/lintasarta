@@ -1080,15 +1080,23 @@
             document.getElementById('leaveAdminNoteInput').value = '';
         }
 
-        document.getElementById('leaveAdminNoteForm')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const modal = document.getElementById('leaveAdminNoteModal');
-            const requestId = modal.dataset.requestId;
-            const actionType = modal.dataset.actionType;
-            const note = document.getElementById('leaveAdminNoteInput').value;
-            
-            processLeaveRequest(requestId, actionType, note);
-            closeLeaveAdminNoteModal();
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('leaveAdminNoteForm')?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const modal = document.getElementById('leaveAdminNoteModal');
+                const requestId = modal.dataset.requestId;
+                const actionType = modal.dataset.actionType;
+                const note = document.getElementById('leaveAdminNoteInput').value;
+                
+                processLeaveRequest(requestId, actionType, note);
+                closeLeaveAdminNoteModal();
+            });
+
+            document.getElementById('leave-detail-modal')?.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closeLeaveDetailModal();
+                }
+            });
         });
 
         async function processLeaveRequest(requestId, action, admin_note = null) {
@@ -1127,11 +1135,7 @@
             }
         }
 
-        document.getElementById('leave-detail-modal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeLeaveDetailModal();
-            }
-        });
+        // Moved to DOMContentLoaded block above
 
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
@@ -1154,7 +1158,7 @@
                 </button>
             </div>
             
-            <form id="leaveAdminNoteForm" class="p-6">
+            <form id="leaveAdminNoteForm" class="p-6" method="post" onsubmit="return false;">
                 <div class="mb-5">
                     <label for="leaveAdminNoteInput" class="block text-sm font-semibold text-gray-700 mb-2">Admin Note</label>
                     <textarea 
