@@ -129,8 +129,9 @@
                                 class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500"
                             >
                                 <option value="">Semua Role</option>
-                                <option value="admin">Admin</option>
-                                <option value="user">User</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Operator">Operator</option>
+                                <option value="User">User</option>
                             </select>
                         </div>
                     </div>

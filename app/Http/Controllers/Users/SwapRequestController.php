@@ -16,7 +16,7 @@ class SwapRequestController extends Controller
     {
         $user = Auth::user();
 
-        // Get incoming requests (Target is me) pending my action
+        // Get incoming requests pending my action
         $incomingRequests = ScheduleSwapRequest::with(['requester', 'requestedSchedule.shift', 'targetSchedule.shift'])
             ->where('target_user_id', $user->id)
             ->where('status', 'pending_target')
@@ -26,6 +26,16 @@ class SwapRequestController extends Controller
         // Get my outgoing requests
         $outgoingRequests = ScheduleSwapRequest::with(['targetUser', 'requestedSchedule.shift', 'targetSchedule.shift'])
             ->where('requester_id', $user->id)
+            ->whereIn('status', ['pending_target', 'pending_admin'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $historyRequests = ScheduleSwapRequest::with(['targetUser', 'requester', 'requestedSchedule.shift', 'targetSchedule.shift'])
+            ->where(function($q) use ($user) {
+                $q->where('requester_id', $user->id)
+                  ->orWhere('target_user_id', $user->id);
+            })
+            ->whereNotIn('status', ['pending_target', 'pending_admin'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -36,7 +46,7 @@ class SwapRequestController extends Controller
             ->orderBy('schedule_date', 'asc')
             ->get();
 
-        return view('users.attendances.swap', compact('incomingRequests', 'outgoingRequests', 'mySchedules'));
+        return view('users.attendances.swap', compact('incomingRequests', 'outgoingRequests', 'historyRequests', 'mySchedules'));
     }
 
     public function getTargetSchedules(Request $request)

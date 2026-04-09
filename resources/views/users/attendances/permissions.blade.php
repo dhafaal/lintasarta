@@ -119,6 +119,11 @@
                                     <th
                                         class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-700 uppercase"
                                     >
+                                        Catatan Admin
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-700 uppercase"
+                                    >
                                         Requested
                                     </th>
                                 </tr>
@@ -199,6 +204,11 @@
                                                 {{ ucfirst($permission->status) }}
                                             </span>
                                         </td>
+                                        <td class="px-4 py-4">
+                                            <div class="max-w-[150px] truncate text-xs text-gray-600 whitespace-normal" title="{{ $permission->admin_note }}">
+                                                {{ $permission->admin_note ?? '-' }}
+                                            </div>
+                                        </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             <div class="text-xs text-gray-500">
                                                 {{ $permission->created_at->format('d M Y') }}
@@ -213,12 +223,30 @@
                         </table>
                     </div>
 
-                    {{-- Pagination --}}
-                    @if ($permissions->hasPages())
-                        <div class="border-t border-gray-200 px-4 py-4">
-                            {{ $permissions->links() }}
+                    {{-- Pagination Footer --}}
+                    <div class="flex flex-col border-t border-gray-200 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">
+                        <div class="flex items-center justify-center space-x-3 text-sm font-medium text-gray-600 md:justify-start">
+                            <span>Tampilkan</span>
+                            <select onchange="window.location.href = this.value" class="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 5]) }}" {{ request('per_page') == 5 ? 'selected' : '' }}>5</option>
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 100]) }}" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                            </select>
+                            <span>data</span>
                         </div>
-                    @endif
+                        <div class="mt-4 flex flex-col items-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-6 md:mt-0">
+                            <div class="text-sm font-medium text-gray-500">
+                                Menampilkan {{ $permissions->count() > 0 ? $permissions->firstItem() : 0 }} - {{ $permissions->count() > 0 ? $permissions->lastItem() : 0 }} dari {{ $permissions->total() }} data
+                            </div>
+                            @if ($permissions->hasPages())
+                                <div class="flex items-center space-x-2">
+                                    {{ $permissions->links() }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
                 @else
                     <div class="p-12 text-center">
                         <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">

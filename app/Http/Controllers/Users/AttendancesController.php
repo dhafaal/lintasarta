@@ -523,9 +523,13 @@ class AttendancesController extends Controller
             });
         }
 
-        $schedules = $scheduleQuery->orderBy('schedule_date', 'desc')->get();
-        $attendances = $attendanceQuery->get();
-        $permissions = $permissionQuery->get();
+        $perPage = request()->input('per_page', 10);
+        $schedules = $scheduleQuery->orderBy('schedule_date', 'desc')->paginate($perPage)->withQueryString();
+
+        $scheduleIds = $schedules->pluck('id');
+
+        $attendances = $attendanceQuery->whereIn('schedule_id', $scheduleIds)->get();
+        $permissions = $permissionQuery->whereIn('schedule_id', $scheduleIds)->get();
 
         return view('users.attendances.history', compact(
             'attendances',

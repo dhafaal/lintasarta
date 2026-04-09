@@ -456,6 +456,31 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    {{-- Pagination Footer --}}
+                    <div class="flex flex-col border-t border-gray-200 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">
+                        <div class="flex items-center justify-center space-x-3 text-sm font-medium text-gray-600 md:justify-start">
+                            <span>Tampilkan</span>
+                            <select onchange="window.location.href = this.value" class="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 5]) }}" {{ request('per_page') == 5 ? 'selected' : '' }}>5</option>
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 100]) }}" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                            </select>
+                            <span>data</span>
+                        </div>
+                        <div class="mt-4 flex flex-col items-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-6 md:mt-0">
+                            <div class="text-sm font-medium text-gray-500">
+                                Menampilkan {{ $schedules->count() > 0 ? $schedules->firstItem() : 0 }} - {{ $schedules->count() > 0 ? $schedules->lastItem() : 0 }} dari {{ $schedules->total() }} data
+                            </div>
+                            @if ($schedules->hasPages())
+                                <div class="flex items-center space-x-2">
+                                    {{ $schedules->links() }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             @else
                 {{-- No Records State --}}

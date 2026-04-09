@@ -17,16 +17,13 @@ class SwapRequestController extends Controller
         $requests = ScheduleSwapRequest::with(['requester', 'targetUser', 'requestedSchedule.shift', 'targetSchedule.shift'])
             ->orderByRaw("FIELD(status, 'pending_admin') DESC")
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->get();
 
         return view('admin.attendances.swap', compact('requests'));
     }
 
     public function approve(Request $request, ScheduleSwapRequest $swap)
     {
-        $request->validate([
-            'admin_note' => 'required|string|min:5|max:500'
-        ]);
         if ($swap->status !== 'pending_admin') {
             return back()->with('error', 'Status request tidak valid untuk di-approve.');
         }
@@ -57,7 +54,7 @@ class SwapRequestController extends Controller
                 $swap->update([
                     'status' => 'approved',
                     'admin_id' => Auth::id(),
-                    'admin_note' => $request->admin_note
+                    'admin_note' => $request->admin_note ?? null
                 ]);
 
                 // Log the swap for both schedules

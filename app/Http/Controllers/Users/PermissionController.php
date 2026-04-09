@@ -22,10 +22,12 @@ class PermissionController extends Controller
 
     public function index()
     {
+        $perPage = request()->input('per_page', 10);
         $permissions = Permissions::with(['schedule.shift', 'user'])
             ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate($perPage)->withQueryString();
+
 
         return view('users.attendances.permissions', compact('permissions'));
     }

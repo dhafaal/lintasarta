@@ -1207,7 +1207,7 @@
     </script>
 
     <!-- Admin Note Modal -->
-    <div id="adminNoteModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 backdrop-blur-sm transition-opacity">
+    <div id="adminNoteModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 transition-opacity">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
             <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                 <div>

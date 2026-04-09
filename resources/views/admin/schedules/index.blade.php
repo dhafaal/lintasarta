@@ -117,19 +117,12 @@
                         <div
                             class="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3 lg:w-auto"
                         >
-                            <form
-                                method="GET"
-                                action="{{ route('admin.schedules.index') }}"
-                                class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3"
-                                onsubmit="return false;"
-                            >
+                            <div class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
                                 <!-- User Search -->
                                 <div class="relative flex-1 sm:flex-initial">
                                     <!-- Search Input -->
                                     <div class="relative">
-                                        <div
-                                            class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
-                                        >
+                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                             <i data-lucide="search" class="h-4 w-4 text-gray-400"></i>
                                         </div>
                                         <input
@@ -139,60 +132,10 @@
                                             placeholder="Cari nama karyawan..."
                                             autocomplete="off"
                                         />
-                                        <input type="hidden" name="search" id="schedule_search_value" />
-                                    </div>
-
-                                    <!-- Search Results Dropdown -->
-                                    <div
-                                        id="schedule_search_results"
-                                        class="absolute z-50 mt-1 hidden max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg sm:w-64"
-                                    >
-                                        <div
-                                            id="schedule_search_loading"
-                                            class="hidden px-3 py-2 text-center text-sm text-gray-500"
-                                        >
-                                            <svg
-                                                class="mx-auto mb-1 h-4 w-4 animate-spin"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <circle
-                                                    class="opacity-25"
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="10"
-                                                    stroke="currentColor"
-                                                    stroke-width="4"
-                                                ></circle>
-                                                <path
-                                                    class="opacity-75"
-                                                    fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                ></path>
-                                            </svg>
-                                            Mencari karyawan...
-                                        </div>
-                                        <div
-                                            id="schedule_search_no_results"
-                                            class="hidden px-3 py-2 text-center text-sm text-gray-500"
-                                        >
-                                            Tidak ada karyawan ditemukan
-                                        </div>
-                                        <div id="schedule_search_results_list" class="divide-y divide-gray-100">
-                                            <!-- Results will be populated here -->
-                                        </div>
                                     </div>
                                 </div>
 
-                                @if (request('search') || request('shift_filter') || request('date_filter'))
-                                    <a
-                                        href="{{ route('admin.schedules.index') }}"
-                                        class="inline-flex items-center justify-center rounded-lg bg-gray-200 px-3 py-2 text-xs whitespace-nowrap text-gray-700 transition hover:bg-gray-300 sm:text-sm"
-                                    >
-                                        Reset
-                                    </a>
-                                @endif
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -613,150 +556,7 @@
     </div>
 
     <script>
-        // Schedule Search Functionality
-        document.addEventListener("DOMContentLoaded", function() {
-            const scheduleSearchInput = document.getElementById('schedule_search');
-            const scheduleSearchResults = document.getElementById('schedule_search_results');
-            const scheduleSearchResultsList = document.getElementById('schedule_search_results_list');
-            const scheduleSearchLoading = document.getElementById('schedule_search_loading');
-            const scheduleSearchNoResults = document.getElementById('schedule_search_no_results');
-            const scheduleSearchValue = document.getElementById('schedule_search_value');
 
-            // Users data - menggunakan data dari controller atau bisa diambil dari API
-            const scheduleUsersData = [
-                @foreach($workHoursSummary ?? [] as $summary)
-                    {
-                        id: {{ $summary['user_id'] ?? 0 }},
-                        name: "{{ $summary['employee_name'] ?? '' }}",
-                        email: "{{ $summary['employee_email'] ?? '' }}"
-                    },
-                @endforeach
-            ];
-
-            let scheduleSearchTimeout;
-
-            // Initialize schedule user search
-            if (scheduleSearchInput) {
-                scheduleSearchInput.addEventListener('input', function() {
-                    const query = this.value.trim();
-
-                    // Clear previous timeout
-                    clearTimeout(scheduleSearchTimeout);
-
-                    // Hide results if query is empty
-                    if (!query) {
-                        hideScheduleSearchResults();
-                        return;
-                    }
-
-                    // Show loading state
-                    showScheduleLoadingState();
-
-                    // Debounce search to avoid too many requests
-                    scheduleSearchTimeout = setTimeout(() => {
-                        performScheduleUserSearch(query);
-                    }, 300);
-                });
-
-                // Hide results when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!scheduleSearchInput.contains(e.target) && !scheduleSearchResults.contains(e.target)) {
-                        hideScheduleSearchResults();
-                    }
-                });
-            }
-
-            function performScheduleUserSearch(query) {
-                // Filter users based on query
-                const filteredUsers = scheduleUsersData.filter(user =>
-                    user.name.toLowerCase().includes(query.toLowerCase()) ||
-                    user.email.toLowerCase().includes(query.toLowerCase())
-                );
-
-                // Show results
-                showScheduleSearchResults(filteredUsers, query);
-            }
-
-            function showScheduleSearchResults(users, query) {
-                scheduleSearchResultsList.innerHTML = '';
-
-                if (users.length === 0) {
-                    hideScheduleLoadingState();
-                    showScheduleNoResultsState();
-                    return;
-                }
-
-                hideScheduleLoadingState();
-                hideScheduleNoResultsState();
-
-                users.forEach(user => {
-                    const userItem = document.createElement('div');
-                    userItem.className = 'px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors';
-                    userItem.innerHTML = `
-                        <div class="flex items-center">
-                            <div class="w-6 h-6 bg-sky-100 rounded-full flex items-center justify-center mr-2">
-                                <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="text-sm font-medium text-gray-900">${highlightScheduleText(user.name, query)}</div>
-                                <div class="text-xs text-gray-500">${highlightScheduleText(user.email, query)}</div>
-                            </div>
-                        </div>
-                    `;
-
-                    userItem.addEventListener('click', () => selectScheduleUser(user));
-                    scheduleSearchResultsList.appendChild(userItem);
-                });
-
-                scheduleSearchResults.classList.remove('hidden');
-            }
-
-            function highlightScheduleText(text, query) {
-                if (!query || !text) return text;
-
-                const regex = new RegExp(`(${query})`, 'gi');
-                return text.replace(regex, '<mark class="bg-yellow-200 text-yellow-800">$1</mark>');
-            }
-
-            function selectScheduleUser(user) {
-                scheduleSearchValue.value = user.name;
-                scheduleSearchInput.value = user.name;
-
-                // Hide search results
-                hideScheduleSearchResults();
-
-                // Submit form untuk filter
-                scheduleSearchInput.form.submit();
-            }
-
-            function showScheduleLoadingState() {
-                scheduleSearchResults.classList.remove('hidden');
-                scheduleSearchLoading.classList.remove('hidden');
-                scheduleSearchNoResults.classList.add('hidden');
-                scheduleSearchResultsList.innerHTML = '';
-            }
-
-            function hideScheduleLoadingState() {
-                scheduleSearchLoading.classList.add('hidden');
-            }
-
-            function showScheduleNoResultsState() {
-                scheduleSearchResults.classList.remove('hidden');
-                scheduleSearchNoResults.classList.remove('hidden');
-            }
-
-            function hideScheduleNoResultsState() {
-                scheduleSearchNoResults.classList.add('hidden');
-            }
-
-            function hideScheduleSearchResults() {
-                scheduleSearchResults.classList.add('hidden');
-                hideScheduleLoadingState();
-                hideScheduleNoResultsState();
-            }
-        });
 
         // Swap Schedule Functionality
         let selectedSourceSchedule = null;
@@ -1006,7 +806,7 @@
             if (!tbody) return;
 
             const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => !row.querySelector('td[colspan]'));
-            const searchInput = document.getElementById('schedule_search');
+            const searchInput = document.getElementById('searchInput');
             const pageSizeSelect = document.getElementById('pageSize');
             const infoText = document.getElementById('paginationInfo');
             const buttonsContainer = document.getElementById('paginationButtons');

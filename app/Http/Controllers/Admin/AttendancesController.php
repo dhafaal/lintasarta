@@ -510,7 +510,7 @@ class AttendancesController extends Controller
                 DB::raw('MIN(id) as first_permission_id'),
                 DB::raw('GROUP_CONCAT(id) as permission_ids'),
             ])
-            ->where('type', 'cuti')
+            ->whereIn('type', ['cuti', 'izin', 'sakit'])
             ->groupBy(['user_id', 'reason', 'type', 'status', 'created_at'])
             ->orderBy('created_at', 'desc');
 
@@ -561,7 +561,7 @@ class AttendancesController extends Controller
         $permissions = Permissions::with(['schedule.shift'])
             ->where('user_id', $permission->user_id)
             ->where('reason', $permission->reason)
-            ->where('type', 'cuti')
+            ->where('type', $permission->type)
             ->whereDate('created_at', $permission->created_at->toDateString())
             ->orderBy('schedule_id')
             ->get();
@@ -598,7 +598,7 @@ class AttendancesController extends Controller
         // Get all permissions for this leave request
         $allPermissions = Permissions::where('user_id', $permission->user_id)
             ->where('reason', $permission->reason)
-            ->where('type', 'cuti')
+            ->where('type', $permission->type)
             ->whereDate('created_at', $permission->created_at->toDateString())
             ->get();
 
@@ -763,7 +763,7 @@ class AttendancesController extends Controller
     {
         $request->validate([
             'action' => 'required|in:approve,reject',
-            'admin_note' => 'required|string|min:5|max:500',
+            'admin_note' => ($request->action === 'reject' ? 'required|' : 'nullable|') . 'string|min:5|max:500',
         ], [
             'admin_note.required' => 'Catatan wajib diisi.',
             'admin_note.min' => 'Catatan minimal 5 karakter.'
@@ -771,11 +771,19 @@ class AttendancesController extends Controller
 
         $permission = Permissions::findOrFail($id);
         $action     = $request->input('action');
+        $adminNote  = $request->input('admin_note');
+
+        // Provide default note for approval if empty
+        if ($action === 'approve' && empty($adminNote)) {
+            $adminNote = 'Approved by Admin';
+        }
 
         // Get all permissions for this leave request (same user, reason, date)
-        $allPermissions = Permissions::where('user_id', $permission->user_id)
+        // Eager load relations for logging
+        $allPermissions = Permissions::with(['user', 'schedule.shift'])
+            ->where('user_id', $permission->user_id)
             ->where('reason', $permission->reason)
-            ->where('type', 'cuti')
+            ->where('type', $permission->type)
             ->whereDate('created_at', $permission->created_at->toDateString())
             ->get();
 
@@ -789,7 +797,7 @@ class AttendancesController extends Controller
                 $oldStatus = $perm->status;
                 $perm->update([
                     'status' => $newStatus,
-                    'admin_note' => $request->admin_note,
+                    'admin_note' => $adminNote,
                 ]);
 
                 // Log admin action with detailed fields
@@ -819,14 +827,14 @@ class AttendancesController extends Controller
 
                 // Handle attendance based on status
                 if ($newStatus === 'approved') {
-                    // Set attendance to izin
+                    // Set attendance to match permission type
                     Attendance::updateOrCreate(
                         [
                             'user_id'     => $perm->user_id,
                             'schedule_id' => $perm->schedule_id,
                         ],
                         [
-                            'status'             => 'izin',
+                            'status'             => $perm->type === 'cuti' ? 'cuti' : 'izin',
                             'is_late'            => false,
                             'late_minutes'       => 0,
                             'check_in_time'      => null,

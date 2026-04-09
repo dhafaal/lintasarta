@@ -129,13 +129,18 @@
                             <div class="flex-1">
                                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Jadwal Anda</p>
                                 <p class="text-sm font-bold text-indigo-700">{{ \Carbon\Carbon::parse($req->requestedSchedule->schedule_date)->format('d M Y') }}</p>
+                                <p class="text-xs text-gray-700">{{ $req->requestedSchedule->shift->shift_name }} ({{ \Carbon\Carbon::parse($req->requestedSchedule->shift->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($req->requestedSchedule->shift->end_time)->format('H:i') }})</p>
                             </div>
                             <div class="hidden sm:flex shrink-0 items-center justify-center">
                                 <i data-lucide="arrow-right-left" class="h-4 w-4 text-gray-400"></i>
                             </div>
+                            <div class="flex sm:hidden shrink-0 items-center justify-center">
+                                <i data-lucide="arrow-down-up" class="h-4 w-4 text-gray-400"></i>
+                            </div>
                             <div class="flex-1 sm:text-right">
                                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Jadwal Dia</p>
                                 <p class="text-sm font-bold text-purple-700">{{ \Carbon\Carbon::parse($req->targetSchedule->schedule_date)->format('d M Y') }}</p>
+                                <p class="text-xs text-gray-700">{{ $req->targetSchedule->shift->shift_name }} ({{ \Carbon\Carbon::parse($req->targetSchedule->shift->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($req->targetSchedule->shift->end_time)->format('H:i') }})</p>
                             </div>
                         </div>
 
@@ -173,13 +178,123 @@
                 @endforelse
             </div>
         </div>
+
+        {{-- History Section --}}
+        <div class="mt-8 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+            <div class="border-b border-gray-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900">History (Riwayat Swap)</h2>
+                    <p class="text-sm text-gray-500">Daftar riwayat pertukaran jadwal yang sudah selesai atau dibatalkan.</p>
+                </div>
+                
+                {{-- Filter Input --}}
+                <div class="flex w-full max-w-sm items-center gap-2">
+                    <div class="relative w-full">
+                        <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
+                        <input type="text" id="history_search_input" placeholder="Cari nama karyawan..." class="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-4 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6">
+                @if($historyRequests->count() > 0)
+                    <div id="history-grid" class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                        @foreach($historyRequests as $req)
+                            @php
+                                $isRequester = $req->requester_id === Auth::id();
+                                $counterpart = $isRequester ? $req->targetUser : $req->requester;
+                            @endphp
+                            <div class="history-card rounded-xl border border-gray-200 bg-white p-5 shadow-sm" data-counterpart="{{ strtolower($counterpart->name) }}">
+                                <div class="mb-4 flex items-center justify-between">
+                                    @php
+                                        $mySchedule = $isRequester ? $req->requestedSchedule : $req->targetSchedule;
+                                        $theirSchedule = $isRequester ? $req->targetSchedule : $req->requestedSchedule;
+                                    @endphp
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-700 font-bold">
+                                            {{ substr($counterpart->name, 0, 1) }}
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-900">{{ $counterpart->name }}</p>
+                                            <p class="text-xs text-gray-500">{{ $req->created_at->format('d M Y') }}</p>
+                                        </div>
+                                    </div>
+                                    @if($req->status === 'approved')
+                                        <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200">Disetujui</span>
+                                    @elseif(in_array($req->status, ['rejected_by_target', 'rejected_by_admin']))
+                                        <span class="inline-flex rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-800 border border-red-200">Ditolak</span>
+                                    @else
+                                        <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-800 border border-gray-200">Dibatalkan</span>
+                                    @endif
+                                </div>
+                                
+                                <div class="mb-3 rounded-lg bg-gray-50 p-3 flex flex-col gap-2 border border-gray-100">
+                                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                                        <div>
+                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Jadwal Anda</p>
+                                            <p class="text-xs font-bold text-indigo-700">{{ \Carbon\Carbon::parse($mySchedule->schedule_date)->format('d M Y') }}</p>
+                                            <p class="text-xs text-gray-600 mt-0.5">{{ $mySchedule->shift->shift_name ?? '' }} ({{ \Carbon\Carbon::parse($mySchedule->shift->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($mySchedule->shift->end_time)->format('H:i') }})</p>
+                                        </div>
+                                        <div class="hidden sm:flex items-center justify-center">
+                                            <i data-lucide="arrow-right-left" class="h-4 w-4 text-gray-400"></i>
+                                        </div>
+                                        <div class="flex sm:hidden items-center justify-center my-1">
+                                            <i data-lucide="arrow-down-up" class="h-4 w-4 text-gray-400"></i>
+                                        </div>
+                                        <div class="sm:text-right">
+                                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Jadwal {{ explode(' ', $counterpart->name)[0] }}</p>
+                                            <p class="text-xs font-bold text-purple-700">{{ \Carbon\Carbon::parse($theirSchedule->schedule_date)->format('d M Y') }}</p>
+                                            <p class="text-xs text-gray-600 mt-0.5">{{ $theirSchedule->shift->shift_name ?? '' }} ({{ \Carbon\Carbon::parse($theirSchedule->shift->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($theirSchedule->shift->end_time)->format('H:i') }})</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if($req->target_rejection_reason || $req->admin_note)
+                                    <div class="mt-3 text-xs bg-gray-50 p-2 rounded text-gray-600">
+                                        @if($req->target_rejection_reason)
+                                            <span class="font-semibold text-red-600">Ditolak User:</span> {{ $req->target_rejection_reason }}<br>
+                                        @endif
+                                        @if($req->admin_note)
+                                            <span class="font-semibold text-blue-600">Admin Note:</span> {{ $req->admin_note }}
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
+                        Belum ada riwayat pertukaran jadwal.
+                    </div>
+                @endif
+            </div>
+
+            {{-- Pagination Footer --}}
+            <div class="flex flex-col border-t border-gray-200 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between rounded-b-2xl">
+                <div class="flex items-center justify-center space-x-3 text-sm font-medium text-gray-600 md:justify-start">
+                    <span>Tampilkan</span>
+                    <select id="pageSize" class="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span>data</span>
+                </div>
+                <div class="mt-4 flex items-center justify-center space-x-4 md:mt-0 md:justify-end">
+                    <span id="paginationInfo" class="text-sm font-medium text-gray-500">Menampilkan 0 – 0 dari 0 data</span>
+                    <div id="paginationButtons" class="flex items-center space-x-1"></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 {{-- Create Swap Request Modal --}}
 <div id="swap-request-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-900/75 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="document.getElementById('swap-request-modal').classList.add('hidden')"></div>
+        <div class="fixed inset-0 bg-black/50 transition-opacity" aria-hidden="true" onclick="document.getElementById('swap-request-modal').classList.add('hidden')"></div>
 
         <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
 
@@ -255,7 +370,7 @@
 {{-- Reject Swap Request Modal --}}
 <div id="reject-swap-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-900/75 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="hideRejectModal()"></div>
+        <div class="fixed inset-0 bg-black/50 transition-opacity" aria-hidden="true" onclick="hideRejectModal()"></div>
 
         <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
 
@@ -413,5 +528,90 @@
     function hideRejectModal() {
         document.getElementById('reject-swap-modal').classList.add('hidden');
     }
+
+    // Client-side Search & Pagination for History
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('history_search_input');
+        const pageSizeSelect = document.getElementById('pageSize');
+        const infoText = document.getElementById('paginationInfo');
+        const buttonsContainer = document.getElementById('paginationButtons');
+        
+        const historyGrid = document.getElementById('history-grid');
+        if (!historyGrid) return;
+        
+        const cards = Array.from(historyGrid.querySelectorAll('.history-card'));
+        
+        let currentPage = 1;
+        let pageSize = parseInt(pageSizeSelect.value);
+        let filteredCards = [...cards];
+        
+        function render() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            
+            filteredCards = cards.filter(card => {
+                const counterpartName = card.getAttribute('data-counterpart') || '';
+                return counterpartName.includes(searchTerm);
+            });
+            
+            const total = filteredCards.length;
+            const totalPages = Math.max(1, Math.ceil(total / pageSize));
+            if (currentPage > totalPages) currentPage = totalPages;
+            
+            const start = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, total);
+            infoText.textContent = total === 0 ? 'Tidak ada data' : `Menampilkan ${start} – ${end} dari ${total} data`;
+            
+            // Hide all
+            cards.forEach(card => card.style.display = 'none');
+            // Show current page
+            filteredCards.slice((currentPage - 1) * pageSize, currentPage * pageSize).forEach(card => {
+                card.style.display = '';
+            });
+            
+            // Render buttons
+            buttonsContainer.innerHTML = '';
+            const btnClass = 'inline-flex items-center justify-center min-w-[2.25rem] h-[2.25rem] px-2 rounded-xl text-sm font-bold transition-all duration-200 border-none';
+            const inactiveClass = 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+            const activeClass = 'bg-purple-600 text-white shadow-md shadow-purple-200';
+            const disabledClass = 'opacity-30 cursor-not-allowed bg-gray-50 text-gray-400';
+
+            function createBtn(html, page, disabled = false, active = false) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.innerHTML = html;
+                btn.className = `${btnClass} ${disabled ? disabledClass : (active ? activeClass : inactiveClass)}`;
+                if (!disabled && !active) {
+                    btn.onclick = () => {
+                        currentPage = page;
+                        render();
+                        window.scrollTo({ top: historyGrid.offsetTop - 100, behavior: 'smooth' });
+                    };
+                }
+                buttonsContainer.appendChild(btn);
+            }
+
+            createBtn('<i data-lucide="chevron-left" class="h-4 w-4"></i>', currentPage - 1, currentPage === 1);
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    createBtn(i, i, false, i === currentPage);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    createBtn('...', i, true);
+                }
+            }
+            
+            createBtn('<i data-lucide="chevron-right" class="h-4 w-4"></i>', currentPage + 1, currentPage === totalPages);
+            lucide.createIcons();
+        }
+
+        searchInput.addEventListener('input', () => { currentPage = 1; render(); });
+        pageSizeSelect.addEventListener('change', (e) => {
+            pageSize = parseInt(e.target.value);
+            currentPage = 1;
+            render();
+        });
+        
+        render();
+    });
 </script>
 @endsection

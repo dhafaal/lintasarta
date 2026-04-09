@@ -1092,31 +1092,38 @@
         });
 
         async function processLeaveRequest(requestId, action, admin_note = null) {
-
             try {
                 const response = await fetch(`/admin/attendances/leave-requests/${requestId}/process-simple`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         action: action,
                         admin_note: admin_note
-                    }),
+                    })
                 });
 
+                const result = await response.json();
+
                 if (response.ok) {
-                    const result = await response.json();
-                    alert(result.message);
+                    alert(result.message || 'Berhasil memproses permintaan.');
                     location.reload();
+                } else if (response.status === 422) {
+                    // Validation errors (like admin_note too short)
+                    let errorMsg = result.message;
+                    if (result.errors) {
+                        errorMsg = Object.values(result.errors).flat().join('\n');
+                    }
+                    alert(errorMsg || 'Data tidak valid.');
                 } else {
-                    const error = await response.json();
-                    alert(error.message || 'Failed to process leave request');
+                    alert(result.message || 'Gagal memproses permintaan.');
                 }
             } catch (error) {
                 console.error('Error processing leave request:', error);
-                alert('An error occurred while processing the request');
+                alert('Terjadi kesalahan koneksi atau server.');
             }
         }
 
@@ -1135,7 +1142,7 @@
     </script>
 
     <!-- Admin Note Modal -->
-    <div id="leaveAdminNoteModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity">
+    <div id="leaveAdminNoteModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 transition-opacity">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
             <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                 <div>
