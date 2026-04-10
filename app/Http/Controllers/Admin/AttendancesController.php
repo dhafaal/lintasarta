@@ -514,14 +514,10 @@ class AttendancesController extends Controller
             ->groupBy(['user_id', 'reason', 'type', 'status', 'created_at'])
             ->orderBy('created_at', 'desc');
 
-        if ($statusFilter) {
-            $query->where('status', $statusFilter);
-        }
-
-        $leaveRequestsData = $query->paginate(15);
+        $leaveRequestsData = $query->get();
 
         // Transform the data to include user information and date ranges
-        $leaveRequests = $leaveRequestsData->through(function ($item) {
+        $leaveRequests = $leaveRequestsData->map(function ($item) {
             $user          = User::find($item->user_id);
             $permissionIds = explode(',', $item->permission_ids);
 

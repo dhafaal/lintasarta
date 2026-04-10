@@ -162,7 +162,7 @@
                                 Total Requests
                             </p>
                             <p class="mt-1 text-xl font-bold sm:mt-2 sm:text-2xl md:text-3xl">
-                                {{ $leaveRequests->total() }}
+                            {{ $leaveRequests->count() }}
                             </p>
                             <p class="mt-1 text-xs text-sky-200">All Time</p>
                         </div>
@@ -238,33 +238,26 @@
                             </p>
                         </div>
 
-                        {{-- Filter Tabs --}}
-                        <div class="flex flex-wrap gap-1 sm:gap-2">
-                            <a
-                                href="{{ route('admin.attendances.leave-requests') }}"
-                                class="{{ ! request('status') ? 'bg-sky-600 text-white shadow-sm' : 'border-2 border-gray-200 bg-white text-gray-700 hover:bg-gray-50' }} rounded-lg px-2 py-1 text-xs font-semibold transition-all sm:px-3 sm:py-1.5 sm:text-sm md:px-4 md:py-2"
-                            >
-                                All Requests
-                            </a>
-                            <a
-                                href="{{ route('admin.attendances.leave-requests', ['status' => 'pending']) }}"
-                                class="{{ request('status') === 'pending' ? 'bg-amber-600 text-white shadow-sm' : 'border-2 border-gray-200 bg-white text-gray-700 hover:bg-gray-50' }} rounded-lg px-2 py-1 text-xs font-semibold transition-all sm:px-3 sm:py-1.5 sm:text-sm md:px-4 md:py-2"
-                            >
-                                Pending
-                            </a>
-                            <a
-                                href="{{ route('admin.attendances.leave-requests', ['status' => 'approved']) }}"
-                                class="{{ request('status') === 'approved' ? 'bg-green-600 text-white shadow-sm' : 'border-2 border-gray-200 bg-white text-gray-700 hover:bg-gray-50' }} rounded-lg px-2 py-1 text-xs font-semibold transition-all sm:px-3 sm:py-1.5 sm:text-sm md:px-4 md:py-2"
-                            >
-                                Approved
-                            </a>
-                            <a
-                                href="{{ route('admin.attendances.leave-requests', ['status' => 'rejected']) }}"
-                                class="{{ request('status') === 'rejected' ? 'bg-red-600 text-white shadow-sm' : 'border-2 border-gray-200 bg-white text-gray-700 hover:bg-gray-50' }} rounded-lg px-2 py-1 text-xs font-semibold transition-all sm:px-3 sm:py-1.5 sm:text-sm md:px-4 md:py-2"
-                            >
-                                Rejected
-                            </a>
-                        </div>
+                        {{-- Search & Filter --}}
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="relative">
+                                <input
+                                    type="text"
+                                    id="searchInput"
+                                    placeholder="Cari karyawan..."
+                                    class="w-48 rounded-lg border border-gray-200 bg-white py-2 pr-4 pl-10 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500"
+                                />
+                                <svg class="absolute top-2.5 left-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <select id="statusFilter" class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500">
+                                <option value="">Semua Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+
 
                         {{-- Mobile View Toggle --}}
                         <div class="flex items-center gap-2 sm:hidden">
@@ -433,7 +426,9 @@
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white">
                             @forelse ($leaveRequests as $request)
-                                <tr class="transition-colors hover:bg-gray-50">
+                                <tr class="leave-row transition-colors hover:bg-gray-50"
+                                    data-name="{{ strtolower($request->user->name ?? '') }}"
+                                    data-status="{{ $request->status }}">
                                     <td class="px-3 py-3 whitespace-nowrap sm:px-4 sm:py-4 md:px-6 lg:px-8">
                                         <div class="flex items-center">
                                             <div class="h-8 w-8 flex-shrink-0 sm:h-10 sm:w-10">
@@ -653,13 +648,15 @@
                 <div id="mobileView" class="hidden space-y-3 p-3 sm:space-y-4 sm:p-4">
                     @forelse ($leaveRequests as $request)
                         <div
-                            class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md sm:p-4"
+                            class="leave-card rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md sm:p-4"
+                            data-name="{{ strtolower($request->user->name ?? '') }}"
+                            data-status="{{ $request->status }}"
                         >
                             {{-- Employee Header --}}
                             <div class="mb-2 flex items-center justify-between sm:mb-3">
                                 <div class="flex items-center gap-2 sm:gap-3">
                                     <div
-                                        class="from-100-400 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br to-sky-200 sm:h-10 sm:w-10"
+                                        class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-sky-100 to-sky-200 sm:h-10 sm:w-10"
                                     >
                                         <span class="text-xs font-bold text-sky-600 sm:text-sm">
                                             {{ strtoupper(substr($request->user->name, 0, 1)) }}
@@ -909,7 +906,28 @@
                                 <p class="text-sm">No leave requests found</p>
                             </div>
                         </div>
-                    @endforelse
+                @endforelse
+                </div>
+
+                {{-- Standardized Pagination Footer --}}
+                <div id="pagination-footer" class="mt-6 flex flex-col items-center justify-between gap-4 border-t border-gray-100 px-6 py-5 sm:flex-row">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-semibold text-gray-600">Tampilkan</span>
+                        <div class="relative">
+                            <select id="pageSize" class="appearance-none rounded-xl border-2 border-sky-100 bg-white py-2.5 pr-10 pl-4 text-sm font-bold text-sky-700 transition-all hover:border-sky-300 focus:border-sky-500 focus:ring-0">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                <svg class="h-4 w-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-600">data</span>
+                    </div>
+                    <div id="paginationInfo" class="text-sm font-bold text-gray-700 rounded-2xl border border-sky-100 bg-sky-50 px-6 py-2.5"></div>
+                    <div id="paginationButtons" class="flex items-center gap-2"></div>
                 </div>
             </div>
         </div>
@@ -947,6 +965,84 @@
     </div>
 
     <script>
+        // Client-side search + pagination
+        document.addEventListener('DOMContentLoaded', function () {
+            const desktopRows = Array.from(document.querySelectorAll('.leave-row'));
+            const mobileCards = Array.from(document.querySelectorAll('.leave-card'));
+
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const pageSizeSelect = document.getElementById('pageSize');
+            const infoText = document.getElementById('paginationInfo');
+            const buttonsContainer = document.getElementById('paginationButtons');
+
+            let currentPage = 1;
+            let pageSize = parseInt(pageSizeSelect.value);
+
+            function render() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const statusTerm = statusFilter.value;
+
+                const filterLogic = (item) => {
+                    const name = item.getAttribute('data-name') || '';
+                    const status = item.getAttribute('data-status') || '';
+                    const matchesSearch = name.includes(searchTerm);
+                    const matchesStatus = statusTerm === '' || status === statusTerm;
+                    return matchesSearch && matchesStatus;
+                };
+
+                const filteredDesktop = desktopRows.filter(filterLogic);
+                const filteredMobile  = mobileCards.filter(filterLogic);
+                const total = Math.max(filteredDesktop.length, filteredMobile.length);
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                const start = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+                const end   = Math.min(currentPage * pageSize, total);
+                infoText.textContent = total === 0
+                    ? 'Tidak ada data'
+                    : `Menampilkan ${start} – ${end} dari ${total} permintaan`;
+
+                desktopRows.forEach(r => r.style.display = 'none');
+                filteredDesktop.slice((currentPage - 1) * pageSize, currentPage * pageSize).forEach(r => r.style.display = '');
+
+                mobileCards.forEach(c => c.style.display = 'none');
+                filteredMobile.slice((currentPage - 1) * pageSize, currentPage * pageSize).forEach(c => c.style.display = '');
+
+                // Render pagination buttons
+                buttonsContainer.innerHTML = '';
+                const btnBase = 'inline-flex items-center justify-center min-w-[2.25rem] h-[2.25rem] px-2 rounded-xl text-sm font-bold transition-all duration-200 border-none';
+                const inactive = 'bg-sky-100 text-sky-700 hover:bg-sky-200';
+                const active   = 'bg-sky-500 text-white shadow-md shadow-sky-200';
+                const disabled = 'opacity-30 cursor-not-allowed bg-gray-100 text-gray-400';
+
+                function addBtn(label, page, isDisabled, isActive = false) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.innerHTML = label;
+                    btn.className = `${btnBase} ${isDisabled ? disabled : (isActive ? active : inactive)}`;
+                    if (!isDisabled && !isActive) {
+                        btn.onclick = () => { currentPage = page; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+                    }
+                    buttonsContainer.appendChild(btn);
+                }
+
+                addBtn('‹', currentPage - 1, currentPage === 1);
+                let startP = Math.max(1, currentPage - 1);
+                let endP   = Math.min(totalPages, startP + 2);
+                if (endP - startP < 2) startP = Math.max(1, endP - 2);
+                for (let i = startP; i <= endP; i++) addBtn(i.toString(), i, false, i === currentPage);
+                addBtn('›', currentPage + 1, currentPage === totalPages);
+            }
+
+            searchInput.addEventListener('input', () => { currentPage = 1; render(); });
+            statusFilter.addEventListener('change', () => { currentPage = 1; render(); });
+            pageSizeSelect.addEventListener('change', (e) => { pageSize = parseInt(e.target.value); currentPage = 1; render(); });
+
+            render();
+        });
+
         function toggleMobileView() {
             const desktopView = document.getElementById('desktopView');
             const mobileView = document.getElementById('mobileView');
