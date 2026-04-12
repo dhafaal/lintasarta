@@ -319,6 +319,7 @@
                                 <option value="hadir">Hadir</option>
                                 <option value="telat">Telat</option>
                                 <option value="izin">Izin</option>
+                                <option value="cuti">Cuti</option>
                                 <option value="early_checkout">Early Checkout</option>
                                 <option value="forgot_checkout">Forgot Checkout</option>
                                 <option value="alpha">Alpha</option>
@@ -344,9 +345,10 @@
                             $checkInTime = optional($attGroup->whereNotNull('check_in_time')->sortBy('check_in_time')->first())->check_in_time;
                             $checkOutTime = optional($attGroup->whereNotNull('check_out_time')->sortByDesc('check_out_time')->first())->check_out_time;
 
-                            // Status priority: izin > early_checkout > telat > hadir > forgot_checkout > alpha
+                            // Status priority: cuti > izin > early_checkout > telat > hadir > forgot_checkout > alpha
                             $statusText = '-';
-                            if ($attGroup->where('status','izin')->isNotEmpty()) { $statusText = 'izin'; }
+                            if ($attGroup->where('status','cuti')->isNotEmpty()) { $statusText = 'cuti'; }
+                            elseif ($attGroup->where('status','izin')->isNotEmpty()) { $statusText = 'izin'; }
                             elseif ($attGroup->where('status','early_checkout')->isNotEmpty()) { $statusText = 'early_checkout'; }
                             elseif ($attGroup->where('status','telat')->isNotEmpty()) { $statusText = 'telat'; }
                             elseif ($attGroup->where('status','hadir')->isNotEmpty()) { $statusText = 'hadir'; }
@@ -360,6 +362,7 @@
                             if($statusText === 'hadir') { $statusColor = 'bg-green-100 text-green-800'; }
                             if($statusText === 'telat') { $statusColor = 'bg-orange-100 text-orange-800'; }
                             if($statusText === 'izin') { $statusColor = 'bg-yellow-100 text-yellow-800'; }
+                            if($statusText === 'cuti') { $statusColor = 'bg-purple-100 text-purple-800'; }
                             if($statusText === 'early_checkout') { $statusColor = 'bg-amber-100 text-amber-800'; }
                             if($statusText === 'forgot_checkout') { $statusColor = 'bg-rose-100 text-rose-800'; }
                             if($statusText === 'alpha') { $statusColor = 'bg-red-100 text-red-800'; }
@@ -645,9 +648,10 @@
                                     $checkInTime = optional($attGroup->whereNotNull('check_in_time')->sortBy('check_in_time')->first())->check_in_time;
                                     $checkOutTime = optional($attGroup->whereNotNull('check_out_time')->sortByDesc('check_out_time')->first())->check_out_time;
 
-                                    // Status priority: izin > early_checkout > telat > hadir > forgot_checkout > alpha
+                                    // Status priority: cuti > izin > early_checkout > telat > hadir > forgot_checkout > alpha
                                     $statusText = '-';
-                                    if ($attGroup->where('status','izin')->isNotEmpty()) { $statusText = 'izin'; }
+                                    if ($attGroup->where('status','cuti')->isNotEmpty()) { $statusText = 'cuti'; }
+                                    elseif ($attGroup->where('status','izin')->isNotEmpty()) { $statusText = 'izin'; }
                                     elseif ($attGroup->where('status','early_checkout')->isNotEmpty()) { $statusText = 'early_checkout'; }
                                     elseif ($attGroup->where('status','telat')->isNotEmpty()) { $statusText = 'telat'; }
                                     elseif ($attGroup->where('status','hadir')->isNotEmpty()) { $statusText = 'hadir'; }
@@ -662,6 +666,7 @@
                                     if($statusText === 'hadir') { $statusColor = 'bg-green-100 text-green-800'; }
                                     if($statusText === 'telat') { $statusColor = 'bg-orange-100 text-orange-800'; }
                                     if($statusText === 'izin') { $statusColor = 'bg-yellow-100 text-yellow-800'; }
+                                    if($statusText === 'cuti') { $statusColor = 'bg-purple-100 text-purple-800'; }
                                     if($statusText === 'early_checkout') { $statusColor = 'bg-amber-100 text-amber-800'; }
                                     if($statusText === 'forgot_checkout') { $statusColor = 'bg-rose-100 text-rose-800'; }
                                     if($statusText === 'alpha') { $statusColor = 'bg-red-100 text-red-800'; }

@@ -163,7 +163,7 @@
                     </svg>
                     <p class="text-xs font-semibold text-gray-700 sm:text-sm">Keterangan Status Kehadiran:</p>
                 </div>
-                <div class="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-4">
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-5">
                     <div
                         class="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 sm:px-4 sm:py-2"
                     >
@@ -181,6 +181,12 @@
                     >
                         <span class="h-2 w-2 flex-shrink-0 rounded-full bg-yellow-500 sm:h-2.5 sm:w-2.5"></span>
                         <span class="text-xs font-medium text-yellow-800 sm:text-sm">Izin</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 sm:px-4 sm:py-2"
+                    >
+                        <span class="h-2 w-2 flex-shrink-0 rounded-full bg-purple-500 sm:h-2.5 sm:w-2.5"></span>
+                        <span class="text-xs font-medium text-purple-800 sm:text-sm">Cuti</span>
                     </div>
                     <div
                         class="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 sm:px-4 sm:py-2"
@@ -364,6 +370,10 @@
                                                 $cellBgClass = 'bg-yellow-50';
                                                 $textClass = 'font-semibold text-yellow-800';
                                                 $borderClass = 'border-yellow-100';
+                                            } elseif ($attendanceStatus === 'cuti') {
+                                                $cellBgClass = 'bg-purple-50';
+                                                $textClass = 'font-semibold text-purple-800';
+                                                $borderClass = 'border-purple-100';
                                             } elseif ($attendanceStatus === 'alpha') {
                                                 $cellBgClass = 'bg-red-50';
                                                 $textClass = 'font-semibold text-red-800';
@@ -461,6 +471,10 @@
                                                 $cellBgClass = 'bg-yellow-50';
                                                 $textClass = 'font-medium text-yellow-700';
                                                 $borderClass = 'border-yellow-100';
+                                            } elseif ($attendanceStatus === 'cuti') {
+                                                $cellBgClass = 'bg-purple-50';
+                                                $textClass = 'font-medium text-purple-700';
+                                                $borderClass = 'border-purple-100';
                                             } elseif ($attendanceStatus === 'alpha') {
                                                 $cellBgClass = 'bg-red-50';
                                                 $textClass = 'font-medium text-red-700';
@@ -572,6 +586,9 @@
                                             } elseif ($attendanceStatus === 'izin') {
                                                 $cellBgClass = 'bg-yellow-100';
                                                 $textClass = 'text-yellow-800';
+                                            } elseif ($attendanceStatus === 'cuti') {
+                                                $cellBgClass = 'bg-purple-100';
+                                                $textClass = 'text-purple-800';
                                             } elseif ($attendanceStatus === 'alpha') {
                                                 $cellBgClass = 'bg-red-100';
                                                 $textClass = 'text-red-800';

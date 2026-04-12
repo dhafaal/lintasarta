@@ -104,6 +104,7 @@ class AttendancesExport implements FromCollection, ShouldAutoSize, WithColumnFor
             $lastCheckOut = $dayAtts->whereNotNull('check_out_time')->sortByDesc('check_out_time')->first();
 
             // Flags
+            $hasCuti    = $dayAtts->where('status', 'cuti')->isNotEmpty();
             $hasForgot  = $dayAtts->where('status', 'forgot_checkout')->isNotEmpty();
             $hasEarly   = $dayAtts->where('status', 'early_checkout')->isNotEmpty();
             $hasIzin    = $dayAtts->where('status', 'izin')->isNotEmpty();
@@ -152,7 +153,9 @@ class AttendancesExport implements FromCollection, ShouldAutoSize, WithColumnFor
             })($dayWorkMinutesAfterBreak);
 
             // Status display
-            if ($hasIzin) {
+            if ($hasCuti) {
+                $statusDisplay = 'Cuti';
+            } elseif ($hasIzin) {
                 $statusDisplay = 'Izin';
             } else {
                 $parts = [];
@@ -376,6 +379,9 @@ class AttendancesExport implements FromCollection, ShouldAutoSize, WithColumnFor
                     } elseif (strpos($statusCell, 'izin') !== false) {
                         $fillColor = 'FFFEF08A'; // yellow-200
                         $textColor = 'FFA16207'; // amber-700
+                    } elseif (strpos($statusCell, 'cuti') !== false) {
+                        $fillColor = 'FFE9D5FF'; // purple-200
+                        $textColor = 'FF7E22CE'; // purple-700
                     } elseif (strpos($statusCell, 'alpha') !== false) {
                         $fillColor = 'FFFECACA'; // red-200
                         $textColor = 'FF991B1B'; // red-700
