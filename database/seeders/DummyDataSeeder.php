@@ -71,6 +71,9 @@ class DummyDataSeeder extends Seeder
             $isFuture = $currentDate->gt($now->copy()->endOfDay());
 
             foreach ($users as $user) {
+                // Skip Admin: tidak perlu jadwal, absensi, dan shift
+                if ($user->role === 'Admin') continue;
+
                 // Skip weekend if you want, but for dummy data let's just generate daily or vary it
                 // Logic: 90% chance of having a schedule on any given day
                 if (rand(1, 100) > 90) continue;
@@ -196,10 +199,14 @@ class DummyDataSeeder extends Seeder
         $allSchedules = Schedules::all();
         $adminUserId = User::where('role', 'Admin')->first()->id ?? $users->first()->id;
 
+        // Filter hanya non-Admin untuk swap requests
+        $nonAdminUsers = $users->filter(fn($u) => $u->role !== 'Admin')->values();
+
         for ($k = 0; $k < 20; $k++) {
-            // Get two random different users
-            $user1 = $users->random();
-            $user2 = $users->where('id', '!=', $user1->id)->random();
+            // Get two random different non-Admin users
+            if ($nonAdminUsers->count() < 2) break;
+            $user1 = $nonAdminUsers->random();
+            $user2 = $nonAdminUsers->where('id', '!=', $user1->id)->random();
 
             // Find schedules for both users
             $sched1 = $allSchedules->where('user_id', $user1->id)->random();

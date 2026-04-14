@@ -141,12 +141,16 @@ class AttendancesController extends Controller
      */
     public function approvePermission(Request $request, Permissions $permission)
     {
-        $request->validate([
-            'admin_note' => 'required|string|min:5|max:500'
-        ], [
-            'admin_note.required' => 'Catatan wajib diisi.',
-            'admin_note.min' => 'Catatan minimal 5 karakter.'
-        ]);
+        $isEarlyCheckout = ($permission->type === 'izin') && (strpos((string) $permission->reason, '[EARLY_CHECKOUT]') === 0);
+
+        if (! $isEarlyCheckout) {
+            $request->validate([
+                'admin_note' => 'required|string|min:5|max:500'
+            ], [
+                'admin_note.required' => 'Catatan wajib diisi.',
+                'admin_note.min' => 'Catatan minimal 5 karakter.'
+            ]);
+        }
         // Validasi permission masih pending
         if ($permission->status !== 'pending') {
             return back()->with('error', 'Izin ini sudah diproses sebelumnya.');
@@ -161,11 +165,10 @@ class AttendancesController extends Controller
             'status'      => 'approved',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
-            'admin_note'  => $request->admin_note,
+            'admin_note'  => $isEarlyCheckout ? ($request->admin_note ?? 'Disetujui untuk pulang lebih awal (Early Checkout).') : $request->admin_note,
         ]);
 
         // Update attendance based on permission type
-        $isEarlyCheckout = ($permission->type === 'izin') && (strpos((string) $permission->reason, '[EARLY_CHECKOUT]') === 0);
         if ($isEarlyCheckout) {
             // Multi-shift support: checkout all attendances on the same date
             $scheduleDate = optional($permission->schedule)?->schedule_date;

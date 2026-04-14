@@ -532,10 +532,13 @@
                                 @if($earlyPending || $otherPending)
                                 <div class="pt-3 border-t border-gray-100 flex gap-2">
                                     @if($earlyPending)
-                                        <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $earlyPending) }}', 'approve')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M20 6 9 17l-5-5"/></svg>
-                                            Setujui
-                                        </button>
+                                        <form action="{{ route('admin.attendances.permission.approve', $earlyPending) }}" method="POST" class="flex-1 w-full flex">
+                                            @csrf
+                                            <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M20 6 9 17l-5-5"/></svg>
+                                                Setujui
+                                            </button>
+                                        </form>
                                         <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.reject', $earlyPending) }}', 'reject')" class="flex-1 w-full inline-flex items-center justify-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                             Tolak
@@ -834,10 +837,13 @@
                                     <td class="px-3 py-4 whitespace-nowrap text-left">
                                         <div class="flex items-center justify-start space-x-1">
                                             @if($earlyPending)
-                                                <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.approve', $earlyPending) }}', 'approve')" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="20 6 9 17 4 12"/></svg>
-                                                    Setujui
-                                                </button>
+                                                <form action="{{ route('admin.attendances.permission.approve', $earlyPending) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="inline-flex items-center px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 font-semibold text-xs rounded-lg transition-all duration-200">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="20 6 9 17 4 12"/></svg>
+                                                        Setujui
+                                                    </button>
+                                                </form>
                                                 <button type="button" onclick="openAdminNoteModal('{{ route('admin.attendances.permission.reject', $earlyPending) }}', 'reject')" class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs rounded-lg transition-all duration-200">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                                     Tolak
