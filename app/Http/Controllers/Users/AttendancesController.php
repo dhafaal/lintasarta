@@ -127,16 +127,22 @@ class AttendancesController extends Controller
             return back()->with('error', 'Waktu shift sudah selesai, lakukan check-out biasa.');
         }
 
-        // Prevent duplicate pending request for the same day (multi-shift aware)
+        // Prevent duplicate request for the same day (multi-shift aware)
+        // Mengecek apakah sudah ada pengajuan early checkout sebelumnya (apapun statusnya)
         $existing = \App\Models\Permissions::where('user_id', $user->id)
             ->where('type', 'izin')
-            ->where('status', 'pending')
             ->where('reason', 'like', '[EARLY_CHECKOUT]%')
             ->whereHas('schedule', function($q) use ($schedule) {
                 $q->whereDate('schedule_date', $schedule->schedule_date);
             })
             ->first();
+
         if ($existing) {
+            if ($existing->status === 'rejected') {
+                return back()->with('error', 'Pengajuan checkout lebih cepat Anda untuk jadwal ini telah ditolak oleh Admin.');
+            } elseif ($existing->status === 'approved') {
+                return back()->with('warning', 'Pengajuan checkout lebih cepat Anda sudah disetujui.');
+            }
             return back()->with('warning', 'Pengajuan checkout lebih cepat sudah dibuat dan menunggu persetujuan.');
         }
 
